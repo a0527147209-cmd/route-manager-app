@@ -1,0 +1,89 @@
+import { useNavigate } from 'react-router-dom';
+import { Settings, X, Search, UserPlus, MapPin } from 'lucide-react';
+import { useSearch } from './SearchContext';
+import { useLanguage } from './LanguageContext';
+
+export default function MenuDrawer({ isOpen, onClose }) {
+  const navigate = useNavigate();
+  const { searchTerm, setSearchTerm } = useSearch();
+  const { t, isRtl } = useLanguage();
+
+  const goTo = (path) => {
+    onClose();
+    navigate(path, { state: { fromMenu: true } });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ease-out"
+        onClick={onClose}
+        style={{ animation: 'fadeIn 0.3s ease-out' }}
+      />
+      <div
+        className={`fixed top-0 h-full w-56 bg-white dark:bg-slate-800 shadow-xl z-50 flex flex-col ${
+          isRtl ? 'left-0' : 'right-0'
+        }`}
+        style={{
+          animation: isRtl
+            ? 'slideInFromLeft 0.3s ease-out'
+            : 'slideInFromRight 0.3s ease-out',
+        }}
+      >
+        <div className="p-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white">{t('menu')}</h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95"
+          >
+            <X size={22} />
+          </button>
+        </div>
+        <div className="p-2 flex flex-col gap-0.5">
+          <div className="px-2 pb-2 border-b border-slate-200 dark:border-slate-700 mb-2">
+            <div className="relative">
+              <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              <input
+                type="text"
+                placeholder={t('searchCustomer')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onClose();
+                    navigate('/locations', { state: { fromMenu: true } });
+                  }
+                }}
+                className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg py-2 ps-8 pe-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => goTo('/add')}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+          >
+            <UserPlus size={20} />
+            <span>{t('addCustomer')}</span>
+          </button>
+          <button
+            onClick={() => goTo('/locations')}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+          >
+            <MapPin size={20} />
+            <span>{t('locations')}</span>
+          </button>
+          <button
+            onClick={() => goTo('/settings')}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+          >
+            <Settings size={20} />
+            <span>{t('settings')}</span>
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

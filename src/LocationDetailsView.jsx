@@ -22,18 +22,17 @@ export default function LocationDetailsView() {
   const { state: navState } = useLocation();
   const backPath = navState?.fromPath ?? '/locations';
   const { locations, updateLocation } = useLocations();
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const [location, setLocation] = useState(null);
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
-  const [commissionRate, setCommissionRate] = useState('');
-  const [hasChangeMachine, setHasChangeMachine] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
   const [animatingBill, setAnimatingBill] = useState(null);
+  const [isManualAmountEdit, setIsManualAmountEdit] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -45,12 +44,20 @@ export default function LocationDetailsView() {
     const found = locs.find((l) => l != null && String(l.id) === String(id));
     if (found) {
       setLocation(found);
-      setAmount(found.lastCollection ?? '');
+      const savedBills = found.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 };
+      setBills(savedBills);
+      // Calculate total from bills if bills exist, otherwise use saved amount
+      const billsTotal = Object.entries(savedBills).reduce((sum, [value, count]) => {
+        return sum + (parseFloat(value) || 0) * (count || 0);
+      }, 0);
+      if (billsTotal > 0) {
+        setAmount(billsTotal.toFixed(2));
+        setIsManualAmountEdit(false);
+      } else {
+        setAmount(found.lastCollection ?? '');
+        setIsManualAmountEdit(true);
+      }
       setNotes(found.notes ?? '');
-      const rate = found.commissionRate ?? 0.4;
-      setCommissionRate(rate != null ? String(rate) : '0.4');
-      setHasChangeMachine(!!found.hasChangeMachine);
-      setBills(found.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
     }
     setLoading(false);
   }, [id, locations]);
@@ -91,10 +98,24 @@ export default function LocationDetailsView() {
 
   const updateBillCount = (billValue, delta) => {
     setAnimatingBill(billValue);
-    setBills((prev) => ({
-      ...prev,
-      [billValue]: Math.max(0, (prev[billValue] || 0) + delta),
-    }));
+    setBills((prev) => {
+      const updated = {
+        ...prev,
+        [billValue]: Math.max(0, (prev[billValue] || 0) + delta),
+      };
+      // Auto-calculate total from bills
+      const billsTotal = Object.entries(updated).reduce((sum, [value, count]) => {
+        return sum + (parseFloat(value) || 0) * (count || 0);
+      }, 0);
+      if (billsTotal > 0) {
+        setAmount(billsTotal.toFixed(2));
+        setIsManualAmountEdit(false);
+      } else {
+        setAmount('');
+        setIsManualAmountEdit(true);
+      }
+      return updated;
+    });
     setTimeout(() => setAnimatingBill(null), 300);
   };
 
@@ -126,6 +147,7 @@ export default function LocationDetailsView() {
   };
 
   // rate = חלק הלקוח מתוך 100 (למשל 0.4 = 40% ללקוח, 60% אליי)
+  const commissionRate = location?.commissionRate ?? 0.4;
   const rate = Math.min(0.99, Math.max(0, parseFloat(commissionRate) || 0.4));
   const totalAmount = parseFloat(amount) || 0;
   const giveToCustomerAmount = totalAmount > 0 ? totalAmount * rate : 0;
@@ -163,14 +185,14 @@ export default function LocationDetailsView() {
       <header className="bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 sticky top-0 z-10 shrink-0 max-w-[380px] mx-auto w-full">
         <button
           onClick={handleBackClick}
-          className="p-2 -ms-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0"
+          className={`p-2 ${isRtl ? '-me-1' : '-ms-1'} rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0`}
           title={t('backToLocations')}
         >
-          <ArrowLeft size={22} />
+          <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
         </button>
         <div className="flex-1 min-w-0 flex items-center justify-center gap-3 text-center px-2">
           <h1 className="font-bold text-base text-slate-800 dark:text-white truncate">
-            Location Log
+            {t('locationLog')}
           </h1>
           <span className="text-slate-400 dark:text-slate-500 shrink-0">·</span>
           <p className="text-sm text-slate-600 dark:text-slate-300 truncate">
@@ -192,11 +214,11 @@ export default function LocationDetailsView() {
       {showBackConfirm && (
         <>
           <div className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setShowBackConfirm(false)} aria-hidden="true" />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] max-w-[320px] bg-white dark:bg-slate-800 rounded-xl shadow-xl p-4 border border-slate-200 dark:border-slate-600">
+          <div className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] max-w-[320px] bg-white dark:bg-slate-800 rounded-xl shadow-xl p-4 border border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
             <p className="text-base font-semibold text-slate-800 dark:text-white mb-4 text-center">
               {t('saveChangesConfirm')}
             </p>
-            <div className="flex gap-2">
+            <div className={`flex gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <button
                 type="button"
                 onClick={handleSave}
@@ -224,27 +246,27 @@ export default function LocationDetailsView() {
       )}
 
       <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
-        <div className="flex items-stretch gap-2 w-full min-h-14">
+        <div className="flex items-stretch gap-2.5 w-full min-h-16">
           <button
             onClick={openWaze}
-            className="flex-1 min-w-0 flex flex-col items-center justify-center p-1.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-700 shadow-md shadow-blue-200/50 dark:shadow-blue-900/30 hover:shadow-lg hover:shadow-blue-300/60 dark:hover:shadow-blue-800/40 hover:scale-[1.02] hover:border-blue-400 dark:hover:border-blue-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
+            className="flex-1 min-w-0 flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-700 shadow-md shadow-blue-200/50 dark:shadow-blue-900/30 hover:shadow-lg hover:shadow-blue-300/60 dark:hover:shadow-blue-800/40 hover:scale-[1.02] hover:border-blue-400 dark:hover:border-blue-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
             title={t('waze')}
           >
-            <Navigation size={18} className="shrink-0" />
-            <span className="text-[9px] font-semibold mt-0.5 truncate w-full text-center">{t('waze')}</span>
+            <Navigation size={22} className="shrink-0" />
+            <span className="text-[10px] font-semibold mt-1 truncate w-full text-center">{t('waze')}</span>
           </button>
           <button
             onClick={openGoogleMaps}
-            className="flex-1 min-w-0 flex flex-col items-center justify-center p-1.5 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-2 border-green-300 dark:border-green-700 shadow-md shadow-green-200/50 dark:shadow-green-900/30 hover:shadow-lg hover:shadow-green-300/60 dark:hover:shadow-green-800/40 hover:scale-[1.02] hover:border-green-400 dark:hover:border-green-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
+            className="flex-1 min-w-0 flex flex-col items-center justify-center p-2.5 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-2 border-green-300 dark:border-green-700 shadow-md shadow-green-200/50 dark:shadow-green-900/30 hover:shadow-lg hover:shadow-green-300/60 dark:hover:shadow-green-800/40 hover:scale-[1.02] hover:border-green-400 dark:hover:border-green-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
             title={t('maps')}
           >
-            <MapLucideIcon size={18} className="shrink-0" />
-            <span className="text-[9px] font-semibold mt-0.5 truncate w-full text-center">{t('maps')}</span>
+            <MapLucideIcon size={22} className="shrink-0" />
+            <span className="text-[10px] font-semibold mt-1 truncate w-full text-center">{t('maps')}</span>
           </button>
-          <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">
+          <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">
             <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight">{t('commission')}</p>
             <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-              {Number.isFinite(parseFloat(commissionRate)) ? `${Math.round(parseFloat(commissionRate) * 100)}%` : '—'}
+              {Number.isFinite(rate) ? `${Math.round(rate * 100)}%` : '—'}
             </p>
           </div>
         </div>
@@ -284,8 +306,8 @@ export default function LocationDetailsView() {
           </div>
         )}
 
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3">
-          <label htmlFor="collectionAmount" className="text-amber-700 dark:text-amber-300 text-xs font-semibold uppercase tracking-wide">
+        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3.5">
+          <label htmlFor="collectionAmount" className="text-amber-700 dark:text-amber-300 text-xs font-semibold uppercase tracking-wide block">
             {t('collectionAmount')}
           </label>
           <input
@@ -296,9 +318,12 @@ export default function LocationDetailsView() {
             step="0.01"
             min="0"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="0.00"
-            className="w-full px-3 py-2.5 text-lg font-semibold rounded-lg border-2 border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setIsManualAmountEdit(true);
+            }}
+            placeholder={isRtl ? '0.00' : '0.00'}
+            className={`w-full px-3 py-2.5 text-lg font-semibold rounded-lg border-2 border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isRtl ? 'text-right' : 'text-left'}`}
           />
           <div className="grid grid-cols-1 gap-2.5 pt-1.5">
             <div>
@@ -320,8 +345,8 @@ export default function LocationDetailsView() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
-          <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block mb-3">
+        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
+          <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block mb-3.5">
             {t('bills')}
           </label>
           <div className="flex flex-wrap gap-2.5">
@@ -330,13 +355,13 @@ export default function LocationDetailsView() {
                 key={billValue}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-800/60 border-2 border-slate-300 dark:border-slate-500 shadow-md hover:shadow-lg transition-all duration-200 ${
                   animatingBill === billValue ? 'animate-pulse scale-105 ring-2 ring-indigo-400 dark:ring-indigo-500' : ''
-                }`}
+                } ${isRtl ? 'flex-row-reverse' : ''}`}
               >
                 <button
                   onClick={() => updateBillCount(billValue, -1)}
                   disabled={bills[billValue] <= 0}
                   className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all duration-150 flex items-center justify-center group"
-                  aria-label={`Decrease ${billValue}`}
+                  aria-label={t('bills')}
                 >
                   <Minus size={18} className="text-slate-700 dark:text-slate-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors" />
                 </button>
@@ -353,7 +378,7 @@ export default function LocationDetailsView() {
                 <button
                   onClick={() => updateBillCount(billValue, 1)}
                   className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 active:scale-90 transition-all duration-150 flex items-center justify-center group"
-                  aria-label={`Increase ${billValue}`}
+                  aria-label={t('bills')}
                 >
                   <Plus size={18} className="text-slate-700 dark:text-slate-300 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" />
                 </button>
@@ -379,11 +404,11 @@ export default function LocationDetailsView() {
 
         <button
           onClick={handleSave}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.99] transition-all text-sm"
+          className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.99] transition-all text-sm ${isRtl ? 'flex-row-reverse' : ''}`}
         >
           <Save size={18} />
           <span>{t('saveWord')}</span>
-          <span className="ms-1.5">{t('logWord')}</span>
+          <span className={isRtl ? 'me-1.5' : 'ms-1.5'}>{t('logWord')}</span>
         </button>
       </div>
     </div>

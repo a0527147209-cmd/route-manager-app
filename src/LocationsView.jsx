@@ -230,13 +230,13 @@ export default function LocationsView() {
         {/* Search + Sort row - compact, narrow width */}
         <div className="mt-1.5 flex items-center gap-1.5">
           <div className="relative w-[120px] max-w-[35vw] shrink-0">
-            <Search size={12} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search size={12} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none ${isRtl ? 'right-1.5' : 'left-1.5'}`} />
             <input
               type="text"
               placeholder={t('searchLocation')}
               value={searchLocations}
               onChange={(e) => setSearchLocations(e.target.value)}
-              className="w-full py-1 pl-5 pr-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className={`w-full py-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-1 text-right' : 'pl-5 pr-1 text-left'}`}
             />
           </div>
           {!isInnerPage && (
@@ -245,7 +245,7 @@ export default function LocationsView() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="py-1 pl-1 pr-5 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
+                className={`py-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer ${isRtl ? 'pr-1 pl-5 text-right' : 'pl-1 pr-5 text-left'}`}
                 title={t('sortBy')}
               >
                 {SORT_OPTIONS.map((opt) => (
@@ -328,7 +328,7 @@ export default function LocationsView() {
                       </p>
                     </div>
                     {loc?.lastVisited && (
-                      <div className="shrink-0 text-right flex flex-col items-end justify-center min-w-0 max-w-[40%] me-3">
+                      <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap leading-tight">
                           {t('lastVisit')}
                         </p>
@@ -337,24 +337,24 @@ export default function LocationsView() {
                         </p>
                       </div>
                     )}
-                    <div className="flex gap-1 shrink-0 ms-4" onClick={(e) => e.stopPropagation()}>
+                    <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
                       <a
                         href={getWazeUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
-                        title="Waze"
+                        className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
+                        title={t('waze')}
                       >
-                        <Navigation size={18} />
+                        <Navigation size={22} />
                       </a>
                       <a
                         href={getMapsUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
-                        title="Google Maps"
+                        className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
+                        title={t('maps')}
                       >
-                        <MapIcon size={18} />
+                        <MapIcon size={22} />
                       </a>
                     </div>
                   </div>
@@ -378,9 +378,9 @@ export default function LocationsView() {
                   onClick={() => openArea(openKey)}
                   className="w-full flex items-center gap-2 py-3 px-4 text-left rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 active:scale-[0.995] transition-all"
                 >
-                  <ChevronRight size={20} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                  <ChevronRight size={20} className={`text-slate-500 dark:text-slate-400 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
                   <span className="font-semibold text-slate-800 dark:text-white">{label(area.label, t)}</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">
+                  <span className={`text-xs text-slate-400 dark:text-slate-500 ${isRtl ? 'mr-auto' : 'ml-auto'}`}>
                     {getAreaCount(area)}
                   </span>
                 </button>

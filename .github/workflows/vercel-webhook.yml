@@ -1,0 +1,33 @@
+name: Trigger on Vercel Deploy
+
+on:
+  # Webhook מ-Vercel
+  repository_dispatch:
+    types: [vercel-deployment-completed]
+
+jobs:
+  notify-and-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Auto commit changes
+        run: |
+          git add -A
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: auto-commit after Vercel deployment [skip ci]" || exit 0
+            git push origin main || echo "Push failed or no changes"
+          else
+            echo "No changes to commit"
+          fi

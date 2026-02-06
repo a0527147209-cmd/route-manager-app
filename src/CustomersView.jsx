@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin } from 'lucide-react';
+import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, Navigation, Map as MapIcon } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 
@@ -168,6 +168,22 @@ export default function CustomersView() {
 
   const displayGroups = sortBy === 'all' ? groupsAll : groups;
 
+  const formatVisitDate = (isoStr) => {
+    if (!isoStr) return null;
+    try {
+      const d = new Date(isoStr);
+      if (Number.isNaN(d.getTime())) return null;
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return null;
+    }
+  };
+
+  const getWazeUrl = (address) =>
+    `https://waze.com/ul?q=${encodeURIComponent(address || '')}&navigate=yes`;
+  const getMapsUrl = (address) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || '')}`;
+
   const handleBack = () => {
     if (isInnerPage) {
       navigate('/customers', { replace: true });
@@ -211,16 +227,16 @@ export default function CustomersView() {
         </div>
         <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-        {/* Search + Sort row */}
+        {/* Search + Sort row - compact, narrow width */}
         <div className="mt-1.5 flex items-center gap-1.5">
           <div className="relative w-[120px] max-w-[35vw] shrink-0">
-            <Search size={12} className="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search size={12} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none ${isRtl ? 'right-1.5' : 'left-1.5'}`} />
             <input
               type="text"
               placeholder={t('searchCustomer')}
               value={searchCustomers}
               onChange={(e) => setSearchCustomers(e.target.value)}
-              className="w-full py-1 pl-5 pr-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className={`w-full py-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-1 text-right' : 'pl-5 pr-1 text-left'}`}
             />
           </div>
           {!isInnerPage && (
@@ -229,7 +245,7 @@ export default function CustomersView() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="py-1 pl-1 pr-5 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
+                className={`py-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer ${isRtl ? 'pr-1 pl-5 text-right' : 'pl-1 pr-5 text-left'}`}
                 title={t('sortBy')}
               >
                 {SORT_OPTIONS.map((opt) => (
@@ -274,31 +290,59 @@ export default function CustomersView() {
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-bold text-slate-800 dark:text-white text-sm truncate">
-                        {loc?.name ?? '—'}
-                      </h3>
-                      {loc?.address && (
-                        <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 truncate flex items-center gap-0.5">
-                          <MapPin size={12} className="shrink-0" />
-                          {loc.address}
-                        </p>
-                      )}
-                      {(loc?.city || loc?.state) && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                          {[loc.city, loc.state].filter(Boolean).join(', ')}
-                        </p>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-slate-800 dark:text-white text-sm truncate">
+                          {loc?.name ?? '—'}
+                        </h3>
+                        {loc?.status === 'visited' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                            {t('visited')}
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-300 text-slate-800 dark:bg-slate-600 dark:text-slate-200 shrink-0">
+                          {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                        </span>
+                        {loc?.hasChangeMachine && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                            {t('machine')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 truncate flex items-center gap-0.5">
+                        <MapPin size={12} className="shrink-0" />
+                        {loc?.address ?? '—'}
+                      </p>
                     </div>
-                    {loc?.commissionRate && (
-                      <div className="shrink-0 text-right flex flex-col items-end justify-center min-w-0 max-w-[40%] me-3">
+                    {loc?.lastVisited && (
+                      <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
                         <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap leading-tight">
-                          {t('commission')}
+                          {t('lastVisit')}
                         </p>
                         <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap leading-tight mt-0.5">
-                          {Math.round((loc.commissionRate || 0.4) * 100)}%
+                          {formatVisitDate(loc.lastVisited)}
                         </p>
                       </div>
                     )}
+                    <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
+                      <a
+                        href={getWazeUrl(loc?.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
+                        title={t('waze')}
+                      >
+                        <Navigation size={22} />
+                      </a>
+                      <a
+                        href={getMapsUrl(loc?.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
+                        title={t('maps')}
+                      >
+                        <MapIcon size={22} />
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -320,9 +364,9 @@ export default function CustomersView() {
                   onClick={() => openArea(openKey)}
                   className="w-full flex items-center gap-2 py-3 px-4 text-left rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 active:scale-[0.995] transition-all"
                 >
-                  <ChevronRight size={20} className="text-slate-500 dark:text-slate-400 shrink-0" />
+                  <ChevronRight size={20} className={`text-slate-500 dark:text-slate-400 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
                   <span className="font-semibold text-slate-800 dark:text-white">{label(area.label, t)}</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto">
+                  <span className={`text-xs text-slate-400 dark:text-slate-500 ${isRtl ? 'mr-auto' : 'ml-auto'}`}>
                     {getAreaCount(area)}
                   </span>
                 </button>

@@ -14,13 +14,14 @@ import CustomerDetailsView from './CustomerDetailsView';
 import SettingsView from './SettingsView';
 
 function AppContent() {
-  const { isTransitioning } = useLanguage();
+  const { isTransitioning, isRtl } = useLanguage();
   return (
     <BrowserRouter>
       <div
         className={`min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300 transition-opacity duration-200 ease-out ${
           isTransitioning ? 'opacity-0' : 'opacity-100'
-        }`}
+        } ${isRtl ? 'rtl' : 'ltr'}`}
+        dir={isRtl ? 'rtl' : 'ltr'}
       >
         <Routes>
           <Route path="/" element={<HomeView />} />

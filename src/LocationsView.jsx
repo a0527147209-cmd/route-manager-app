@@ -337,24 +337,24 @@ export default function LocationsView() {
                         </p>
                       </div>
                     )}
-                    <div className={`flex gap-2 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
+                    <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
                       <a
                         href={getWazeUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95 shadow-md hover:shadow-lg"
+                        className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
                         title={t('waze')}
                       >
-                        <Navigation size={26} />
+                        <Navigation size={22} />
                       </a>
                       <a
                         href={getMapsUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3.5 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95 shadow-md hover:shadow-lg"
+                        className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
                         title={t('maps')}
                       >
-                        <MapIcon size={26} />
+                        <MapIcon size={22} />
                       </a>
                     </div>
                   </div>

@@ -8,8 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "auto-commit": "./auto-commit.sh",
-    "deploy": "npm run build && git add -A && git commit -m 'chore: build and deploy [skip ci]' && git push",
-    "upload": "git add . && git commit -m \"Auto update\" && git push"
+    "deploy": "npm run build && git add -A && git commit -m 'chore: build and deploy [skip ci]' && git push"
   },
   "dependencies": {
     "lucide-react": "^0.294.0",

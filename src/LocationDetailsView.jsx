@@ -13,8 +13,6 @@ import {
   Clock,
   Plus,
   Minus,
-  Scale,
-  X,
 } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 
@@ -35,10 +33,6 @@ export default function LocationDetailsView() {
   const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
   const [animatingBill, setAnimatingBill] = useState(null);
   const [isManualAmountEdit, setIsManualAmountEdit] = useState(false);
-  const [showWeightScale, setShowWeightScale] = useState(false);
-  const [weightValue, setWeightValue] = useState('');
-  const [weightUnit, setWeightUnit] = useState('grams');
-  const [coinType, setCoinType] = useState('quarters');
 
   useEffect(() => {
     setLoading(true);
@@ -149,48 +143,6 @@ export default function LocationDetailsView() {
       return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     } catch {
       return null;
-    }
-  };
-
-  // Coin weight calculations
-  const COIN_WEIGHTS = {
-    quarters: 5.67, // grams
-    dimes: 2.268, // grams
-    nickels: 5.0, // grams
-    mixed: 4.5, // average estimate in grams
-  };
-
-  const COIN_VALUES = {
-    quarters: 0.25,
-    dimes: 0.10,
-    nickels: 0.05,
-    mixed: 0.15, // average estimate
-  };
-
-  const calculateCashValue = () => {
-    if (!weightValue || parseFloat(weightValue) <= 0) return 0;
-    
-    let weightInGrams = parseFloat(weightValue);
-    if (weightUnit === 'lbs') {
-      weightInGrams = weightInGrams * 453.592; // Convert lbs to grams
-    }
-
-    const coinWeight = COIN_WEIGHTS[coinType];
-    const coinValue = COIN_VALUES[coinType];
-    
-    const numberOfCoins = weightInGrams / coinWeight;
-    const totalValue = numberOfCoins * coinValue;
-    
-    return totalValue;
-  };
-
-  const handleApplyWeightScale = () => {
-    const calculatedValue = calculateCashValue();
-    if (calculatedValue > 0) {
-      setAmount(calculatedValue.toFixed(2));
-      setIsManualAmountEdit(true);
-      setShowWeightScale(false);
-      setWeightValue('');
     }
   };
 
@@ -355,19 +307,9 @@ export default function LocationDetailsView() {
         )}
 
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3.5">
-          <div className="flex items-center justify-between gap-2">
-            <label htmlFor="collectionAmount" className="text-amber-700 dark:text-amber-300 text-xs font-semibold uppercase tracking-wide block">
-              {t('collectionAmount')}
-            </label>
-            <button
-              onClick={() => setShowWeightScale(true)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-colors active:scale-95 text-xs font-semibold ${isRtl ? 'flex-row-reverse' : ''}`}
-              title={t('weightScale')}
-            >
-              <Scale size={14} />
-              <span>{t('weightScale')}</span>
-            </button>
-          </div>
+          <label htmlFor="collectionAmount" className="text-amber-700 dark:text-amber-300 text-xs font-semibold uppercase tracking-wide block">
+            {t('collectionAmount')}
+          </label>
           <input
             id="collectionAmount"
             name="collectionAmount"
@@ -469,99 +411,6 @@ export default function LocationDetailsView() {
           <span className={isRtl ? 'me-1.5' : 'ms-1.5'}>{t('logWord')}</span>
         </button>
       </div>
-
-      {/* Weight Scale Modal */}
-      {showWeightScale && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-[60]"
-            onClick={() => setShowWeightScale(false)}
-            aria-hidden="true"
-          />
-          <div
-            className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[90%] max-w-[340px] bg-white dark:bg-slate-800 rounded-xl shadow-xl p-5 border border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">
-                {t('weightScale')}
-              </h2>
-              <button
-                onClick={() => setShowWeightScale(false)}
-                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* Weight Input */}
-              <div>
-                <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block mb-2">
-                  {t('weight')}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    value={weightValue}
-                    onChange={(e) => setWeightValue(e.target.value)}
-                    placeholder="0.00"
-                    className={`flex-1 px-3 py-2.5 text-base font-semibold rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isRtl ? 'text-right' : 'text-left'}`}
-                  />
-                  <select
-                    value={weightUnit}
-                    onChange={(e) => setWeightUnit(e.target.value)}
-                    className={`px-3 py-2.5 text-base font-semibold rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer ${isRtl ? 'text-right' : 'text-left'}`}
-                  >
-                    <option value="grams">{t('grams')}</option>
-                    <option value="lbs">{t('lbs')}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Coin Type Selection */}
-              <div>
-                <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block mb-2">
-                  {t('coinType')}
-                </label>
-                <select
-                  value={coinType}
-                  onChange={(e) => setCoinType(e.target.value)}
-                  className={`w-full px-3 py-2.5 text-base font-semibold rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer ${isRtl ? 'text-right' : 'text-left'}`}
-                >
-                  <option value="quarters">{t('quartersStandard')}</option>
-                  <option value="dimes">{t('dimesWeight')}</option>
-                  <option value="nickels">{t('nickelsWeight')}</option>
-                  <option value="mixed">{t('mixedEstimate')}</option>
-                </select>
-              </div>
-
-              {/* Calculated Value Display */}
-              <div className="bg-indigo-50 dark:bg-indigo-950/30 p-4 rounded-lg border-2 border-indigo-300 dark:border-indigo-700">
-                <label className="text-indigo-700 dark:text-indigo-300 text-xs font-semibold uppercase tracking-wide block mb-2">
-                  {t('value')}
-                </label>
-                <div className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                  ${calculateCashValue().toFixed(2)}
-                </div>
-              </div>
-
-              {/* Apply Button */}
-              <button
-                onClick={handleApplyWeightScale}
-                disabled={!weightValue || parseFloat(weightValue) <= 0}
-                className={`w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:dark:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.99] transition-all text-sm ${isRtl ? 'flex-row-reverse' : ''}`}
-              >
-                <Check size={18} />
-                <span>{t('apply')}</span>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

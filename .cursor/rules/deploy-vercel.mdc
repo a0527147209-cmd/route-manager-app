@@ -5,12 +5,11 @@ alwaysApply: true
 
 # Deploy to Vercel at End of Process
 
-After completing any code or content changes in this project, **finish the process** with the deploy flow so the live site on Vercel is updated:
+**Every change, no matter how small:** After any code or content change in this project, **automatically** offer (or run) the git update flow:
 
-1. **Build**: Run `npm run build` (must succeed).
-2. **Commit**: Stage and commit changes with a clear message (e.g. `feat: ...` or `fix: ...`).
-3. **Remind**: Tell the user to run `git push` from their machine (or run it if credentials are available) so Vercel builds from the repo.
+1. **Commit**: Run `git add -A` and `git commit -m "..."` with a short, clear message (e.g. `feat: ...`, `fix: ...`, `chore: ...`).
+2. **Remind**: Tell the user to run `git push` from their machine so Vercel builds from the repo.
 
-Optional: If the project has a `npm run deploy` script, prefer that when appropriate (it may do build + commit + push).
+Optional: Run `npm run build` first if the change might affect build; then commit.
 
-Do not consider the task fully done until the deploy step is offered or completed.
+Do not consider the task fully done until you have offered or run the commit and reminded about `git push`. The user asked for this to happen **automatically** after every small change.

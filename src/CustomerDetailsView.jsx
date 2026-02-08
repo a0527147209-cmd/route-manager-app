@@ -363,7 +363,7 @@ export default function CustomerDetailsView() {
             {t('logHistory')}
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-sm border-collapse border border-slate-300 dark:border-slate-600">
+            <table className="w-full min-w-[320px] text-sm border-collapse border border-slate-300 dark:border-slate-600 table-fixed">
               <thead>
                 <tr className="bg-slate-100/80 dark:bg-slate-700/50">
                   <th className={`px-3 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
@@ -397,16 +397,16 @@ export default function CustomerDetailsView() {
                   <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-top max-w-[140px]`}>
-                    <div className={`flex flex-col gap-1 min-w-0 ${isRtl ? 'items-end' : 'items-start'}`}>
-                      <span className="truncate block min-w-0">
+                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-top w-[130px] max-w-[130px] overflow-hidden`}>
+                    <div className={`flex flex-col gap-1 min-w-0 w-full overflow-hidden ${isRtl ? 'items-end' : 'items-start'}`}>
+                      <span className="block min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap">
                         {(location?.logNotes ?? location?.notes) ? (location.logNotes ?? location.notes) : '—'}
                       </span>
                       {(location?.logNotes ?? location?.notes) && (location.logNotes ?? location.notes).length > 30 && (
                         <button
                           type="button"
                           onClick={() => setExpandLogNotes(true)}
-                          className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline ${isRtl ? 'flex-row-reverse' : ''}`}
+                          className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}
                         >
                           <ChevronDown size={14} />
                           <span>{t('expand')}</span>

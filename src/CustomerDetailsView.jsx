@@ -90,6 +90,25 @@ export default function CustomerDetailsView() {
     );
   };
 
+  const formatLogDate = (isoStr) => {
+    if (!isoStr) return '—';
+    try {
+      const d = new Date(isoStr);
+      if (Number.isNaN(d.getTime())) return '—';
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return '—';
+    }
+  };
+
+  const formatBillsSummary = (billsObj) => {
+    if (!billsObj || typeof billsObj !== 'object') return '—';
+    const parts = [50, 20, 10, 5, 1]
+      .filter((v) => billsObj[v] > 0)
+      .map((v) => `${v}×${billsObj[v]}`);
+    return parts.length ? parts.join(', ') : '—';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
@@ -281,6 +300,55 @@ export default function CustomerDetailsView() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Log History - open table by default */}
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 overflow-hidden">
+          <h2 className="px-4 py-3 text-sm font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80">
+            {t('logHistory')}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[320px] text-sm border-collapse">
+              <thead>
+                <tr className="bg-slate-100 dark:bg-slate-700/60">
+                  <th className={`px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('lastVisit')}
+                  </th>
+                  <th className={`px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('commission')}
+                  </th>
+                  <th className={`px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('collectionAmount')}
+                  </th>
+                  <th className={`px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('bills')}
+                  </th>
+                  <th className={`px-3 py-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('notes')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                  <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {formatLogDate(location?.lastVisited)}
+                  </td>
+                  <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {location?.commissionRate != null ? `${Math.round(Number(location.commissionRate) * 100)}%` : '—'}
+                  </td>
+                  <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {location?.lastCollection != null && String(location.lastCollection).trim() !== '' ? Number(location.lastCollection).toFixed(2) : '—'}
+                  </td>
+                  <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700 ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {formatBillsSummary(location?.bills)}
+                  </td>
+                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700 max-w-[120px] truncate ${isRtl ? 'text-right' : 'text-left'}`} title={location?.notes ?? ''}>
+                    {location?.notes ? (location.notes.length > 20 ? `${location.notes.slice(0, 20)}…` : location.notes) : '—'}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

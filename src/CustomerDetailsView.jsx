@@ -401,9 +401,9 @@ export default function CustomerDetailsView() {
                     <button
                       type="button"
                       onClick={() => setExpandLogNotes(true)}
-                      className={`w-full min-w-0 py-1 px-1.5 flex items-center justify-center gap-1 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:text-indigo-800 dark:hover:text-indigo-200 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
+                      className={`w-full min-w-0 py-0.5 px-1 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
                     >
-                      <ChevronDown size={12} className="shrink-0" />
+                      <ChevronDown size={14} strokeWidth={2.5} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
                       <span className="whitespace-nowrap">{t('showNotes')}</span>
                     </button>
                   </td>

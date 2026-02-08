@@ -402,16 +402,14 @@ export default function CustomerDetailsView() {
                       <span className="block min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap">
                         {(location?.logNotes ?? location?.notes) ? (location.logNotes ?? location.notes) : '—'}
                       </span>
-                      {(location?.logNotes ?? location?.notes) && (location.logNotes ?? location.notes).length > 30 && (
-                        <button
-                          type="button"
-                          onClick={() => setExpandLogNotes(true)}
-                          className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}
-                        >
-                          <ChevronDown size={14} />
-                          <span>{t('expand')}</span>
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setExpandLogNotes(true)}
+                        className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}
+                      >
+                        <ChevronDown size={14} />
+                        <span>{t('showNotes')}</span>
+                      </button>
                     </div>
                   </td>
                 </tr>

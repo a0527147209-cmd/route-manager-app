@@ -350,20 +350,20 @@ export default function CustomerDetailsView() {
                   <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('iReceive')}
                   </th>
-                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
-                    50
+                  <th className="px-1 py-1 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    $50
                   </th>
-                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
-                    20
+                  <th className="px-1 py-1 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    $20
                   </th>
-                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
-                    10
+                  <th className="px-1 py-1 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    $10
                   </th>
-                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
-                    5
+                  <th className="px-1 py-1 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    $5
                   </th>
-                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
-                    1
+                  <th className="px-1 py-1 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    $1
                   </th>
                   <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('logNotes')}

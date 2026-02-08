@@ -19,7 +19,7 @@ function AppContent() {
 
   return (
     <div
-      className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'
+      className={`min-h-screen w-full max-w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden ${isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
     >
       <Routes location={location} key={location.pathname}>

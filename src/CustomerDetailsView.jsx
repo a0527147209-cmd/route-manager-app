@@ -337,7 +337,7 @@ export default function CustomerDetailsView() {
           <h2 className="px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800">
             {t('logHistory')}
           </h2>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full">
             <table className="w-full text-xs border-collapse text-left bg-white dark:bg-slate-800">
               <thead>
                 <tr className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">

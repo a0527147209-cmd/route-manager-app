@@ -152,15 +152,16 @@ export default function CustomerDetailsView() {
         />
       )}
 
-      {/* Floating Add Log button */}
+      {/* Floating Add Log popup-style button */}
       <button
         onClick={() => setShowLogModal(true)}
-        className={`fixed bottom-6 z-50 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center active:scale-95 transition-all max-w-[380px] ${isRtl ? 'left-6' : 'right-6'}`}
+        className={`fixed bottom-6 z-50 px-5 py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center gap-2 active:scale-95 transition-all ${isRtl ? 'left-6' : 'right-6'} ${isRtl ? 'flex-row-reverse' : ''}`}
         style={{ marginLeft: 'max(env(safe-area-inset-left), 0.5rem)', marginRight: 'max(env(safe-area-inset-right), 0.5rem)' }}
         title={t('addLog')}
         aria-label={t('addLog')}
       >
-        <Plus size={26} />
+        <Plus size={22} className="shrink-0" />
+        <span className="font-semibold text-sm whitespace-nowrap">{t('addLog')}</span>
       </button>
 
       <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1 pb-20">

@@ -1,0 +1,16 @@
+---
+description: End every change with git update and Vercel deploy
+alwaysApply: true
+---
+
+# Deploy to Vercel at End of Process
+
+After completing any code or content changes in this project, **finish the process** with the deploy flow so the live site on Vercel is updated:
+
+1. **Build**: Run `npm run build` (must succeed).
+2. **Commit**: Stage and commit changes with a clear message (e.g. `feat: ...` or `fix: ...`).
+3. **Remind**: Tell the user to run `git push` from their machine (or run it if credentials are available) so Vercel builds from the repo.
+
+Optional: If the project has a `npm run deploy` script, prefer that when appropriate (it may do build + commit + push).
+
+Do not consider the task fully done until the deploy step is offered or completed.

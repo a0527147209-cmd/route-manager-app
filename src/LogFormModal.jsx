@@ -5,8 +5,6 @@ import {
   X,
   Save,
   Calendar,
-  Clock,
-  Plus,
   Minus,
   Check,
 } from 'lucide-react';
@@ -38,17 +36,14 @@ export default function LogFormModal({ location, onClose, onSaved }) {
   }, [location]);
 
   const getTodayISO = () => new Date().toISOString().slice(0, 10);
-  const formatVisitDateShort = (isoStr) => {
-    if (!isoStr) return null;
+  const getTodayFormatted = () => {
     try {
-      const d = new Date(isoStr);
-      if (Number.isNaN(d.getTime())) return null;
+      const d = new Date();
       return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     } catch {
-      return null;
+      return '—';
     }
   };
-  const getTodayFormatted = () => formatVisitDateShort(getTodayISO());
 
   const updateBillCount = (billValue, delta) => {
     setAnimatingBill(billValue);
@@ -129,15 +124,6 @@ export default function LogFormModal({ location, onClose, onSaved }) {
               </div>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200 text-center leading-tight select-none mt-0.5">
                 {getTodayFormatted()}
-              </p>
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">
-              <div className="flex items-center justify-center gap-1 shrink-0">
-                <Clock size={16} className="text-slate-500 dark:text-slate-400 shrink-0" />
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 leading-tight">{t('lastVisit')}</p>
-              </div>
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200 text-center leading-tight mt-0.5">
-                {location.lastVisited ? formatVisitDateShort(location.lastVisited) : '—'}
               </p>
             </div>
           </div>

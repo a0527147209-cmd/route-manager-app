@@ -397,14 +397,14 @@ export default function CustomerDetailsView() {
                   <td className={`px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-3 py-2.5 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle w-[120px] min-w-[120px]`}>
+                  <td className={`px-2 py-2 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle w-[110px] min-w-0 overflow-hidden`}>
                     <button
                       type="button"
                       onClick={() => setExpandLogNotes(true)}
-                      className={`w-full py-1.5 px-2 flex items-center justify-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
+                      className={`w-full min-w-0 py-1 px-1.5 flex items-center justify-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
                     >
-                      <ChevronDown size={14} className="shrink-0" />
-                      <span className="whitespace-nowrap">{t('showNotes')}</span>
+                      <ChevronDown size={13} className="shrink-0" />
+                      <span className="whitespace-nowrap truncate">{t('showNotes')}</span>
                     </button>
                   </td>
                 </tr>

@@ -5,8 +5,6 @@ import {
   X,
   Save,
   Calendar,
-  Plus,
-  Minus,
   Check,
 } from 'lucide-react';
 
@@ -194,10 +192,10 @@ export default function LogFormModal({ location, onClose, onSaved }) {
                   <button
                     onClick={() => updateBillCount(billValue, -1)}
                     disabled={bills[billValue] <= 0}
-                    className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all duration-150 flex items-center justify-center group"
+                    className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-30 disabled:cursor-not-allowed active:scale-90 transition-all duration-150 flex items-center justify-center group text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-red-600 dark:group-hover:text-red-400"
                     aria-label={t('bills')}
                   >
-                    <Minus size={18} className="text-slate-700 dark:text-slate-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors" />
+                    −
                   </button>
                   <div className="flex flex-col items-center min-w-[40px] px-2">
                     <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -213,10 +211,10 @@ export default function LogFormModal({ location, onClose, onSaved }) {
                   </div>
                   <button
                     onClick={() => updateBillCount(billValue, 1)}
-                    className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 active:scale-90 transition-all duration-150 flex items-center justify-center group"
+                    className="p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 active:scale-90 transition-all duration-150 flex items-center justify-center group text-lg font-bold text-slate-700 dark:text-slate-300 group-hover:text-green-600 dark:group-hover:text-green-400"
                     aria-label={t('bills')}
                   >
-                    <Plus size={18} className="text-slate-700 dark:text-slate-300 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" />
+                    +
                   </button>
                 </div>
               ))}

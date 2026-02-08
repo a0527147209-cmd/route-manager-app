@@ -397,13 +397,13 @@ export default function CustomerDetailsView() {
                   <td className={`px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-2 py-2 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle w-[115px] min-w-0 overflow-hidden`}>
+                  <td className={`px-3 py-2.5 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle w-[150px] min-w-[150px] overflow-hidden`}>
                     <button
                       type="button"
                       onClick={() => setExpandLogNotes(true)}
-                      className={`w-full min-w-0 py-0.5 px-1 flex items-center justify-center gap-1 text-[10px] font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
+                      className={`w-full min-w-0 py-1.5 px-2.5 flex items-center justify-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
                     >
-                      <ChevronDown size={14} strokeWidth={2.5} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
+                      <ChevronDown size={16} strokeWidth={2.5} className="shrink-0 text-indigo-600 dark:text-indigo-400" />
                       <span className="whitespace-nowrap">{t('showNotes')}</span>
                     </button>
                   </td>

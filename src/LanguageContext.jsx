@@ -120,6 +120,8 @@ const translations = {
     bill10: '10',
     bill5: '5',
     bill1: '1',
+    lastVisitSummary: 'Last Visit Summary',
+    yearlySummary: 'Yearly Summary',
   },
   he: {
     appTitle: 'המסלול שלי',
@@ -238,6 +240,8 @@ const translations = {
     bill10: '10',
     bill5: '5',
     bill1: '1',
+    lastVisitSummary: 'סיכום ביקור אחרון',
+    yearlySummary: 'סיכום שנתי',
   },
 };
 

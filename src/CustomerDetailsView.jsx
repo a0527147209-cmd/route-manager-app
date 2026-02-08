@@ -448,7 +448,7 @@ export default function CustomerDetailsView() {
             <div className="space-y-3">
               <div>
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('totalCollection') || 'Total Collection'}
+                  {t('collectionAmount')}
                 </p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-lg font-bold text-slate-800 dark:text-white">
@@ -470,7 +470,7 @@ export default function CustomerDetailsView() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('iReceive') || 'I Receive'}
+                  {t('iReceive')}
                 </p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
@@ -505,7 +505,7 @@ export default function CustomerDetailsView() {
             <div className="space-y-3">
               <div>
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('totalCollection') || 'Total Collection'}
+                  {t('collectionAmount')}
                 </p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-lg font-bold text-slate-800 dark:text-white">
@@ -540,7 +540,7 @@ export default function CustomerDetailsView() {
               </div>
               <div>
                 <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('iReceive') || 'I Receive'}
+                  {t('iReceive')}
                 </p>
                 <div className="flex items-baseline gap-2">
                   <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">

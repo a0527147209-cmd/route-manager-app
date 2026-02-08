@@ -13,7 +13,6 @@ import {
   Pencil,
   Plus,
   ChevronDown,
-  ChevronUp,
   X,
 } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
@@ -398,28 +397,19 @@ export default function CustomerDetailsView() {
                   <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-top`}>
-                    <div className={`flex flex-col gap-1 ${isRtl ? 'items-end' : 'items-start'}`}>
-                      <div className={`min-w-0 ${expandLogNotes ? 'max-w-[280px] whitespace-normal break-words' : 'max-w-[140px] truncate'}`}>
+                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-top max-w-[140px]`}>
+                    <div className={`flex flex-col gap-1 min-w-0 ${isRtl ? 'items-end' : 'items-start'}`}>
+                      <span className="truncate block min-w-0">
                         {(location?.logNotes ?? location?.notes) ? (location.logNotes ?? location.notes) : '—'}
-                      </div>
+                      </span>
                       {(location?.logNotes ?? location?.notes) && (location.logNotes ?? location.notes).length > 30 && (
                         <button
                           type="button"
-                          onClick={() => setExpandLogNotes((v) => !v)}
+                          onClick={() => setExpandLogNotes(true)}
                           className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline ${isRtl ? 'flex-row-reverse' : ''}`}
                         >
-                          {expandLogNotes ? (
-                            <>
-                              <ChevronUp size={14} />
-                              <span>{t('collapse')}</span>
-                            </>
-                          ) : (
-                            <>
-                              <ChevronDown size={14} />
-                              <span>{t('expand')}</span>
-                            </>
-                          )}
+                          <ChevronDown size={14} />
+                          <span>{t('expand')}</span>
                         </button>
                       )}
                     </div>
@@ -429,6 +419,39 @@ export default function CustomerDetailsView() {
             </table>
           </div>
         </div>
+
+        {/* Floating overlay for full log notes - does not affect table layout */}
+        {expandLogNotes && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/40 z-[55]"
+              onClick={() => setExpandLogNotes(false)}
+              aria-hidden="true"
+            />
+            <div
+              className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[60] w-[calc(100%-2rem)] max-w-[340px] max-h-[70vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 flex flex-col ${isRtl ? 'text-right' : 'text-left'}`}
+              role="dialog"
+              aria-label={t('logNotes')}
+            >
+              <div className="p-3 border-b border-slate-200 dark:border-slate-600 flex items-center justify-between shrink-0">
+                <span className="font-bold text-sm text-slate-800 dark:text-white">{t('logNotes')}</span>
+                <button
+                  type="button"
+                  onClick={() => setExpandLogNotes(false)}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                  aria-label={t('close')}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto flex-1 min-h-0">
+                <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-words">
+                  {(location?.logNotes ?? location?.notes) || '—'}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

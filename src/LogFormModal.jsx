@@ -5,6 +5,7 @@ import {
   X,
   Save,
   Calendar,
+  Plus,
   Minus,
   Check,
 } from 'lucide-react';

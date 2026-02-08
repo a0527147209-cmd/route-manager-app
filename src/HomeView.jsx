@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, MapPin, Users } from 'lucide-react';
+import { Menu, Users } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 
@@ -36,17 +36,6 @@ export default function HomeView() {
 
       <main className="flex-1 overflow-auto p-3 max-w-[380px] mx-auto w-full">
         <div className="flex flex-wrap items-start gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/locations')}
-            className="p-4 flex items-center gap-2.5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 shadow-md border-2 border-emerald-300 dark:border-emerald-700 hover:shadow-lg hover:border-emerald-400 dark:hover:border-emerald-600 active:scale-[0.98] transition-all shrink-0"
-            title={t('locations')}
-          >
-            <div className="w-14 h-14 rounded-xl bg-emerald-200 dark:bg-emerald-800/50 flex items-center justify-center shrink-0 shadow-sm">
-              <MapPin size={26} className="text-emerald-700 dark:text-emerald-300" />
-            </div>
-            <span className="text-sm font-bold text-emerald-900 dark:text-emerald-100">{t('locations')}</span>
-          </button>
           <button
             type="button"
             onClick={() => navigate('/customers')}

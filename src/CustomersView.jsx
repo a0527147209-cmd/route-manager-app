@@ -210,7 +210,7 @@ export default function CustomersView() {
           <button
             onClick={handleBack}
             className="p-2 -ms-1 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 active:scale-95"
-            title={isInnerPage ? t('backToLocations') : t('backToHome')}
+            title={isInnerPage ? t('backToCustomers') : t('backToHome')}
           >
             <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
           </button>

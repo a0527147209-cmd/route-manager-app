@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, Search, UserPlus, MapPin } from 'lucide-react';
+import { Settings, X, Search, UserPlus, Users } from 'lucide-react';
 import { useSearch } from './SearchContext';
 import { useLanguage } from './LanguageContext';
 
@@ -53,7 +53,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     onClose();
-                    navigate('/locations', { state: { fromMenu: true } });
+                    navigate('/customers', { state: { fromMenu: true } });
                   }
                 }}
                 className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg py-2 ps-8 pe-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
@@ -69,11 +69,11 @@ export default function MenuDrawer({ isOpen, onClose }) {
             <span>{t('addCustomer')}</span>
           </button>
           <button
-            onClick={() => goTo('/locations')}
+            onClick={() => goTo('/customers')}
             className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
           >
-            <MapPin size={20} />
-            <span>{t('locations')}</span>
+            <Users size={20} />
+            <span>{t('customers')}</span>
           </button>
           <button
             onClick={() => goTo('/settings')}

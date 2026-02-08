@@ -11,17 +11,20 @@ import {
   MapPin,
   Check,
   Pencil,
+  Plus,
 } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
+import LogFormModal from './LogFormModal';
 
 export default function CustomerDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state: navState } = useLocation();
-  const backPath = navState?.fromPath ?? '/locations';
+  const backPath = navState?.fromPath ?? '/customers';
   const { locations, updateLocation } = useLocations();
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(false);
 
   const [location, setLocation] = useState(null);
   const [notes, setNotes] = useState('');
@@ -108,7 +111,7 @@ export default function CustomerDetailsView() {
           onClick={() => navigate(backPath)}
           className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl active:scale-95 transition-all"
         >
-          {t('backToLocations')}
+          {t('backToCustomers')}
         </button>
       </div>
     );
@@ -119,10 +122,10 @@ export default function CustomerDetailsView() {
       <header className="bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 sticky top-0 z-10 shrink-0 max-w-[380px] mx-auto w-full">
         <button
           onClick={handleBackClick}
-          className="p-2 -ms-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0"
-          title={t('backToLocations')}
+          className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0 ${isRtl ? '-me-1' : '-ms-1'}`}
+          title={t('backToCustomers')}
         >
-          <ArrowLeft size={22} />
+          <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
         </button>
         <div className="flex-1 min-w-0 flex items-center justify-center gap-3 text-center px-2">
           <h1 className="font-bold text-base text-slate-800 dark:text-white truncate">
@@ -141,7 +144,26 @@ export default function CustomerDetailsView() {
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
+      {showLogModal && (
+        <LogFormModal
+          location={location}
+          onClose={() => setShowLogModal(false)}
+          onSaved={() => setShowLogModal(false)}
+        />
+      )}
+
+      {/* Floating Add Log button */}
+      <button
+        onClick={() => setShowLogModal(true)}
+        className={`fixed bottom-6 z-50 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center active:scale-95 transition-all max-w-[380px] ${isRtl ? 'left-6' : 'right-6'}`}
+        style={{ marginLeft: 'max(env(safe-area-inset-left), 0.5rem)', marginRight: 'max(env(safe-area-inset-right), 0.5rem)' }}
+        title={t('addLog')}
+        aria-label={t('addLog')}
+      >
+        <Plus size={26} />
+      </button>
+
+      <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1 pb-20">
         {/* Customer Info Card */}
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3">
           <div className="flex items-start gap-3">

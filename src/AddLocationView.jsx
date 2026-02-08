@@ -65,7 +65,7 @@ export default function AddLocationView() {
     };
 
     addLocation(newLocation);
-    navigate('/locations');
+    navigate('/customers');
   };
 
   // עיצוב ניגודיות גבוהה – קומפקטי למובייל

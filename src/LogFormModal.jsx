@@ -8,28 +8,35 @@ import {
   Check,
 } from 'lucide-react';
 
-export default function LogFormModal({ location, onClose, onSaved }) {
-  const { updateLocation } = useLocations();
+export default function LogFormModal({ location, onClose, onSaved, initialLog = null, logIndex = -1 }) {
+  const { updateLocation, updateLog } = useLocations();
   const { t, isRtl } = useLanguage();
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
   const [animatingBill, setAnimatingBill] = useState(null);
-  const [isManualAmountEdit, setIsManualAmountEdit] = useState(false);
 
-  // New log form starts empty; previous log data is only shown in the table
+  // Initialize form
   useEffect(() => {
     if (!location) return;
-    setBills({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
-    setAmount('');
-    setIsManualAmountEdit(true);
-    setNotes('');
-  }, [location]);
+
+    if (initialLog) {
+      // Editing existing log
+      setBills(initialLog.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
+      setAmount(initialLog.collection || '');
+      setNotes(initialLog.notes || '');
+    } else {
+      // New log
+      setBills({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
+      setAmount('');
+      setNotes('');
+    }
+  }, [location, initialLog]);
 
   const getTodayISO = () => new Date().toISOString().slice(0, 10);
   const getTodayFormatted = () => {
     try {
-      const d = new Date();
+      const d = initialLog ? new Date(initialLog.date) : new Date();
       return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     } catch {
       return '—';
@@ -43,32 +50,80 @@ export default function LogFormModal({ location, onClose, onSaved }) {
         ...prev,
         [billValue]: Math.max(0, (prev[billValue] || 0) + delta),
       };
-      const billsTotal = Object.entries(updated).reduce((sum, [value, count]) => {
-        return sum + (parseFloat(value) || 0) * (count || 0);
-      }, 0);
-      if (billsTotal > 0) {
-        setAmount(billsTotal.toFixed(2));
-        setIsManualAmountEdit(false);
-      } else {
-        setAmount('');
-        setIsManualAmountEdit(true);
-      }
       return updated;
     });
     setTimeout(() => setAnimatingBill(null), 300);
   };
 
+  const handleClose = () => {
+    // Check for changes (simplified for now, ideally compare with initial state)
+    // For edit mode, we might want to check against initialLog
+    const hasBills = Object.values(bills).some(v => v > 0);
+    // If editing, check if different from initial
+    const isDirty = initialLog
+      ? (amount !== initialLog.collection || notes !== (initialLog.notes || '') || JSON.stringify(bills) !== JSON.stringify(initialLog.bills))
+      : ((amount !== '' && amount !== '0') || notes !== '' || hasBills);
+
+    if (isDirty) {
+      if (window.confirm(t('confirmDiscardChanges') || 'Are you sure you want to leave? Your changes will not be saved.')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
   const handleSave = () => {
     if (!location) return;
-    updateLocation(location.id, {
-      lastCollection: amount,
-      status: location.status ?? 'pending',
-      logNotes: notes,
-      commissionRate: location.commissionRate ?? 0.4,
-      hasChangeMachine: !!location.hasChangeMachine,
-      lastVisited: getTodayISO(),
-      bills,
-    });
+
+    if (initialLog && logIndex >= 0) {
+      // Update existing log
+      const updatedLogEntry = {
+        ...initialLog,
+        collection: amount,
+        bills,
+        notes,
+        // We generally keep the original date/id when editing history
+      };
+
+      updateLog(location.id, logIndex, updatedLogEntry);
+
+      // If we edited the MOST RECENT log (index 0), update location stats as well?
+      // User likely expects this.
+      if (logIndex === 0) {
+        updateLocation(location.id, {
+          lastCollection: amount,
+          logNotes: notes,
+          bills: bills
+        });
+      }
+
+    } else {
+      // Create new log
+      const newLog = {
+        date: getTodayISO(),
+        commissionRate: location.commissionRate ?? 0.4,
+        collection: amount,
+        bills,
+        notes,
+        id: Date.now().toString()
+      };
+
+      // Create new logs array: New log first, then existing logs
+      const updatedLogs = [newLog, ...(location.logs || [])];
+
+      updateLocation(location.id, {
+        lastCollection: amount,
+        status: location.status ?? 'pending',
+        logNotes: notes,
+        commissionRate: location.commissionRate ?? 0.4,
+        hasChangeMachine: !!location.hasChangeMachine,
+        lastVisited: getTodayISO(),
+        bills,
+        logs: updatedLogs
+      });
+    }
+
     onSaved?.();
     onClose();
   };
@@ -99,7 +154,7 @@ export default function LogFormModal({ location, onClose, onSaved }) {
             {t('locationLog')} · {location.name}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95"
             aria-label={t('close')}
           >
@@ -146,7 +201,6 @@ export default function LogFormModal({ location, onClose, onSaved }) {
               value={amount}
               onChange={(e) => {
                 setAmount(e.target.value);
-                setIsManualAmountEdit(true);
               }}
               placeholder={isRtl ? '0.00' : '0.00'}
               className={`w-full px-3 py-2.5 text-lg font-semibold rounded-lg border-2 border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isRtl ? 'text-right' : 'text-left'}`}
@@ -177,9 +231,8 @@ export default function LogFormModal({ location, onClose, onSaved }) {
               {[50, 20, 10, 5, 1].map((billValue) => (
                 <div
                   key={billValue}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-800/60 border-2 border-slate-300 dark:border-slate-500 shadow-md hover:shadow-lg transition-all duration-200 ${
-                    animatingBill === billValue ? 'animate-pulse scale-105 ring-2 ring-indigo-400 dark:ring-indigo-500' : ''
-                  } ${isRtl ? 'flex-row-reverse' : ''}`}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-800/60 border-2 border-slate-300 dark:border-slate-500 shadow-md hover:shadow-lg transition-all duration-200 ${animatingBill === billValue ? 'animate-pulse scale-105 ring-2 ring-indigo-400 dark:ring-indigo-500' : ''
+                    } ${isRtl ? 'flex-row-reverse' : ''}`}
                 >
                   <button
                     onClick={() => updateBillCount(billValue, -1)}
@@ -194,9 +247,8 @@ export default function LogFormModal({ location, onClose, onSaved }) {
                       {t(`bill${billValue}`)}
                     </span>
                     <span
-                      className={`text-lg font-bold text-slate-900 dark:text-slate-100 transition-all duration-200 ${
-                        animatingBill === billValue ? 'scale-125 text-indigo-600 dark:text-indigo-400' : ''
-                      }`}
+                      className={`text-lg font-bold text-slate-900 dark:text-slate-100 transition-all duration-200 ${animatingBill === billValue ? 'scale-125 text-indigo-600 dark:text-indigo-400' : ''
+                        }`}
                     >
                       {bills[billValue] || 0}
                     </span>
@@ -210,6 +262,13 @@ export default function LogFormModal({ location, onClose, onSaved }) {
                   </button>
                 </div>
               ))}
+            </div>
+            {/* Bills Summary Row */}
+            <div className="mt-3.5 px-4 py-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg flex items-center justify-between border border-slate-200 dark:border-slate-600">
+              <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">{t('totalBills') || 'Total Bills'}:</span>
+              <span className="text-lg font-bold text-slate-800 dark:text-slate-100 font-mono">
+                {Object.entries(bills).reduce((sum, [val, count]) => sum + (Number(val) * count), 0).toFixed(2)}
+              </span>
             </div>
           </div>
 

@@ -28,9 +28,10 @@ export default function CustomerDetailsView() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [expandLogNotes, setExpandLogNotes] = useState(false);
-  const [showAddLogPopup, setShowAddLogPopup] = useState(false);
-  const [popupAnimateIn, setPopupAnimateIn] = useState(false);
-  const popupShownForIdRef = useRef(null);
+
+  // Edit Log State
+  const [editingLog, setEditingLog] = useState(null);
+  const [editingLogIndex, setEditingLogIndex] = useState(-1);
 
   const [location, setLocation] = useState(null);
   const [notes, setNotes] = useState('');
@@ -51,23 +52,6 @@ export default function CustomerDetailsView() {
     }
     setLoading(false);
   }, [id, locations]);
-
-  // Show animated Add Log popup when customer page is ready (location loaded)
-  useEffect(() => {
-    if (!location || !id) return;
-    if (popupShownForIdRef.current === id) return;
-    popupShownForIdRef.current = id;
-    setShowAddLogPopup(true);
-    setPopupAnimateIn(false);
-    const t1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setPopupAnimateIn(true));
-    });
-    const t2 = setTimeout(() => setShowAddLogPopup(false), 3500);
-    return () => {
-      cancelAnimationFrame(t1);
-      clearTimeout(t2);
-    };
-  }, [id, location]);
 
   const handleSaveNotes = () => {
     if (!location) return;
@@ -97,6 +81,21 @@ export default function CustomerDetailsView() {
     navigate(backPath);
   };
 
+  const handleEditLog = (log, index) => {
+    // "Hard to edit" - confirmation dialog
+    if (window.confirm(t('confirmEditLog') || 'Editing historical logs will change financial data. Are you sure?')) {
+      setEditingLog(log);
+      setEditingLogIndex(index);
+      setShowLogModal(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowLogModal(false);
+    setEditingLog(null);
+    setEditingLogIndex(-1);
+  };
+
   const openWaze = () => {
     if (!location?.address) return;
     window.open(
@@ -118,10 +117,17 @@ export default function CustomerDetailsView() {
     try {
       const d = new Date(isoStr);
       if (Number.isNaN(d.getTime())) return '—';
-      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+      // Requested format: Month Day Year (MM/DD/YYYY numeric)
+      return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
     } catch {
       return '—';
     }
+  };
+
+  const calculateIReceive = (log) => {
+    const collection = parseFloat(log.collection) || 0;
+    const rate = parseFloat(log.commissionRate) || 0;
+    return (collection * (1 - rate)).toFixed(2);
   };
 
   const formatBillsSummary = (billsObj) => {
@@ -198,45 +204,14 @@ export default function CustomerDetailsView() {
       {showLogModal && (
         <LogFormModal
           location={location}
-          onClose={() => setShowLogModal(false)}
-          onSaved={() => setShowLogModal(false)}
+          onClose={handleCloseModal}
+          onSaved={handleCloseModal}
+          initialLog={editingLog}
+          logIndex={editingLogIndex}
         />
       )}
 
-      {/* Animated Add Log popup - appears when entering customer page */}
-      {showAddLogPopup && (
-        <div
-          className={`fixed left-1/2 top-20 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-[260px] transition-all duration-300 ease-out ${
-            popupAnimateIn ? 'opacity-100 scale-100 translate-y-0 -translate-x-1/2' : 'opacity-0 scale-90 translate-y-2 -translate-x-1/2'
-          }`}
-        >
-          <div
-            onClick={() => {
-              setShowAddLogPopup(false);
-              setShowLogModal(true);
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/40 p-2.5 flex items-center justify-between gap-2 cursor-pointer active:scale-[0.98] transition-all border border-indigo-400/50"
-          >
-            <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
-              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
-                <Plus size={18} />
-              </div>
-              <span className="font-semibold text-xs">{t('addLog')}</span>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAddLogPopup(false);
-              }}
-              className="p-1 rounded-md hover:bg-white/20 text-white/90 transition-colors"
-              aria-label={t('close')}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+
 
       <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
         {/* Customer Info Card */}
@@ -357,66 +332,252 @@ export default function CustomerDetailsView() {
           )}
         </div>
 
-        {/* Log History - open table by default */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-200 dark:border-slate-600 overflow-hidden ring-1 ring-slate-200/50 dark:ring-slate-600/30">
-          <h2 className="px-4 py-3.5 text-base font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-600 bg-gradient-to-r from-indigo-50 to-slate-50 dark:from-indigo-950/30 dark:to-slate-800/80">
+        {/* Log History - Google Sheets Style */}
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-300 dark:border-slate-600 overflow-hidden">
+          <h2 className="px-3 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 border-b border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800">
             {t('logHistory')}
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-sm border-collapse border border-slate-300 dark:border-slate-600">
-              <colgroup>
-                <col className="w-[22%]" />
-                <col className="w-[14%]" />
-                <col className="w-[18%]" />
-                <col className="w-[18%]" />
-                <col className="w-[28%]" />
-              </colgroup>
+            <table className="w-full text-xs border-collapse text-left bg-white dark:bg-slate-800">
               <thead>
-                <tr className="bg-slate-100/80 dark:bg-slate-700/50">
-                  <th className={`px-2 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {t('lastVisit')}
+                <tr className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('logDate')}
                   </th>
-                  <th className={`px-2 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {t('commission')}
-                  </th>
-                  <th className={`px-2 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('collectionAmount')}
                   </th>
-                  <th className={`px-2 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {t('bills')}
+                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('iReceive')}
                   </th>
-                  <th className={`px-2 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    50
+                  </th>
+                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    20
+                  </th>
+                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    10
+                  </th>
+                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    5
+                  </th>
+                  <th className="px-1 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    1
+                  </th>
+                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('logNotes')}
+                  </th>
+                  <th className="px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
+                    {/* Edit */}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-slate-50/50 dark:bg-slate-800/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors">
-                  <td className={`px-2 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {formatLogDate(location?.lastVisited)}
-                  </td>
-                  <td className={`px-2 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {location?.commissionRate != null ? `${Math.round(Number(location.commissionRate) * 100)}%` : '—'}
-                  </td>
-                  <td className={`px-2 py-2 text-xs text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {location?.lastCollection != null && String(location.lastCollection).trim() !== '' ? Number(location.lastCollection).toFixed(2) : '—'}
-                  </td>
-                  <td className={`px-2 py-2 text-xs text-slate-700 dark:text-slate-300 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {formatBillsSummary(location?.bills)}
-                  </td>
-                  <td className={`px-2 py-2 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle`} style={{ minWidth: '155px' }}>
-                    <button
-                      type="button"
-                      onClick={() => setExpandLogNotes(true)}
-                      className={`inline-flex items-center justify-center gap-1.5 py-1.5 px-2 text-xs font-bold text-slate-800 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded border border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-700/80 ${isRtl ? 'flex-row-reverse' : ''}`}
-                    >
-                      <ChevronDown size={14} strokeWidth={2.5} className="shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-                      <span>{t('showNotes')}</span>
-                    </button>
-                  </td>
-                </tr>
+                {(location.logs && location.logs.length > 0) ? (
+                  location.logs.map((log, index) => (
+                    <tr key={log.id || index} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors">
+                      <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                        {formatLogDate(log.date)}
+                      </td>
+                      {/* Collection Amount */}
+                      <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-bold ${isRtl ? 'text-right' : 'text-left'}`}>
+                        {log.collection != null && String(log.collection).trim() !== '' ? Number(log.collection).toFixed(2) : ''}
+                      </td>
+                      {/* I Receive Amount */}
+                      <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-medium ${isRtl ? 'text-right' : 'text-left'}`}>
+                        {calculateIReceive(log)}
+                      </td>
+                      {/* Bill Columns */}
+                      <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center text-slate-700 dark:text-slate-300 font-medium">
+                        {log.bills?.[50] > 0 ? log.bills[50] : ''}
+                      </td>
+                      <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center text-slate-700 dark:text-slate-300 font-medium">
+                        {log.bills?.[20] > 0 ? log.bills[20] : ''}
+                      </td>
+                      <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center text-slate-700 dark:text-slate-300 font-medium">
+                        {log.bills?.[10] > 0 ? log.bills[10] : ''}
+                      </td>
+                      <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center text-slate-700 dark:text-slate-300 font-medium">
+                        {log.bills?.[5] > 0 ? log.bills[5] : ''}
+                      </td>
+                      <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center text-slate-700 dark:text-slate-300 font-medium">
+                        {log.bills?.[1] > 0 ? log.bills[1] : ''}
+                      </td>
+                      {/* Notes and Edit */}
+                      <td className={`px-2 py-0 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle`} style={{ minWidth: '120px' }}>
+                        <div className="flex items-center justify-between gap-1 h-full">
+                          <span className="truncate max-w-[100px] text-slate-500 italic block">
+                            {(log.notes || '')?.slice(0, 15)}
+                          </span>
+                          <div className="p-0.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-help" title={log.notes}>
+                            <ChevronDown size={14} />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center">
+                        <button
+                          onClick={() => handleEditLog(log, index)}
+                          className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                          title={t('editLog') || 'Edit Log'}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20">
+                    <td colSpan="9" className="px-4 py-4 text-center text-slate-500 italic">
+                      {t('noHistory') || 'No history available'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Financial Summaries */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Last Visit Summary */}
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+              {t('lastVisitSummary') || 'Last Visit Summary'}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
+                  {t('totalCollection') || 'Total Collection'}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-lg font-bold text-slate-800 dark:text-white">
+                    {(() => {
+                      const latestLog = location.logs?.[0];
+                      if (!latestLog) return '0.00';
+                      return (parseFloat(latestLog.collection) || 0).toFixed(2);
+                    })()}
+                  </p>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                    {(() => {
+                      const latestLog = location.logs?.[0];
+                      if (!latestLog) return '$0';
+                      const val = parseFloat(latestLog.collection) || 0;
+                      return `$${(val * 20).toLocaleString()}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
+                  {t('iReceive') || 'I Receive'}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                    {(() => {
+                      const latestLog = location.logs?.[0];
+                      if (!latestLog) return '0.00';
+                      const collection = parseFloat(latestLog.collection) || 0;
+                      const rate = parseFloat(latestLog.commissionRate) || 0;
+                      return (collection * (1 - rate)).toFixed(2);
+                    })()}
+                  </p>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                    {(() => {
+                      const latestLog = location.logs?.[0];
+                      if (!latestLog) return '$0';
+                      const collection = parseFloat(latestLog.collection) || 0;
+                      const rate = parseFloat(latestLog.commissionRate) || 0;
+                      const val = collection * (1 - rate);
+                      return `$${(val * 20).toLocaleString()}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Yearly Summary */}
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+              {t('yearlySummary') || 'Yearly Summary'}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
+                  {t('totalCollection') || 'Total Collection'}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-lg font-bold text-slate-800 dark:text-white">
+                    {(() => {
+                      const now = new Date();
+                      const currentYear = now.getFullYear();
+                      const total = (location.logs || []).reduce((sum, log) => {
+                        const d = new Date(log.date);
+                        if (d.getFullYear() === currentYear) {
+                          return sum + (parseFloat(log.collection) || 0);
+                        }
+                        return sum;
+                      }, 0);
+                      return total.toFixed(2);
+                    })()}
+                  </p>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                    {(() => {
+                      const now = new Date();
+                      const currentYear = now.getFullYear();
+                      const total = (location.logs || []).reduce((sum, log) => {
+                        const d = new Date(log.date);
+                        if (d.getFullYear() === currentYear) {
+                          return sum + (parseFloat(log.collection) || 0);
+                        }
+                        return sum;
+                      }, 0);
+                      return `$${(total * 20).toLocaleString()}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
+                  {t('iReceive') || 'I Receive'}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                    {(() => {
+                      const now = new Date();
+                      const currentYear = now.getFullYear();
+                      const total = (location.logs || []).reduce((sum, log) => {
+                        const d = new Date(log.date);
+                        if (d.getFullYear() === currentYear) {
+                          const collection = parseFloat(log.collection) || 0;
+                          const rate = parseFloat(log.commissionRate) || 0;
+                          return sum + (collection * (1 - rate));
+                        }
+                        return sum;
+                      }, 0);
+                      return total.toFixed(2);
+                    })()}
+                  </p>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                    {(() => {
+                      const now = new Date();
+                      const currentYear = now.getFullYear();
+                      const total = (location.logs || []).reduce((sum, log) => {
+                        const d = new Date(log.date);
+                        if (d.getFullYear() === currentYear) {
+                          const collection = parseFloat(log.collection) || 0;
+                          const rate = parseFloat(log.commissionRate) || 0;
+                          return sum + (collection * (1 - rate));
+                        }
+                        return sum;
+                      }, 0);
+                      return `$${(total * 20).toLocaleString()}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

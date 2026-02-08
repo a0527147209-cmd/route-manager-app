@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LocationsProvider } from './LocationsContext';
 import { SearchProvider } from './SearchContext';
@@ -15,41 +15,42 @@ import SettingsView from './SettingsView';
 
 function AppContent() {
   const { isTransitioning } = useLanguage();
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <div
-        className={`min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300 transition-opacity duration-200 ease-out ${
-          isTransitioning ? 'opacity-0' : 'opacity-100'
+    <div
+      className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
-      >
-        <Routes>
-          <Route path="/" element={<HomeView />} />
-          <Route path="/locations/area/:areaKey" element={<LocationsView />} />
-          <Route path="/locations" element={<LocationsView />} />
-          <Route path="/customers/area/:areaKey" element={<CustomersView />} />
-          <Route path="/customers" element={<CustomersView />} />
-          <Route path="/add" element={<AddLocationView />} />
-          <Route path="/location/:id" element={<LocationDetailsView />} />
-          <Route path="/customer/:id" element={<CustomerDetailsView />} />
-          <Route path="/settings" element={<SettingsView />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    >
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<HomeView />} />
+        <Route path="/locations/area/:areaKey" element={<LocationsView />} />
+        <Route path="/locations" element={<LocationsView />} />
+        <Route path="/customers/area/:areaKey" element={<CustomersView />} />
+        <Route path="/customers" element={<CustomersView />} />
+        <Route path="/add" element={<AddLocationView />} />
+        <Route path="/location/:id" element={<LocationDetailsView />} />
+        <Route path="/customer/:id" element={<CustomerDetailsView />} />
+        <Route path="/settings" element={<SettingsView />} />
+      </Routes>
+    </div>
   );
 }
 
 function App() {
   return (
     <ErrorBoundary>
-    <LocationsProvider>
-      <SearchProvider>
-      <ThemeProvider>
-      <LanguageProvider>
-        <AppContent />
-      </LanguageProvider>
-      </ThemeProvider>
-      </SearchProvider>
-    </LocationsProvider>
+      <LocationsProvider>
+        <SearchProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </LanguageProvider>
+          </ThemeProvider>
+        </SearchProvider>
+      </LocationsProvider>
     </ErrorBoundary>
   );
 }

@@ -385,32 +385,27 @@ export default function CustomerDetailsView() {
               </thead>
               <tbody>
                 <tr className="bg-slate-50/50 dark:bg-slate-800/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors">
-                  <td className={`px-3 py-2.5 text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatLogDate(location?.lastVisited)}
                   </td>
-                  <td className={`px-3 py-2.5 text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {location?.commissionRate != null ? `${Math.round(Number(location.commissionRate) * 100)}%` : '—'}
                   </td>
-                  <td className={`px-3 py-2.5 text-slate-800 dark:text-slate-200 font-semibold border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-xs text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {location?.lastCollection != null && String(location.lastCollection).trim() !== '' ? Number(location.lastCollection).toFixed(2) : '—'}
                   </td>
-                  <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-xs text-slate-700 dark:text-slate-300 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-top w-[130px] max-w-[130px] overflow-hidden`}>
-                    <div className={`flex flex-col gap-1 min-w-0 w-full overflow-hidden ${isRtl ? 'items-end' : 'items-start'}`}>
-                      <span className="block min-w-0 w-full overflow-hidden text-ellipsis whitespace-nowrap">
-                        {(location?.logNotes ?? location?.notes) ? (location.logNotes ?? location.notes) : '—'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setExpandLogNotes(true)}
-                        className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}
-                      >
-                        <ChevronDown size={14} />
-                        <span>{t('showNotes')}</span>
-                      </button>
-                    </div>
+                  <td className={`px-3 py-2.5 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle w-[120px] min-w-[120px]`}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandLogNotes(true)}
+                      className={`w-full py-1.5 px-2 flex items-center justify-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
+                    >
+                      <ChevronDown size={14} className="shrink-0" />
+                      <span className="whitespace-nowrap">{t('showNotes')}</span>
+                    </button>
                   </td>
                 </tr>
               </tbody>

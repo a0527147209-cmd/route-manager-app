@@ -364,41 +364,41 @@ export default function CustomerDetailsView() {
             {t('logHistory')}
           </h2>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[320px] text-sm border-collapse">
+            <table className="w-full min-w-[320px] text-sm border-collapse border border-slate-300 dark:border-slate-600">
               <thead>
                 <tr className="bg-slate-100/80 dark:bg-slate-700/50">
-                  <th className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} `}>
+                  <th className={`px-3 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('lastVisit')}
                   </th>
-                  <th className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-3 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('commission')}
                   </th>
-                  <th className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-3 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('collectionAmount')}
                   </th>
-                  <th className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-3 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('bills')}
                   </th>
-                  <th className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <th className={`px-3 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('logNotes')}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="bg-slate-50/50 dark:bg-slate-800/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/20 transition-colors">
-                  <td className={`px-4 py-3.5 text-slate-800 dark:text-slate-200 font-medium border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatLogDate(location?.lastVisited)}
                   </td>
-                  <td className={`px-4 py-3.5 text-slate-800 dark:text-slate-200 font-medium border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-slate-800 dark:text-slate-200 font-medium border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {location?.commissionRate != null ? `${Math.round(Number(location.commissionRate) * 100)}%` : '—'}
                   </td>
-                  <td className={`px-4 py-3.5 text-slate-800 dark:text-slate-200 font-semibold border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-slate-800 dark:text-slate-200 font-semibold border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {location?.lastCollection != null && String(location.lastCollection).trim() !== '' ? Number(location.lastCollection).toFixed(2) : '—'}
                   </td>
-                  <td className={`px-4 py-3.5 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'}`}>
+                  <td className={`px-3 py-2.5 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-4 py-3.5 text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'} align-top`}>
+                  <td className={`px-3 py-2.5 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-top`}>
                     <div className={`flex flex-col gap-1 ${isRtl ? 'items-end' : 'items-start'}`}>
                       <div className={`min-w-0 ${expandLogNotes ? 'max-w-[280px] whitespace-normal break-words' : 'max-w-[140px] truncate'}`}>
                         {(location?.logNotes ?? location?.notes) ? (location.logNotes ?? location.notes) : '—'}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
@@ -12,6 +12,9 @@ import {
   Check,
   Pencil,
   Plus,
+  ChevronDown,
+  ChevronUp,
+  X,
 } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 import LogFormModal from './LogFormModal';
@@ -25,6 +28,10 @@ export default function CustomerDetailsView() {
   const { t, isRtl } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
+  const [expandLogNotes, setExpandLogNotes] = useState(false);
+  const [showAddLogPopup, setShowAddLogPopup] = useState(false);
+  const [popupAnimateIn, setPopupAnimateIn] = useState(false);
+  const popupShownForIdRef = useRef(null);
 
   const [location, setLocation] = useState(null);
   const [notes, setNotes] = useState('');
@@ -45,6 +52,23 @@ export default function CustomerDetailsView() {
     }
     setLoading(false);
   }, [id, locations]);
+
+  // Show animated Add Log popup when customer page is ready (location loaded)
+  useEffect(() => {
+    if (!location || !id) return;
+    if (popupShownForIdRef.current === id) return;
+    popupShownForIdRef.current = id;
+    setShowAddLogPopup(true);
+    setPopupAnimateIn(false);
+    const t1 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setPopupAnimateIn(true));
+    });
+    const t2 = setTimeout(() => setShowAddLogPopup(false), 3500);
+    return () => {
+      cancelAnimationFrame(t1);
+      clearTimeout(t2);
+    };
+  }, [id, location]);
 
   const handleSaveNotes = () => {
     if (!location) return;
@@ -151,7 +175,16 @@ export default function CustomerDetailsView() {
             {location.name}
           </h1>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className={`flex items-center gap-1.5 shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}>
+          <button
+            onClick={() => setShowLogModal(true)}
+            className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            title={t('addLog')}
+            aria-label={t('addLog')}
+          >
+            <Plus size={20} className="shrink-0" />
+            <span className="font-semibold text-xs whitespace-nowrap">{t('addLog')}</span>
+          </button>
           <button
             onClick={() => setMenuOpen(true)}
             className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95"
@@ -171,19 +204,42 @@ export default function CustomerDetailsView() {
         />
       )}
 
-      {/* Floating Add Log popup-style button */}
-      <button
-        onClick={() => setShowLogModal(true)}
-        className={`fixed bottom-6 z-50 px-5 py-3 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/40 flex items-center justify-center gap-2 active:scale-95 transition-all ${isRtl ? 'left-6' : 'right-6'} ${isRtl ? 'flex-row-reverse' : ''}`}
-        style={{ marginLeft: 'max(env(safe-area-inset-left), 0.5rem)', marginRight: 'max(env(safe-area-inset-right), 0.5rem)' }}
-        title={t('addLog')}
-        aria-label={t('addLog')}
-      >
-        <Plus size={22} className="shrink-0" />
-        <span className="font-semibold text-sm whitespace-nowrap">{t('addLog')}</span>
-      </button>
+      {/* Animated Add Log popup - appears when entering customer page */}
+      {showAddLogPopup && (
+        <div
+          className={`fixed left-1/2 top-20 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-[260px] transition-all duration-300 ease-out ${
+            popupAnimateIn ? 'opacity-100 scale-100 translate-y-0 -translate-x-1/2' : 'opacity-0 scale-90 translate-y-2 -translate-x-1/2'
+          }`}
+        >
+          <div
+            onClick={() => {
+              setShowAddLogPopup(false);
+              setShowLogModal(true);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/40 p-2.5 flex items-center justify-between gap-2 cursor-pointer active:scale-[0.98] transition-all border border-indigo-400/50"
+          >
+            <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                <Plus size={18} />
+              </div>
+              <span className="font-semibold text-xs">{t('addLog')}</span>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAddLogPopup(false);
+              }}
+              className="p-1 rounded-md hover:bg-white/20 text-white/90 transition-colors"
+              aria-label={t('close')}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
-      <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1 pb-20">
+      <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
         {/* Customer Info Card */}
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3">
           <div className="flex items-start gap-3">
@@ -246,11 +302,11 @@ export default function CustomerDetailsView() {
           </div>
         )}
 
-        {/* Customer Notes */}
+        {/* Customer Notes - separate from log notes */}
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-2">
           <div className="flex items-center justify-between">
             <label htmlFor="notes" className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide">
-              {t('notes')}
+              {t('customerNotes')}
             </label>
             {!isEditingNotes && (
               <button
@@ -324,7 +380,7 @@ export default function CustomerDetailsView() {
                     {t('bills')}
                   </th>
                   <th className={`px-4 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b-2 border-slate-200 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {t('notes')}
+                    {t('logNotes')}
                   </th>
                 </tr>
               </thead>
@@ -342,8 +398,31 @@ export default function CustomerDetailsView() {
                   <td className={`px-4 py-3.5 text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'}`}>
                     {formatBillsSummary(location?.bills)}
                   </td>
-                  <td className={`px-4 py-3.5 text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700/80 max-w-[140px] truncate ${isRtl ? 'text-right' : 'text-left'}`} title={location?.notes ?? ''}>
-                    {location?.notes ? (location.notes.length > 24 ? `${location.notes.slice(0, 24)}…` : location.notes) : '—'}
+                  <td className={`px-4 py-3.5 text-slate-600 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700/80 ${isRtl ? 'text-right' : 'text-left'} align-top`}>
+                    <div className={`flex flex-col gap-1 ${isRtl ? 'items-end' : 'items-start'}`}>
+                      <div className={`min-w-0 ${expandLogNotes ? 'max-w-[280px] whitespace-normal break-words' : 'max-w-[140px] truncate'}`}>
+                        {(location?.logNotes ?? location?.notes) ? (location.logNotes ?? location.notes) : '—'}
+                      </div>
+                      {(location?.logNotes ?? location?.notes) && (location.logNotes ?? location.notes).length > 30 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandLogNotes((v) => !v)}
+                          className={`flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline ${isRtl ? 'flex-row-reverse' : ''}`}
+                        >
+                          {expandLogNotes ? (
+                            <>
+                              <ChevronUp size={14} />
+                              <span>{t('collapse')}</span>
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown size={14} />
+                              <span>{t('expand')}</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               </tbody>

@@ -57,7 +57,7 @@ export default function LocationDetailsView() {
         setAmount(found.lastCollection ?? '');
         setIsManualAmountEdit(true);
       }
-      setNotes(found.notes ?? '');
+      setNotes(found.logNotes ?? found.notes ?? '');
     }
     setLoading(false);
   }, [id, locations]);
@@ -70,7 +70,7 @@ export default function LocationDetailsView() {
     updateLocation(location.id, {
       lastCollection: amount,
       status: location.status ?? 'pending',
-      notes,
+      logNotes: notes,
       commissionRate: location.commissionRate ?? 0.4,
       hasChangeMachine: !!location.hasChangeMachine,
       lastVisited: getTodayISO(),
@@ -82,7 +82,7 @@ export default function LocationDetailsView() {
 
   const hasUnsavedChanges = location && (
     String(amount ?? '').trim() !== String(location.lastCollection ?? '').trim() ||
-    String(notes ?? '').trim() !== String(location.notes ?? '').trim() ||
+    String(notes ?? '').trim() !== String(location.logNotes ?? location.notes ?? '').trim() ||
     JSON.stringify(bills) !== JSON.stringify(location.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 })
   );
 
@@ -389,7 +389,7 @@ export default function LocationDetailsView() {
 
         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-2">
           <label htmlFor="notes" className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide">
-            {t('notes')}
+            {t('logNotes')}
           </label>
           <textarea
             id="notes"
@@ -408,7 +408,7 @@ export default function LocationDetailsView() {
         >
           <Save size={18} />
           <span>{t('saveWord')}</span>
-          <span className={isRtl ? 'me-1.5' : 'ms-1.5'}>{t('logWord')}</span>
+          <span className={isRtl ? 'me-0.5' : 'ms-0.5'}>{t('logWord')}</span>
         </button>
       </div>
     </div>

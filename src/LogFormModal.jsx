@@ -17,21 +17,13 @@ export default function LogFormModal({ location, onClose, onSaved }) {
   const [animatingBill, setAnimatingBill] = useState(null);
   const [isManualAmountEdit, setIsManualAmountEdit] = useState(false);
 
+  // New log form starts empty; previous log data is only shown in the table
   useEffect(() => {
     if (!location) return;
-    const savedBills = location.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 };
-    setBills(savedBills);
-    const billsTotal = Object.entries(savedBills).reduce((sum, [value, count]) => {
-      return sum + (parseFloat(value) || 0) * (count || 0);
-    }, 0);
-    if (billsTotal > 0) {
-      setAmount(billsTotal.toFixed(2));
-      setIsManualAmountEdit(false);
-    } else {
-      setAmount(location.lastCollection ?? '');
-      setIsManualAmountEdit(true);
-    }
-    setNotes(location.notes ?? '');
+    setBills({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
+    setAmount('');
+    setIsManualAmountEdit(true);
+    setNotes('');
   }, [location]);
 
   const getTodayISO = () => new Date().toISOString().slice(0, 10);
@@ -71,7 +63,7 @@ export default function LogFormModal({ location, onClose, onSaved }) {
     updateLocation(location.id, {
       lastCollection: amount,
       status: location.status ?? 'pending',
-      notes,
+      logNotes: notes,
       commissionRate: location.commissionRate ?? 0.4,
       hasChangeMachine: !!location.hasChangeMachine,
       lastVisited: getTodayISO(),
@@ -223,7 +215,7 @@ export default function LogFormModal({ location, onClose, onSaved }) {
 
           <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-2">
             <label htmlFor="modal-notes" className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide">
-              {t('notes')}
+              {t('logNotes')}
             </label>
             <textarea
               id="modal-notes"
@@ -241,7 +233,7 @@ export default function LogFormModal({ location, onClose, onSaved }) {
           >
             <Save size={18} />
             <span>{t('saveWord')}</span>
-            <span className={isRtl ? 'me-1.5' : 'ms-1.5'}>{t('logWord')}</span>
+            <span className={isRtl ? 'me-0.5' : 'ms-0.5'}>{t('logWord')}</span>
           </button>
         </div>
       </div>

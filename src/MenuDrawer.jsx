@@ -1,16 +1,24 @@
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, Search, UserPlus, Users } from 'lucide-react';
+import { Settings, X, Search, UserPlus, Users, RotateCcw } from 'lucide-react';
 import { useSearch } from './SearchContext';
 import { useLanguage } from './LanguageContext';
+import { useLocations } from './LocationsContext';
 
 export default function MenuDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm } = useSearch();
   const { t, isRtl } = useLanguage();
+  const { resetAndLoadDemo } = useLocations();
 
   const goTo = (path) => {
     onClose();
     navigate(path, { state: { fromMenu: true } });
+  };
+
+  const handleResetDemo = () => {
+    resetAndLoadDemo?.();
+    onClose();
+    navigate('/customers', { state: { fromMenu: true } });
   };
 
   if (!isOpen) return null;
@@ -74,6 +82,13 @@ export default function MenuDrawer({ isOpen, onClose }) {
           >
             <Users size={20} />
             <span>{t('customers')}</span>
+          </button>
+          <button
+            onClick={handleResetDemo}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+          >
+            <RotateCcw size={20} />
+            <span>{t('resetAndLoadDemo')}</span>
           </button>
           <button
             onClick={() => goTo('/settings')}

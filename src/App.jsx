@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LocationsProvider } from './LocationsContext';
 import { SearchProvider } from './SearchContext';
@@ -48,6 +48,7 @@ function AppContent() {
         <Route path="/location/:id" element={<LocationDetailsView />} />
         <Route path="/customer/:id" element={<CustomerDetailsView />} />
         <Route path="/settings" element={<SettingsView />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );

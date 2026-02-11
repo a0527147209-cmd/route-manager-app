@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { useLanguage } from './LanguageContext';
 import { Lock, User, LogIn } from 'lucide-react';
 
 export default function LoginView() {
+    const navigate = useNavigate();
     const { login } = useAuth();
     const { t, isRtl } = useLanguage();
     const [username, setUsername] = useState('');
@@ -14,7 +16,9 @@ export default function LoginView() {
         e.preventDefault();
         setError('');
         const result = login(username, password);
-        if (!result.success) {
+        if (result.success) {
+            navigate('/', { replace: true });
+        } else {
             setError(t('loginError') || 'Invalid username or password');
         }
     };

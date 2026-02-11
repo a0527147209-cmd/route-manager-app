@@ -17,7 +17,10 @@ export default function LoginView() {
         setError('');
         const result = login(username, password);
         if (result.success) {
-            navigate('/', { replace: true });
+            // Small delay to ensure state updates propagate
+            setTimeout(() => {
+                navigate('/', { replace: true });
+            }, 50);
         } else {
             setError(t('loginError') || 'Invalid username or password');
         }

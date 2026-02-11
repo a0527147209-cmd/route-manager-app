@@ -35,8 +35,7 @@ function AppContent() {
 
   return (
     <div
-      className={`min-h-screen w-full max-w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden ${isTransitioning ? 'opacity-0' : 'opacity-100'
-        }`}
+      className="min-h-screen w-full max-w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden"
     >
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<HomeView />} />

@@ -12,6 +12,22 @@ import AddLocationView from './AddLocationView';
 import LocationDetailsView from './LocationDetailsView';
 import CustomerDetailsView from './CustomerDetailsView';
 import SettingsView from './SettingsView';
+import LoginView from './LoginView';
+import { AuthProvider, useAuth } from './AuthContext';
+
+function AppWithAuth() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-500">Loading...</div>;
+  }
+
+  if (!user) {
+    return <LoginView />;
+  }
+
+  return <AppContent />;
+}
 
 function AppContent() {
   const { isTransitioning } = useLanguage();
@@ -19,7 +35,7 @@ function AppContent() {
 
   return (
     <div
-      className={`min-h-screen w-full max-w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden ${isTransitioning ? 'opacity-0' : 'opacity-100'
+      className={`min-h-screen w-full max-w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden ${isTransitioning ? 'opacity-0' : 'opacity-100'
         }`}
     >
       <Routes location={location} key={location.pathname}>
@@ -42,13 +58,15 @@ function App() {
     <ErrorBoundary>
       <LocationsProvider>
         <SearchProvider>
-          <LanguageProvider>
-            <ThemeProvider>
-              <BrowserRouter>
-                <AppContent />
-              </BrowserRouter>
-            </ThemeProvider>
-          </LanguageProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              <ThemeProvider>
+                <BrowserRouter>
+                  <AppWithAuth />
+                </BrowserRouter>
+              </ThemeProvider>
+            </LanguageProvider>
+          </AuthProvider>
         </SearchProvider>
       </LocationsProvider>
     </ErrorBoundary>

@@ -204,22 +204,22 @@ export default function LocationsView() {
   const getAreaCount = (area) => (sortBy === 'all' ? getLocationsByCompositeKey(area.key).length : getLocationsInGroup(area.key).length);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900">
-      <header className="bg-white dark:bg-slate-800 p-2 min-h-[50px] flex flex-col justify-center sticky top-0 z-10 shadow-sm shrink-0 max-w-[380px] mx-auto w-full">
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="bg-card p-2 min-h-[50px] flex flex-col justify-center sticky top-0 z-10 shadow-sm shrink-0 max-w-[380px] mx-auto w-full border-b border-border">
         <div className="flex justify-between items-center gap-1.5 w-full">
           <button
             onClick={handleBack}
-            className="p-2 -ms-1 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 active:scale-95"
+            className="p-2 -ms-1 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
             title={isInnerPage ? t('backToLocations') : t('backToHome')}
           >
             <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
           </button>
-          <h1 className="text-base font-bold text-slate-800 dark:text-white truncate flex-1 text-center min-w-0">
+          <h1 className="text-base font-bold text-foreground truncate flex-1 text-center min-w-0">
             {isInnerPage ? areaDisplayLabel : t('locations')}
           </h1>
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 active:scale-95"
+            className="p-2 rounded-xl text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
             title={t('menu')}
           >
             <Menu size={22} />
@@ -230,22 +230,22 @@ export default function LocationsView() {
         {/* Search + Sort row - compact, narrow width */}
         <div className="mt-1.5 flex items-center gap-1.5">
           <div className="relative w-[120px] max-w-[35vw] shrink-0">
-            <Search size={12} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none ${isRtl ? 'right-1.5' : 'left-1.5'}`} />
+            <Search size={12} className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none ${isRtl ? 'right-1.5' : 'left-1.5'}`} />
             <input
               type="text"
               placeholder={t('searchLocation')}
               value={searchLocations}
               onChange={(e) => setSearchLocations(e.target.value)}
-              className={`w-full py-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-1 text-right' : 'pl-5 pr-1 text-left'}`}
+              className={`w-full py-1 text-[11px] rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-1 text-right' : 'pl-5 pr-1 text-left'}`}
             />
           </div>
           {!isInnerPage && (
             <div className="flex items-center gap-0.5 shrink-0">
-              <SlidersHorizontal size={12} className="text-slate-500 dark:text-slate-400" />
+              <SlidersHorizontal size={12} className="text-muted-foreground" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className={`py-1 text-[11px] rounded-md border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer ${isRtl ? 'pr-1 pl-5 text-right' : 'pl-1 pr-5 text-left'}`}
+                className={`py-1 text-[11px] rounded-md border border-input bg-background text-foreground focus:ring-1 focus:ring-primary outline-none cursor-pointer ${isRtl ? 'pr-1 pl-5 text-right' : 'pl-1 pr-5 text-left'}`}
                 title={t('sortBy')}
               >
                 {SORT_OPTIONS.map((opt) => (
@@ -262,15 +262,15 @@ export default function LocationsView() {
       <main className="flex-1 overflow-auto p-3 max-w-[380px] mx-auto w-full">
         {validLocations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <MapPin className="w-16 h-16 text-slate-300 dark:text-slate-600 mb-4" />
-            <h2 className="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            <MapPin className="w-16 h-16 text-muted-foreground/50 mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">
               {t('noLocationsYet')}
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{t('openMenuAddCustomer')}</p>
+            <p className="text-muted-foreground text-sm mb-6">{t('openMenuAddCustomer')}</p>
             <div className="flex flex-wrap gap-3 justify-center">
               <button
                 onClick={() => navigate('/add')}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl"
+                className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl"
               >
                 {t('addLocation')}
               </button>
@@ -285,11 +285,11 @@ export default function LocationsView() {
         ) : isInnerPage ? (
           areaLocations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <p className="text-slate-600 dark:text-slate-300 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
+              <p className="text-muted-foreground font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>
+              <p className="text-muted-foreground/80 text-sm mt-1">{t('tryDifferentKeywords')}</p>
               <button
                 onClick={handleBack}
-                className="mt-4 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white text-sm font-medium"
+                className="mt-4 px-4 py-2 rounded-xl bg-muted text-foreground text-sm font-medium"
               >
                 {t('back')}
               </button>
@@ -300,12 +300,12 @@ export default function LocationsView() {
                 <div
                   key={loc?.id ?? index}
                   onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-                  className="rounded-lg bg-white dark:bg-slate-800 p-3 shadow-sm border border-slate-100 dark:border-slate-700 active:scale-[0.99] transition-transform cursor-pointer"
+                  className="rounded-lg bg-card p-3 shadow-sm border border-border active:scale-[0.99] transition-transform cursor-pointer"
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-bold text-slate-800 dark:text-white text-sm truncate">
+                        <h3 className="font-bold text-foreground text-sm truncate">
                           {loc?.name ?? '—'}
                         </h3>
                         {loc?.status === 'visited' && (
@@ -313,7 +313,7 @@ export default function LocationsView() {
                             {t('visited')}
                           </span>
                         )}
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-300 text-slate-800 dark:bg-slate-600 dark:text-slate-200 shrink-0">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                           {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                         </span>
                         {loc?.hasChangeMachine && (
@@ -322,17 +322,17 @@ export default function LocationsView() {
                           </span>
                         )}
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 truncate flex items-center gap-0.5">
+                      <p className="text-muted-foreground text-xs mt-0.5 truncate flex items-center gap-0.5">
                         <MapPin size={12} className="shrink-0" />
                         {loc?.address ?? '—'}
                       </p>
                     </div>
                     {loc?.lastVisited && (
                       <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
-                        <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap leading-tight">
+                        <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
                           {t('lastVisit')}
                         </p>
-                        <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap leading-tight mt-0.5">
+                        <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
                           {formatVisitDate(loc.lastVisited)}
                         </p>
                       </div>
@@ -364,8 +364,8 @@ export default function LocationsView() {
           )
         ) : displayGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">{t('noResultsFor')} &quot;{searchLocations}&quot;</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">{t('tryDifferentKeywords')}</p>
+            <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchLocations}&quot;</p>
+            <p className="text-muted-foreground/80 text-sm">{t('tryDifferentKeywords')}</p>
           </div>
         ) : (
           <div className="space-y-1">
@@ -376,11 +376,11 @@ export default function LocationsView() {
                   key={area.key}
                   type="button"
                   onClick={() => openArea(openKey)}
-                  className="w-full flex items-center gap-2 py-3 px-4 text-left rounded-xl border border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700/50 active:scale-[0.995] transition-all"
+                  className="w-full flex items-center gap-2 py-3 px-4 text-left rounded-xl border border-border bg-card shadow-sm hover:bg-muted/50 active:scale-[0.995] transition-all"
                 >
-                  <ChevronRight size={20} className={`text-slate-500 dark:text-slate-400 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
-                  <span className="font-semibold text-slate-800 dark:text-white">{label(area.label, t)}</span>
-                  <span className={`text-xs text-slate-400 dark:text-slate-500 ${isRtl ? 'mr-auto' : 'ml-auto'}`}>
+                  <ChevronRight size={20} className={`text-muted-foreground shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
+                  <span className="font-semibold text-foreground">{label(area.label, t)}</span>
+                  <span className={`text-xs text-muted-foreground ${isRtl ? 'mr-auto' : 'ml-auto'}`}>
                     {getAreaCount(area)}
                   </span>
                 </button>

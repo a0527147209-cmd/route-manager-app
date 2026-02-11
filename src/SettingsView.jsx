@@ -5,15 +5,25 @@ import { useLanguage } from './LanguageContext';
 import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Languages } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 
+import { useAuth } from './AuthContext';
+
 export default function SettingsView() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDarkMode, toggleTheme, theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
+  const { logout, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      logout();
+      navigate('/');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300">
 
       {/* Header – compact for mobile */}
       <div className="bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between max-w-[380px] mx-auto w-full">
@@ -79,8 +89,8 @@ export default function SettingsView() {
                   key={th}
                   onClick={() => setTheme(th)}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border ${isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-900/40 border-indigo-500 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-500' // Active state
-                    : 'bg-slate-50 dark:bg-slate-700/30 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary' // Active state
+                    : 'bg-card border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                 >
                   {th === 'classic' ? (language === 'he' ? 'קלאסי' : 'Classic') : (language === 'he' ? 'מודרני' : 'Modern')}
@@ -102,7 +112,7 @@ export default function SettingsView() {
               onClick={() => setLanguage('he')}
               title={language === 'he' ? undefined : t('hebrew')}
               className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${language === 'he'
-                ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                ? 'bg-card text-primary shadow-sm ring-1 ring-primary/20'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
             >
@@ -113,7 +123,7 @@ export default function SettingsView() {
               onClick={() => setLanguage('en')}
               title={language === 'en' ? undefined : t('english')}
               className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${language === 'en'
-                ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                ? 'bg-card text-primary shadow-sm ring-1 ring-primary/20'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
             >
@@ -129,6 +139,16 @@ export default function SettingsView() {
             <Globe size={14} className="text-slate-400" />
             <Github size={14} className="text-slate-400" />
           </div>
+        </div>
+
+        {/* Logout Button */}
+        <div className="mt-8">
+          <button
+            onClick={handleLogout}
+            className="w-full py-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-300 dark:hover:bg-slate-700 active:scale-[0.98] transition-all"
+          >
+            Log Out ({user?.username})
+          </button>
         </div>
 
       </div>

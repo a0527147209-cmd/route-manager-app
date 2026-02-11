@@ -18,13 +18,16 @@ import {
 import MenuDrawer from './MenuDrawer';
 import LogFormModal from './LogFormModal';
 
+import { useAuth } from './AuthContext';
+
 export default function CustomerDetailsView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state: navState } = useLocation();
   const backPath = navState?.fromPath ?? '/customers';
-  const { locations, updateLocation } = useLocations();
+  const { locations, updateLocation, removeLocation } = useLocations();
   const { t, isRtl } = useLanguage();
+  const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [expandLogNotes, setExpandLogNotes] = useState(false);
@@ -183,7 +186,7 @@ export default function CustomerDetailsView() {
         <div className={`flex items-center gap-1.5 shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <button
             onClick={() => setShowLogModal(true)}
-            className="p-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
             title={t('addLog')}
             aria-label={t('addLog')}
           >
@@ -215,13 +218,13 @@ export default function CustomerDetailsView() {
 
       <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
         {/* Customer Info Card */}
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3">
+        <div className="bg-card p-4 rounded-xl shadow-sm border border-border space-y-3">
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 shrink-0">
-              <Building size={20} className="text-indigo-600 dark:text-indigo-400" />
+            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+              <Building size={20} className="text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1">
+              <h2 className="text-base font-bold text-foreground mb-1">
                 {location.name}
               </h2>
               {location.address && (
@@ -344,12 +347,16 @@ export default function CustomerDetailsView() {
                   <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('logDate')}
                   </th>
-                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {t('collectionAmount')}
-                  </th>
-                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
-                    {t('iReceive')}
-                  </th>
+                  {isAdmin && (
+                    <>
+                      <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
+                        {t('collectionAmount')}
+                      </th>
+                      <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
+                        {t('iReceive')}
+                      </th>
+                    </>
+                  )}
                   <th className="px-1 py-1 border border-slate-300 dark:border-slate-600 font-semibold text-center w-[40px]">
                     $50
                   </th>
@@ -380,14 +387,17 @@ export default function CustomerDetailsView() {
                       <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                         {formatLogDate(log.date)}
                       </td>
-                      {/* Collection Amount */}
-                      <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-bold ${isRtl ? 'text-right' : 'text-left'}`}>
-                        {log.collection != null && String(log.collection).trim() !== '' ? Number(log.collection).toFixed(2) : ''}
-                      </td>
-                      {/* I Receive Amount */}
-                      <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-medium ${isRtl ? 'text-right' : 'text-left'}`}>
-                        {calculateIReceive(log)}
-                      </td>
+                      {/* Financials - Admin Only */}
+                      {isAdmin && (
+                        <>
+                          <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-bold ${isRtl ? 'text-right' : 'text-left'}`}>
+                            {log.collection != null && String(log.collection).trim() !== '' ? Number(log.collection).toFixed(2) : ''}
+                          </td>
+                          <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-medium ${isRtl ? 'text-right' : 'text-left'}`}>
+                            {calculateIReceive(log)}
+                          </td>
+                        </>
+                      )}
                       {/* Bill Columns */}
                       <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center text-slate-700 dark:text-slate-300 font-medium">
                         {log.bills?.[50] > 0 ? log.bills[50] : ''}
@@ -416,19 +426,21 @@ export default function CustomerDetailsView() {
                         </div>
                       </td>
                       <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center">
-                        <button
-                          onClick={() => handleEditLog(log, index)}
-                          className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                          title={t('editLog') || 'Edit Log'}
-                        >
-                          <Pencil size={14} />
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleEditLog(log, index)}
+                            className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                            title={t('editLog') || 'Edit Log'}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20">
-                    <td colSpan="9" className="px-4 py-4 text-center text-slate-500 italic">
+                    <td colSpan={isAdmin ? "11" : "9"} className="px-4 py-4 text-center text-slate-500 italic">
                       {t('noHistory') || 'No history available'}
                     </td>
                   </tr>
@@ -438,148 +450,150 @@ export default function CustomerDetailsView() {
           </div>
         </div>
 
-        {/* Financial Summaries */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Last Visit Summary */}
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
-            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
-              {t('lastVisitSummary') || 'Last Visit Summary'}
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('collectionAmount')}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-lg font-bold text-slate-800 dark:text-white">
-                    {(() => {
-                      const latestLog = location.logs?.[0];
-                      if (!latestLog) return '0.00';
-                      return (parseFloat(latestLog.collection) || 0).toFixed(2);
-                    })()}
+        {/* Financial Summaries - Admin Only */}
+        {isAdmin && (
+          <div className="grid grid-cols-2 gap-3">
+            {/* Last Visit Summary */}
+            <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                {t('lastVisitSummary') || 'Last Visit Summary'}
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+                    {t('collectionAmount')}
                   </p>
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                    {(() => {
-                      const latestLog = location.logs?.[0];
-                      if (!latestLog) return '$0';
-                      const val = parseFloat(latestLog.collection) || 0;
-                      return `$${(val * 20).toLocaleString()}`;
-                    })()}
-                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-lg font-bold text-foreground">
+                      {(() => {
+                        const latestLog = location.logs?.[0];
+                        if (!latestLog) return '0.00';
+                        return (parseFloat(latestLog.collection) || 0).toFixed(2);
+                      })()}
+                    </p>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                      {(() => {
+                        const latestLog = location.logs?.[0];
+                        if (!latestLog) return '$0';
+                        const val = parseFloat(latestLog.collection) || 0;
+                        return `$${(val * 20).toLocaleString()}`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('iReceive')}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                    {(() => {
-                      const latestLog = location.logs?.[0];
-                      if (!latestLog) return '0.00';
-                      const collection = parseFloat(latestLog.collection) || 0;
-                      const rate = parseFloat(latestLog.commissionRate) || 0;
-                      return (collection * (1 - rate)).toFixed(2);
-                    })()}
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+                    {t('iReceive')}
                   </p>
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                    {(() => {
-                      const latestLog = location.logs?.[0];
-                      if (!latestLog) return '$0';
-                      const collection = parseFloat(latestLog.collection) || 0;
-                      const rate = parseFloat(latestLog.commissionRate) || 0;
-                      const val = collection * (1 - rate);
-                      return `$${(val * 20).toLocaleString()}`;
-                    })()}
-                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-lg font-bold text-primary">
+                      {(() => {
+                        const latestLog = location.logs?.[0];
+                        if (!latestLog) return '0.00';
+                        const collection = parseFloat(latestLog.collection) || 0;
+                        const rate = parseFloat(latestLog.commissionRate) || 0;
+                        return (collection * (1 - rate)).toFixed(2);
+                      })()}
+                    </p>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                      {(() => {
+                        const latestLog = location.logs?.[0];
+                        if (!latestLog) return '$0';
+                        const collection = parseFloat(latestLog.collection) || 0;
+                        const rate = parseFloat(latestLog.commissionRate) || 0;
+                        const val = collection * (1 - rate);
+                        return `$${(val * 20).toLocaleString()}`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Yearly Summary */}
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
-            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
-              {t('yearlySummary') || 'Yearly Summary'}
-            </h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('collectionAmount')}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-lg font-bold text-slate-800 dark:text-white">
-                    {(() => {
-                      const now = new Date();
-                      const currentYear = now.getFullYear();
-                      const total = (location.logs || []).reduce((sum, log) => {
-                        const d = new Date(log.date);
-                        if (d.getFullYear() === currentYear) {
-                          return sum + (parseFloat(log.collection) || 0);
-                        }
-                        return sum;
-                      }, 0);
-                      return total.toFixed(2);
-                    })()}
+            {/* Yearly Summary */}
+            <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                {t('yearlySummary') || 'Yearly Summary'}
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+                    {t('collectionAmount')}
                   </p>
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                    {(() => {
-                      const now = new Date();
-                      const currentYear = now.getFullYear();
-                      const total = (location.logs || []).reduce((sum, log) => {
-                        const d = new Date(log.date);
-                        if (d.getFullYear() === currentYear) {
-                          return sum + (parseFloat(log.collection) || 0);
-                        }
-                        return sum;
-                      }, 0);
-                      return `$${(total * 20).toLocaleString()}`;
-                    })()}
-                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-lg font-bold text-foreground">
+                      {(() => {
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const total = (location.logs || []).reduce((sum, log) => {
+                          const d = new Date(log.date);
+                          if (d.getFullYear() === currentYear) {
+                            return sum + (parseFloat(log.collection) || 0);
+                          }
+                          return sum;
+                        }, 0);
+                        return total.toFixed(2);
+                      })()}
+                    </p>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                      {(() => {
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const total = (location.logs || []).reduce((sum, log) => {
+                          const d = new Date(log.date);
+                          if (d.getFullYear() === currentYear) {
+                            return sum + (parseFloat(log.collection) || 0);
+                          }
+                          return sum;
+                        }, 0);
+                        return `$${(total * 20).toLocaleString()}`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
-                  {t('iReceive')}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                    {(() => {
-                      const now = new Date();
-                      const currentYear = now.getFullYear();
-                      const total = (location.logs || []).reduce((sum, log) => {
-                        const d = new Date(log.date);
-                        if (d.getFullYear() === currentYear) {
-                          const collection = parseFloat(log.collection) || 0;
-                          const rate = parseFloat(log.commissionRate) || 0;
-                          return sum + (collection * (1 - rate));
-                        }
-                        return sum;
-                      }, 0);
-                      return total.toFixed(2);
-                    })()}
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+                    {t('iReceive')}
                   </p>
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                    {(() => {
-                      const now = new Date();
-                      const currentYear = now.getFullYear();
-                      const total = (location.logs || []).reduce((sum, log) => {
-                        const d = new Date(log.date);
-                        if (d.getFullYear() === currentYear) {
-                          const collection = parseFloat(log.collection) || 0;
-                          const rate = parseFloat(log.commissionRate) || 0;
-                          return sum + (collection * (1 - rate));
-                        }
-                        return sum;
-                      }, 0);
-                      return `$${(total * 20).toLocaleString()}`;
-                    })()}
-                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-lg font-bold text-primary">
+                      {(() => {
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const total = (location.logs || []).reduce((sum, log) => {
+                          const d = new Date(log.date);
+                          if (d.getFullYear() === currentYear) {
+                            const collection = parseFloat(log.collection) || 0;
+                            const rate = parseFloat(log.commissionRate) || 0;
+                            return sum + (collection * (1 - rate));
+                          }
+                          return sum;
+                        }, 0);
+                        return total.toFixed(2);
+                      })()}
+                    </p>
+                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                      {(() => {
+                        const now = new Date();
+                        const currentYear = now.getFullYear();
+                        const total = (location.logs || []).reduce((sum, log) => {
+                          const d = new Date(log.date);
+                          if (d.getFullYear() === currentYear) {
+                            const collection = parseFloat(log.collection) || 0;
+                            const rate = parseFloat(log.commissionRate) || 0;
+                            return sum + (collection * (1 - rate));
+                          }
+                          return sum;
+                        }, 0);
+                        return `$${(total * 20).toLocaleString()}`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Floating overlay for full log notes - does not affect table layout */}
         {expandLogNotes && (
@@ -612,6 +626,22 @@ export default function CustomerDetailsView() {
               </div>
             </div>
           </>
+        )}
+        {/* Admin Actions */}
+        {isAdmin && (
+          <div className="mt-8 px-4">
+            <button
+              onClick={() => {
+                if (window.confirm(t('deleteThisCustomer'))) {
+                  removeLocation(id);
+                  navigate('/customers', { replace: true });
+                }
+              }}
+              className="w-full py-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-semibold border border-red-100 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              <span>{t('deleteThisCustomer')}</span>
+            </button>
+          </div>
         )}
       </div>
     </div>

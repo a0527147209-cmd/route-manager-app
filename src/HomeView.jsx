@@ -20,7 +20,7 @@ export default function HomeView() {
   }, [location.state?.openMenu, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 pb-20">
+    <div className="min-h-screen flex flex-col bg-background pb-20">
       {/* Glass Header */}
       <header className="fixed top-0 inset-x-0 z-10 glass">
         <div className="max-w-[380px] mx-auto w-full p-4 flex justify-between items-center gap-2">
@@ -53,17 +53,17 @@ export default function HomeView() {
             className="w-full relative overflow-hidden group rounded-3xl p-6 h-[220px] flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
           >
             {/* Rich Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-800 opacity-100 group-hover:scale-105 transition-transform duration-700" />
+            <div className="absolute inset-0 bg-primary opacity-100 group-hover:scale-105 transition-transform duration-700" />
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
 
             {/* Content */}
             <div className="relative z-10 flex flex-col items-center gap-4">
               <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner ring-1 ring-white/10 group-active:scale-95 transition-transform">
-                <Users size={40} className="text-white drop-shadow-md" />
+                <Users size={40} className="text-primary-foreground drop-shadow-md" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white font-display tracking-tight mb-1">{t('customers')}</h2>
-                <p className="text-indigo-100 text-sm font-medium opacity-80">View active accounts</p>
+                <h2 className="text-2xl font-bold text-primary-foreground font-display tracking-tight mb-1">{t('customers')}</h2>
+                <p className="text-primary-foreground/80 text-sm font-medium">View active accounts</p>
               </div>
             </div>
           </button>

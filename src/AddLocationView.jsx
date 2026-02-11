@@ -36,14 +36,14 @@ export default function AddLocationView() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Generate ID prefix based on Zone
     let prefix = 'BRK';
     if (formData.zone === 'Bronx') prefix = 'BNX';
     if (formData.zone === 'Queens') prefix = 'QNS';
     if (formData.zone === 'Manhattan') prefix = 'MAN';
     if (formData.zone === 'Staten Island') prefix = 'STI';
-    
+
     const randomNum = Math.floor(100 + Math.random() * 900);
     const newId = `${prefix}-${randomNum}`;
 
@@ -97,8 +97,8 @@ export default function AddLocationView() {
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <div className="max-w-[380px] mx-auto p-3">
-<form onSubmit={handleSubmit} className="space-y-4">
-            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm space-y-3">
             <h2 className="flex items-center gap-2 text-base font-semibold text-indigo-600 dark:text-indigo-400">
               <Building size={18} />
               {t('businessDetails')}
@@ -213,12 +213,12 @@ export default function AddLocationView() {
             </div>
 
             {/* עמלה, מכונה, הערות */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-              <label className="text-slate-500 dark:text-slate-400 text-sm font-semibold uppercase tracking-wide flex items-center gap-2">
+            <div className="bg-muted/30 p-4 rounded-xl border border-border space-y-2">
+              <label className="text-muted-foreground text-sm font-semibold uppercase tracking-wide flex items-center gap-2">
                 <Percent size={16} />
                 {t('commissionRate')}
               </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{t('enterDecimal')}</p>
+              <p className="text-xs text-muted-foreground">{t('enterDecimal')}</p>
               <div className="flex gap-2 items-center">
                 <input
                   type="number"
@@ -229,7 +229,7 @@ export default function AddLocationView() {
                   value={formData.commissionRate}
                   onChange={handleChange}
                   placeholder="0.40"
-                  className="flex-1 p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                  className="flex-1 p-3 rounded-xl bg-background border border-border outline-none focus:ring-2 focus:ring-primary text-foreground"
                 />
                 <span className="px-2 py-1 rounded-lg text-sm font-bold bg-amber-400 text-amber-900 dark:bg-amber-500 dark:text-amber-950 shrink-0">
                   {Number.isFinite(parseFloat(formData.commissionRate)) ? `${Math.round(parseFloat(formData.commissionRate) * 100)}%` : '—'}
@@ -237,16 +237,16 @@ export default function AddLocationView() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
               <input
                 type="checkbox"
                 id="hasChangeMachine"
                 name="hasChangeMachine"
                 checked={formData.hasChangeMachine}
                 onChange={handleChange}
-                className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-5 h-5 rounded border-input text-primary focus:ring-primary"
               />
-              <label htmlFor="hasChangeMachine" className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
+              <label htmlFor="hasChangeMachine" className="flex items-center gap-2 text-foreground font-medium cursor-pointer">
                 <Banknote size={18} />
                 {t('hasChangeMachine')}
               </label>
@@ -268,7 +268,7 @@ export default function AddLocationView() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 text-lg"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-2 text-lg"
           >
             <Save size={24} />
             {t('saveCustomer')}

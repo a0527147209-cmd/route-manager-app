@@ -141,15 +141,7 @@ export default function SettingsView() {
           </div>
         </div>
 
-        {/* Logout Button */}
-        <div className="mt-8">
-          <button
-            onClick={handleLogout}
-            className="w-full py-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-300 dark:hover:bg-slate-700 active:scale-[0.98] transition-all"
-          >
-            Log Out ({user?.username})
-          </button>
-        </div>
+
 
       </div>
     </div>

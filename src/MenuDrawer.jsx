@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, Search, UserPlus, Users } from 'lucide-react';
+import { Settings, X, Search, UserPlus, Users, LogOut, LogIn } from 'lucide-react';
 import { useSearch } from './SearchContext';
 import { useLanguage } from './LanguageContext';
+import { useAuth } from './AuthContext';
 
 export default function MenuDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm } = useSearch();
   const { t, isRtl } = useLanguage();
+  const { user, logout } = useAuth();
 
   const goTo = (path) => {
     onClose();
@@ -81,8 +83,34 @@ export default function MenuDrawer({ isOpen, onClose }) {
             <Settings size={20} />
             <span>{t('settings')}</span>
           </button>
+
+
+
+          {user ? (
+            <button
+              onClick={() => {
+                if (window.confirm(t('confirmLogout') || 'Are you sure you want to log out?')) {
+                  logout();
+                  onClose();
+                  navigate('/login');
+                }
+              }}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+            >
+              <LogOut size={20} />
+              <span>{t('logout') || 'Log Out'} ({user.username})</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => goTo('/login')}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-primary hover:bg-primary/10 transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+            >
+              <LogIn size={20} />
+              <span>{t('login') || 'Log In'}</span>
+            </button>
+          )}
         </div>
-      </div>
+      </div >
     </>
   );
 }

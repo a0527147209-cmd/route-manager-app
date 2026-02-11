@@ -1,39 +1,34 @@
-import { createContext, useContext, useState, useLayoutEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+
+const STORAGE_KEY = 'myRouteTheme';
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  // Check system preference or localStorage
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    const saved = localStorage.getItem('appTheme');
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const [theme, setThemeState] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY) || 'classic';
   });
 
-  // Apply the class to the HTML element and sync theme-color meta (useLayoutEffect = before paint)
-  useLayoutEffect(() => {
-    const root = window.document.documentElement;
-    const meta = window.document.querySelector('meta[name="theme-color"]');
-    if (isDarkMode) {
-      root.classList.add('dark');
-      if (meta) meta.setAttribute('content', '#0f172a');
-      localStorage.setItem('appTheme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      if (meta) meta.setAttribute('content', '#f8fafc');
-      localStorage.setItem('appTheme', 'light');
-    }
-  }, [isDarkMode]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, theme);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
-  const toggleTheme = () => setIsDarkMode(prev => !prev);
+  const setTheme = (newTheme) => {
+    setThemeState(newTheme);
+  };
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 }

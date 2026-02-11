@@ -5,14 +5,69 @@
 @tailwind utilities;
 
 @layer base {
+
+  /* CLASSIC THEME (Default) */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --color-primary: 79 70% 58%;
+    /* Indigo-600 approx */
+    --color-primary-foreground: 0 0% 100%;
+    --color-accent: 160 84% 39%;
+    /* Emerald-600 approx */
+    --color-accent-foreground: 0 0% 100%;
+    --color-background: 210 40% 98%;
+    /* Slate-50 */
+    --color-foreground: 222.2 84% 4.9%;
+    /* Slate-900 */
+    --color-card: 0 0% 100%;
+    --color-card-foreground: 222.2 84% 4.9%;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+  /* DARK CLASSIC */
+  .dark,
+  [data-theme='classic'] .dark {
+    --color-primary: 226 71% 70%;
+    /* Indigo-400 */
+    --color-primary-foreground: 222.2 84% 4.9%;
+    --color-accent: 160 84% 70%;
+    /* Emerald-400 */
+    --color-accent-foreground: 222.2 84% 4.9%;
+    --color-background: 222.2 84% 4.9%;
+    /* Slate-950 */
+    --color-foreground: 210 40% 98%;
+    /* Slate-50 */
+    --color-card: 217 33% 17%;
+    /* Slate-800 */
+    --color-card-foreground: 210 40% 98%;
+  }
+
+  /* MODERN THEME (Blue & Gold) */
+  [data-theme='modern'] {
+    --color-primary: 222 47% 11%;
+    /* #0f172a (Slate-950/Blue-950) - Deep luxury blue */
+    --color-primary-foreground: 210 40% 98%;
+    --color-accent: 45 93% 47%;
+    /* #f59e0b (Amber-500) - Gold */
+    --color-accent-foreground: 0 0% 100%;
+    --color-background: 210 40% 96.1%;
+    /* Slate-100/Grayish for contrast */
+    --color-foreground: 222.2 84% 4.9%;
+    --color-card: 0 0% 100%;
+    --color-card-foreground: 222.2 84% 4.9%;
+  }
+
+  [data-theme='modern'] .dark {
+    --color-primary: 217 33% 17%;
+    /* Lighter slate for dark mode primary */
+    --color-primary-foreground: 210 40% 98%;
+    --color-accent: 45 93% 47%;
+    /* Gold remains */
+    --color-accent-foreground: 222.2 47% 11%;
+    --color-background: 222 47% 11%;
+    /* Deep blue/black background */
+    --color-foreground: 210 40% 98%;
+    --color-card: 222 47% 15%;
+    /* Slightly lighter blue for cards */
+    --color-card-foreground: 210 40% 98%;
   }
 
   html {

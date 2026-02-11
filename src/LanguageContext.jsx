@@ -122,6 +122,9 @@ const translations = {
     bill1: '1',
     lastVisitSummary: 'Last Visit Summary',
     yearlySummary: 'Yearly Summary',
+    visualTheme: 'Visual Theme',
+    classic: 'Classic',
+    modern: 'Modern',
   },
   he: {
     appTitle: 'המסלול שלי',
@@ -242,6 +245,9 @@ const translations = {
     bill1: '1',
     lastVisitSummary: 'סיכום ביקור אחרון',
     yearlySummary: 'סיכום שנתי',
+    visualTheme: 'ערכת נושא',
+    classic: 'קלאסי',
+    modern: 'מודרני',
   },
 };
 

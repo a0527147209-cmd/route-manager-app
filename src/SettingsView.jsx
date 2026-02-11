@@ -8,13 +8,13 @@ import MenuDrawer from './MenuDrawer';
 export default function SettingsView() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme, theme, setTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors duration-300">
-      
+
       {/* Header – compact for mobile */}
       <div className="bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between max-w-[380px] mx-auto w-full">
         <div className="flex items-center justify-between w-full gap-2">
@@ -53,18 +53,41 @@ export default function SettingsView() {
             <div className="relative w-10 h-10 flex items-center justify-center rounded-full bg-slate-200/80 dark:bg-slate-600/80 transition-colors duration-500">
               <Moon
                 size={22}
-                className={`absolute text-indigo-400 transition-all duration-500 ease-in-out ${
-                  isDarkMode ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
-                }`}
+                className={`absolute text-indigo-400 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
+                  }`}
               />
               <Sun
                 size={22}
-                className={`absolute text-amber-500 transition-all duration-500 ease-in-out ${
-                  isDarkMode ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                }`}
+                className={`absolute text-amber-500 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                  }`}
               />
             </div>
           </button>
+        </div>
+
+
+        {/* Visual Theme */}
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            {t('visualTheme') || (language === 'he' ? 'ערכת נושא' : 'Visual Theme')}
+          </h2>
+          <div className="flex gap-2">
+            {['classic', 'modern'].map((th) => {
+              const isActive = theme === th;
+              return (
+                <button
+                  key={th}
+                  onClick={() => setTheme(th)}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border ${isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-900/40 border-indigo-500 text-indigo-700 dark:text-indigo-300 shadow-sm ring-1 ring-indigo-500' // Active state
+                    : 'bg-slate-50 dark:bg-slate-700/30 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }`}
+                >
+                  {th === 'classic' ? (language === 'he' ? 'קלאסי' : 'Classic') : (language === 'he' ? 'מודרני' : 'Modern')}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Language – smaller box for mobile */}
@@ -78,11 +101,10 @@ export default function SettingsView() {
               type="button"
               onClick={() => setLanguage('he')}
               title={language === 'he' ? undefined : t('hebrew')}
-              className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${
-                language === 'he'
-                  ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+              className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${language === 'he'
+                ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
             >
               עברית
             </button>
@@ -90,11 +112,10 @@ export default function SettingsView() {
               type="button"
               onClick={() => setLanguage('en')}
               title={language === 'en' ? undefined : t('english')}
-              className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${
-                language === 'en'
-                  ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+              className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${language === 'en'
+                ? 'bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
             >
               English
             </button>
@@ -105,8 +126,8 @@ export default function SettingsView() {
         <div className="text-center mt-6 space-y-1.5">
           <p className="text-slate-400 text-xs">{t('appVersion')}</p>
           <div className="flex justify-center gap-3">
-             <Globe size={14} className="text-slate-400" />
-             <Github size={14} className="text-slate-400" />
+            <Globe size={14} className="text-slate-400" />
+            <Github size={14} className="text-slate-400" />
           </div>
         </div>
 

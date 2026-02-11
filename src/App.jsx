@@ -42,13 +42,13 @@ function App() {
     <ErrorBoundary>
       <LocationsProvider>
         <SearchProvider>
-          <ThemeProvider>
-            <LanguageProvider>
+          <LanguageProvider>
+            <ThemeProvider>
               <BrowserRouter>
                 <AppContent />
               </BrowserRouter>
-            </LanguageProvider>
-          </ThemeProvider>
+            </ThemeProvider>
+          </LanguageProvider>
         </SearchProvider>
       </LocationsProvider>
     </ErrorBoundary>

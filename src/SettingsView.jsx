@@ -13,7 +13,7 @@ export default function SettingsView() {
   const location = useLocation();
   const { isDarkMode, toggleTheme, theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
-  const { t, isRtl } = useLanguage();
+  const { t, isRtl, language, setLanguage } = useLanguage();
   const { confirm } = useConfirmation();
   const [menuOpen, setMenuOpen] = useState(false);
 

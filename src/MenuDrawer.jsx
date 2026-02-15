@@ -130,6 +130,10 @@ export default function MenuDrawer({ isOpen, onClose }) {
               <span>{t('login') || 'Log In'}</span>
             </button>
           )}
+
+          <div className="mt-auto p-4 text-center">
+            <p className="text-[10px] text-muted-foreground/50 font-mono">v2.5 (Latest)</p>
+          </div>
         </div>
       </div >
     </>

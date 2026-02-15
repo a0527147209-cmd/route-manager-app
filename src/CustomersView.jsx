@@ -352,7 +352,7 @@ export default function CustomersView() {
                       </p>
                     )}
                     {loc?.subtitle && (
-                      <p className="text-xs font-bold font-serif text-red-600 dark:text-red-400 mt-1 truncate">{loc.subtitle}</p>
+                      <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 truncate">{loc.subtitle}</p>
                     )}
                   </div>
                   {loc?.lastVisited && (
@@ -424,7 +424,7 @@ export default function CustomersView() {
                         </p>
                       )}
                       {loc?.subtitle && (
-                        <p className="text-xs font-bold font-serif text-red-600 dark:text-red-400 mt-1 truncate">{loc.subtitle}</p>
+                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 truncate">{loc.subtitle}</p>
                       )}
                     </div>
                     {loc?.lastVisited && (

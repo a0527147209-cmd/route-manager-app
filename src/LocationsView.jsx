@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { MapPin, Map as MapIcon, Navigation, Menu, Banknote, Calendar, ArrowLeft, Search, ChevronRight, SlidersHorizontal, X, GripVertical } from 'lucide-react';
+import { MapPin, Menu, Banknote, Calendar, ArrowLeft, Search, ChevronRight, SlidersHorizontal, X, GripVertical } from 'lucide-react';
+import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 import { useSearch } from './SearchContext';
@@ -393,7 +394,7 @@ export default function LocationsView() {
                         className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
                         title={t('waze')}
                       >
-                        <Navigation size={22} />
+                        <WazeLogo size={22} />
                       </a>
                       <a
                         href={getMapsUrl(loc?.address)}
@@ -402,7 +403,7 @@ export default function LocationsView() {
                         className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
                         title={t('maps')}
                       >
-                        <MapIcon size={22} />
+                        <GoogleMapsLogo size={22} />
                       </a>
                     </div>
                   </div>
@@ -467,7 +468,7 @@ export default function LocationsView() {
                         className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
                         title={t('waze')}
                       >
-                        <Navigation size={22} />
+                        <WazeLogo size={22} />
                       </a>
                       <a
                         href={getMapsUrl(loc?.address)}
@@ -476,7 +477,7 @@ export default function LocationsView() {
                         className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
                         title={t('maps')}
                       >
-                        <MapIcon size={22} />
+                        <GoogleMapsLogo size={22} />
                       </a>
                     </div>
                   </div>

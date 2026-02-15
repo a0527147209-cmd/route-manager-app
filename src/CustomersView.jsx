@@ -377,19 +377,19 @@ export default function CustomersView() {
                         href={getWazeUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
+                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
                         title={t('waze')}
                       >
-                        <WazeLogo size={22} />
+                        <WazeLogo size={38} />
                       </a>
                       <a
                         href={getMapsUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
+                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
                         title={t('maps')}
                       >
-                        <GoogleMapsLogo size={22} />
+                        <GoogleMapsLogo size={38} />
                       </a>
                     </div>
                   </div>
@@ -451,19 +451,19 @@ export default function CustomersView() {
                         href={getWazeUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
+                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
                         title={t('waze')}
                       >
-                        <WazeLogo size={22} />
+                        <WazeLogo size={38} />
                       </a>
                       <a
                         href={getMapsUrl(loc?.address)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
+                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
                         title={t('maps')}
                       >
-                        <GoogleMapsLogo size={22} />
+                        <GoogleMapsLogo size={38} />
                       </a>
                     </div>
                   </div>

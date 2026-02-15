@@ -129,10 +129,7 @@ export default function LocationDetailsView() {
 
   const openGoogleMaps = () => {
     if (!location?.address) return;
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`,
-      '_blank'
-    );
+    navigate(`/maps?q=${encodeURIComponent(location.address)}`);
   };
 
   const formatVisitDateShort = (isoStr) => {
@@ -353,9 +350,8 @@ export default function LocationDetailsView() {
             {[50, 20, 10, 5, 1].map((billValue) => (
               <div
                 key={billValue}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-800/60 border-2 border-slate-300 dark:border-slate-500 shadow-md hover:shadow-lg transition-all duration-200 ${
-                  animatingBill === billValue ? 'animate-pulse scale-105 ring-2 ring-indigo-400 dark:ring-indigo-500' : ''
-                } ${isRtl ? 'flex-row-reverse' : ''}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-700/60 dark:to-slate-800/60 border-2 border-slate-300 dark:border-slate-500 shadow-md hover:shadow-lg transition-all duration-200 ${animatingBill === billValue ? 'animate-pulse scale-105 ring-2 ring-indigo-400 dark:ring-indigo-500' : ''
+                  } ${isRtl ? 'flex-row-reverse' : ''}`}
               >
                 <button
                   onClick={() => updateBillCount(billValue, -1)}
@@ -369,9 +365,8 @@ export default function LocationDetailsView() {
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     {t(`bill${billValue}`)}
                   </span>
-                  <span className={`text-lg font-bold text-slate-900 dark:text-slate-100 transition-all duration-200 ${
-                    animatingBill === billValue ? 'scale-125 text-indigo-600 dark:text-indigo-400' : ''
-                  }`}>
+                  <span className={`text-lg font-bold text-slate-900 dark:text-slate-100 transition-all duration-200 ${animatingBill === billValue ? 'scale-125 text-indigo-600 dark:text-indigo-400' : ''
+                    }`}>
                     {bills[billValue] || 0}
                   </span>
                 </div>

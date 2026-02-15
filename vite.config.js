@@ -4,6 +4,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    port: 5173,
+    strictPort: true,
+    host: true,
+  },
   plugins: [
     react(),
     // PWA disabled due to workbox/terser build hook conflict - re-enable when fixed

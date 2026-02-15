@@ -13,7 +13,9 @@ import LocationDetailsView from './LocationDetailsView';
 import CustomerDetailsView from './CustomerDetailsView';
 import SettingsView from './SettingsView';
 import LoginView from './LoginView';
+import MapsView from './MapsView';
 import { AuthProvider, useAuth } from './AuthContext';
+import { ConfirmationProvider } from './ConfirmationContext';
 
 function AppWithAuth() {
   const { user, isLoading } = useAuth();
@@ -47,6 +49,7 @@ function AppContent() {
         <Route path="/location/:id" element={<LocationDetailsView />} />
         <Route path="/customer/:id" element={<CustomerDetailsView />} />
         <Route path="/settings" element={<SettingsView />} />
+        <Route path="/maps" element={<MapsView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
@@ -60,11 +63,13 @@ function App() {
         <SearchProvider>
           <AuthProvider>
             <LanguageProvider>
-              <ThemeProvider>
-                <BrowserRouter>
-                  <AppWithAuth />
-                </BrowserRouter>
-              </ThemeProvider>
+              <ConfirmationProvider>
+                <ThemeProvider>
+                  <BrowserRouter>
+                    <AppWithAuth />
+                  </BrowserRouter>
+                </ThemeProvider>
+              </ConfirmationProvider>
             </LanguageProvider>
           </AuthProvider>
         </SearchProvider>

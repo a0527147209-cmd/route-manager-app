@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
+import { useConfirmation } from './ConfirmationContext';
 import {
   X,
   Save,
   Calendar,
   Check,
+  Trash2,
+  DollarSign,
+  Calculator,
+  ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 
 export default function LogFormModal({ location, onClose, onSaved, initialLog = null, logIndex = -1 }) {
   const { updateLocation, updateLog } = useLocations();
   const { t, isRtl } = useLanguage();
+  const { confirm } = useConfirmation();
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
@@ -55,17 +62,22 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
     setTimeout(() => setAnimatingBill(null), 300);
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
     // Check for changes (simplified for now, ideally compare with initial state)
     // For edit mode, we might want to check against initialLog
     const hasBills = Object.values(bills).some(v => v > 0);
     // If editing, check if different from initial
-    const isDirty = initialLog
+    const hasChanges = initialLog
       ? (amount !== initialLog.collection || notes !== (initialLog.notes || '') || JSON.stringify(bills) !== JSON.stringify(initialLog.bills))
       : ((amount !== '' && amount !== '0') || notes !== '' || hasBills);
 
-    if (isDirty) {
-      if (window.confirm(t('confirmDiscardChanges') || 'Are you sure you want to leave? Your changes will not be saved.')) {
+    if (hasChanges) {
+      if (await confirm({
+        title: t('discardChanges') || 'Discard Changes',
+        message: t('confirmDiscardChanges') || 'Are you sure you want to leave? Your changes will not be saved.',
+        confirmText: t('discard') || 'Discard',
+        cancelText: t('keepEditing') || 'Keep Editing'
+      })) {
         onClose();
       }
     } else {

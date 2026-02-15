@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
+import { useConfirmation } from './ConfirmationContext';
 import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Languages } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 
@@ -11,14 +12,20 @@ export default function SettingsView() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDarkMode, toggleTheme, theme, setTheme } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
-  const { logout, user } = useAuth();
+  const { user, logout } = useAuth();
+  const { t, isRtl } = useLanguage();
+  const { confirm } = useConfirmation();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    if (window.confirm('Are you sure you want to log out?')) {
+  const handleLogout = async () => {
+    if (await confirm({
+      title: t('logout') || 'Log Out',
+      message: t('confirmLogout') || 'Are you sure you want to log out?',
+      confirmText: t('logout') || 'Log Out',
+      cancelText: t('cancel') || 'Cancel'
+    })) {
       logout();
-      navigate('/');
+      navigate('/login');
     }
   };
 

@@ -3,12 +3,14 @@ import { Settings, X, Search, UserPlus, Users, LogOut, LogIn } from 'lucide-reac
 import { useSearch } from './SearchContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
+import { useConfirmation } from './ConfirmationContext';
 
 export default function MenuDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm } = useSearch();
   const { t, isRtl } = useLanguage();
   const { user, logout } = useAuth();
+  const { confirm } = useConfirmation();
 
   const goTo = (path) => {
     onClose();
@@ -88,8 +90,13 @@ export default function MenuDrawer({ isOpen, onClose }) {
 
           {user ? (
             <button
-              onClick={() => {
-                if (window.confirm(t('confirmLogout') || 'Are you sure you want to log out?')) {
+              onClick={async () => {
+                if (await confirm({
+                  title: t('logout') || 'Log Out',
+                  message: t('confirmLogout') || 'Are you sure you want to log out?',
+                  confirmText: t('logout') || 'Log Out',
+                  cancelText: t('cancel') || 'Cancel'
+                })) {
                   logout();
                   onClose();
                   navigate('/login');

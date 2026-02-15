@@ -20,6 +20,7 @@ import MenuDrawer from './MenuDrawer';
 import LogFormModal from './LogFormModal';
 
 import { useAuth } from './AuthContext';
+import { useConfirmation } from './ConfirmationContext';
 
 export default function CustomerDetailsView() {
   const { id } = useParams();
@@ -29,9 +30,10 @@ export default function CustomerDetailsView() {
   const { locations, updateLocation, removeLocation, removeLog } = useLocations();
   const { t, isRtl } = useLanguage();
   const { isAdmin } = useAuth();
+  const { confirm } = useConfirmation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
-  const [expandLogNotes, setExpandLogNotes] = useState(false);
+  const [viewingLogNote, setViewingLogNote] = useState(null);
 
   // Edit Log State
   const [editingLog, setEditingLog] = useState(null);
@@ -74,9 +76,14 @@ export default function CustomerDetailsView() {
     String(notes ?? '').trim() !== String(location.notes ?? '').trim()
   );
 
-  const handleBackClick = () => {
+  const handleBackClick = async () => {
     if (hasUnsavedChanges) {
-      if (window.confirm(t('saveChangesConfirm'))) {
+      if (await confirm({
+        title: t('saveChanges') || 'Save Changes?',
+        message: t('saveChangesConfirm') || 'Do you want to save your changes before leaving?',
+        confirmText: t('saveWord') || 'Save',
+        cancelText: t('discard') || 'Discard'
+      })) {
         handleSaveNotes();
       } else {
         handleCancelEdit();
@@ -85,9 +92,14 @@ export default function CustomerDetailsView() {
     navigate(backPath);
   };
 
-  const handleEditLog = (log, index) => {
+  const handleEditLog = async (log, index) => {
     // "Hard to edit" - confirmation dialog
-    if (window.confirm(t('confirmEditLog') || 'Editing historical logs will change financial data. Are you sure?')) {
+    if (await confirm({
+      title: t('editLog') || 'Edit Log',
+      message: t('confirmEditLog') || 'Editing historical logs will change financial data. Are you sure?',
+      confirmText: t('continue') || 'Continue',
+      cancelText: t('cancel') || 'Cancel'
+    })) {
       setEditingLog(log);
       setEditingLogIndex(index);
       setShowLogModal(true);
@@ -110,10 +122,7 @@ export default function CustomerDetailsView() {
 
   const openGoogleMaps = () => {
     if (!location?.address) return;
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`,
-      '_blank'
-    );
+    navigate(`/maps?q=${encodeURIComponent(location.address)}`);
   };
 
   const formatLogDate = (isoStr) => {
@@ -417,11 +426,14 @@ export default function CustomerDetailsView() {
                       </td>
                       {/* Notes and Edit */}
                       <td className={`px-2 py-0 border border-slate-300 dark:border-slate-600 ${isRtl ? 'text-right' : 'text-left'} align-middle`} style={{ minWidth: '120px' }}>
-                        <div className="flex items-center justify-between gap-1 h-full">
+                        <div
+                          className="flex items-center justify-between gap-1 h-full cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 p-1 rounded transition-colors"
+                          onClick={() => setViewingLogNote(log.notes)}
+                        >
                           <span className="truncate max-w-[100px] text-slate-500 italic block">
                             {(log.notes || '')?.slice(0, 15)}
                           </span>
-                          <div className="p-0.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-help" title={log.notes}>
+                          <div className="p-0.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                             <ChevronDown size={14} />
                           </div>
                         </div>
@@ -437,8 +449,14 @@ export default function CustomerDetailsView() {
                               <Pencil size={14} />
                             </button>
                             <button
-                              onClick={() => {
-                                if (window.confirm(t('confirmDeleteLog') || 'Are you sure you want to delete this log?')) {
+                              onClick={async () => {
+                                if (await confirm({
+                                  title: t('deleteLog') || 'Delete Log',
+                                  message: t('confirmDeleteLog') || 'Are you sure you want to delete this log?',
+                                  confirmText: t('delete') || 'Delete',
+                                  cancelText: t('cancel') || 'Cancel',
+                                  isDelete: true
+                                })) {
                                   removeLog(location.id, index);
                                 }
                               }}
@@ -610,11 +628,11 @@ export default function CustomerDetailsView() {
         )}
 
         {/* Floating overlay for full log notes - does not affect table layout */}
-        {expandLogNotes && (
+        {viewingLogNote && (
           <>
             <div
               className="fixed inset-0 bg-black/40 z-[55]"
-              onClick={() => setExpandLogNotes(false)}
+              onClick={() => setViewingLogNote(null)}
               aria-hidden="true"
             />
             <div
@@ -626,7 +644,7 @@ export default function CustomerDetailsView() {
                 <span className="font-bold text-sm text-slate-800 dark:text-white">{t('logNotes')}</span>
                 <button
                   type="button"
-                  onClick={() => setExpandLogNotes(false)}
+                  onClick={() => setViewingLogNote(null)}
                   className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
                   aria-label={t('close')}
                 >
@@ -635,7 +653,7 @@ export default function CustomerDetailsView() {
               </div>
               <div className="p-4 overflow-y-auto flex-1 min-h-0">
                 <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-words">
-                  {(location?.logNotes ?? location?.notes) || '—'}
+                  {viewingLogNote || '—'}
                 </p>
               </div>
             </div>
@@ -645,8 +663,14 @@ export default function CustomerDetailsView() {
         {isAdmin && (
           <div className="mt-8 px-4">
             <button
-              onClick={() => {
-                if (window.confirm(t('deleteThisCustomer'))) {
+              onClick={async () => {
+                if (await confirm({
+                  title: t('deleteCustomer') || 'Delete Customer',
+                  message: t('deleteThisCustomer') || 'Are you sure you want to delete this customer?',
+                  confirmText: t('delete') || 'Delete',
+                  cancelText: t('cancel') || 'Cancel',
+                  isDelete: true
+                })) {
                   removeLocation(id);
                   navigate('/customers', { replace: true });
                 }
@@ -658,6 +682,8 @@ export default function CustomerDetailsView() {
           </div>
         )}
       </div>
+
+
     </div>
   );
 }

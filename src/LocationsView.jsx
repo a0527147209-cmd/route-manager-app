@@ -333,7 +333,7 @@ export default function LocationsView() {
               }}
               className="space-y-2"
             >
-              {areaLocations.map((loc) => (
+              {areaLocations.map((loc, index) => (
                 <Reorder.Item
                   key={loc?.id}
                   value={loc}
@@ -342,8 +342,11 @@ export default function LocationsView() {
                   whileDrag={{ scale: 1.03, boxShadow: '0 8px 25px rgba(0,0,0,0.15)' }}
                 >
                   <div className="flex items-start gap-2">
-                    <div className="shrink-0 flex items-center pt-1 text-muted-foreground/50">
-                      <GripVertical size={16} />
+                    <div className="shrink-0 flex flex-col items-center pt-0.5 gap-0.5">
+                      <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">
+                        {index + 1}
+                      </span>
+                      <GripVertical size={14} className="text-muted-foreground/40" />
                     </div>
                     <div
                       className="min-w-0 flex-1 cursor-pointer"

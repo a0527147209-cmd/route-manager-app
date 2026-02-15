@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, X } from 'lucide-react';
+import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, X, Clock } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';

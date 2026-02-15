@@ -52,6 +52,7 @@ export default function CustomerDetailsView() {
     setEditForm({
       name: location?.name ?? '',
       address: location?.address ?? '',
+      locationType: location?.locationType ?? '',
       city: location?.city ?? '',
       state: location?.state ?? '',
       zipCode: location?.zipCode ?? '',
@@ -67,6 +68,7 @@ export default function CustomerDetailsView() {
     updateLocation(location.id, {
       name: editForm.name.trim(),
       address: editForm.address.trim(),
+      locationType: (editForm.locationType || '').trim(),
       city: editForm.city.trim(),
       state: editForm.state.trim(),
       zipCode: (editForm.zipCode || '').trim(),
@@ -293,6 +295,16 @@ export default function CustomerDetailsView() {
                   onChange={(e) => setEditForm(f => ({ ...f, address: e.target.value }))}
                   className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
                   placeholder={t('address') || 'כתובת'}
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('locationType') || 'סוג מיקום'}</label>
+                <input
+                  type="text"
+                  value={editForm.locationType}
+                  onChange={(e) => setEditForm(f => ({ ...f, locationType: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                  placeholder={t('locationTypePlaceholder') || 'למשל: מסעדה, חנות, מרכול...'}
                 />
               </div>
               <div className="flex gap-2">

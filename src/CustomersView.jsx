@@ -351,10 +351,11 @@ export default function CustomersView() {
                         </span>
                       )}
                     </div>
-                    <p className="text-muted-foreground text-xs mt-0.5 truncate flex items-center gap-0.5">
-                      <MapPin size={12} className="shrink-0" />
-                      {loc?.address ?? '—'}
-                    </p>
+                    {loc?.locationType && (
+                      <p className="text-muted-foreground text-xs mt-0.5 truncate">
+                        {loc.locationType}
+                      </p>
+                    )}
                     {loc?.subtitle && (
                       <p className="text-[10px] mt-0.5 truncate italic px-1.5 py-0.5 rounded border border-black/30 inline-block" style={{ color: '#00ff00' }}>{loc.subtitle}</p>
                     )}
@@ -427,10 +428,11 @@ export default function CustomersView() {
                           </span>
                         )}
                       </div>
-                      <p className="text-muted-foreground text-xs mt-0.5 truncate flex items-center gap-0.5">
-                        <MapPin size={12} className="shrink-0" />
-                        {loc?.address ?? '—'}
-                      </p>
+                      {loc?.locationType && (
+                        <p className="text-muted-foreground text-xs mt-0.5 truncate">
+                          {loc.locationType}
+                        </p>
+                      )}
                       {loc?.subtitle && (
                         <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate italic">{loc.subtitle}</p>
                       )}

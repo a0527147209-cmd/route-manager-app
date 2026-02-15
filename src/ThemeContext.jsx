@@ -1,25 +1,46 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
-const STORAGE_KEY = 'myRouteTheme';
+const THEME_KEY = 'myRouteTheme';
+const DARK_KEY = 'myRouteDarkMode';
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) || 'classic';
+    return localStorage.getItem(THEME_KEY) || 'classic';
+  });
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const stored = localStorage.getItem(DARK_KEY);
+    if (stored !== null) return stored === 'true';
+    // Default to system preference
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(THEME_KEY, theme);
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem(DARK_KEY, String(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   const setTheme = (newTheme) => {
     setThemeState(newTheme);
   };
 
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, isDarkMode, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -342,7 +342,7 @@ export default function CustomersView() {
                       </span>
                       {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                          x{loc.changeMachineCount || 1} {t('machine')}
+                          x{loc.changeMachineCount || 1} Change Machine
                         </span>
                       )}
                     </div>

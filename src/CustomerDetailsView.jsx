@@ -75,6 +75,7 @@ export default function CustomerDetailsView() {
       subtitle: (editForm.subtitle || '').trim(),
       commissionRate: (parseFloat(editForm.commissionRate) || 40) / 100,
       changeMachineCount: parseInt(editForm.changeMachineCount) || 0,
+      hasChangeMachine: false,
     });
     setIsEditingCustomer(false);
   };

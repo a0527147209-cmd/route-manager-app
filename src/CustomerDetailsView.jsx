@@ -4,8 +4,6 @@ import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import {
   ArrowLeft,
-  Navigation,
-  Map as MapLucideIcon,
   Menu,
   Building,
   MapPin,
@@ -15,7 +13,9 @@ import {
   ChevronDown,
   X,
   Trash2,
+  Save,
 } from 'lucide-react';
+import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import MenuDrawer from './MenuDrawer';
 import LogFormModal from './LogFormModal';
 
@@ -43,6 +43,40 @@ export default function CustomerDetailsView() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(true);
   const [isEditingNotes, setIsEditingNotes] = useState(false);
+
+  // Customer Edit Mode
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [editForm, setEditForm] = useState({});
+
+  const startEditingCustomer = () => {
+    setEditForm({
+      name: location?.name ?? '',
+      address: location?.address ?? '',
+      city: location?.city ?? '',
+      state: location?.state ?? '',
+      commissionRate: location?.commissionRate ? Math.round(location.commissionRate * 100) : 40,
+      hasChangeMachine: location?.hasChangeMachine ?? false,
+    });
+    setIsEditingCustomer(true);
+  };
+
+  const handleSaveCustomer = () => {
+    if (!location || !editForm.name?.trim()) return;
+    updateLocation(location.id, {
+      name: editForm.name.trim(),
+      address: editForm.address.trim(),
+      city: editForm.city.trim(),
+      state: editForm.state.trim(),
+      commissionRate: (parseFloat(editForm.commissionRate) || 40) / 100,
+      hasChangeMachine: editForm.hasChangeMachine,
+    });
+    setIsEditingCustomer(false);
+  };
+
+  const handleCancelCustomerEdit = () => {
+    setIsEditingCustomer(false);
+    setEditForm({});
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -228,29 +262,128 @@ export default function CustomerDetailsView() {
 
       <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
         {/* Customer Info Card */}
-        <div className="bg-card p-4 rounded-xl shadow-sm border border-border space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-              <Building size={20} className="text-primary" />
+        {isEditingCustomer ? (
+          <div className="bg-card p-4 rounded-xl shadow-sm border-2 border-primary/40 space-y-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Pencil size={16} className="text-primary" />
+                <span className="text-sm font-bold text-primary">{t('edit') || 'עריכה'}</span>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-foreground mb-1">
-                {location.name}
-              </h2>
-              {location.address && (
-                <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <MapPin size={16} className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
-                  <span className="break-words">{location.address}</span>
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('name') || 'שם'}</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                  placeholder={t('name') || 'שם'}
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('address') || 'כתובת'}</label>
+                <input
+                  type="text"
+                  value={editForm.address}
+                  onChange={(e) => setEditForm(f => ({ ...f, address: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                  placeholder={t('address') || 'כתובת'}
+                />
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('city') || 'עיר'}</label>
+                  <input
+                    type="text"
+                    value={editForm.city}
+                    onChange={(e) => setEditForm(f => ({ ...f, city: e.target.value }))}
+                    className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                    placeholder={t('city') || 'עיר'}
+                  />
                 </div>
-              )}
-              {(location.city || location.state) && (
-                <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                  {[location.city, location.state].filter(Boolean).join(', ')}
-                </p>
-              )}
+                <div className="flex-1">
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('state') || 'מדינה'}</label>
+                  <input
+                    type="text"
+                    value={editForm.state}
+                    onChange={(e) => setEditForm(f => ({ ...f, state: e.target.value }))}
+                    className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                    placeholder={t('state') || 'מדינה'}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('commission') || 'עמלה'} (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={editForm.commissionRate}
+                  onChange={(e) => setEditForm(f => ({ ...f, commissionRate: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                />
+              </div>
+              <label className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-500 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editForm.hasChangeMachine}
+                  onChange={(e) => setEditForm(f => ({ ...f, hasChangeMachine: e.target.checked }))}
+                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                />
+                <span className="text-sm font-medium text-foreground">{t('hasChangeMachine') || 'מכונת עודף'}</span>
+              </label>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleSaveCustomer}
+                disabled={!editForm.name?.trim()}
+                className="flex-1 bg-primary hover:bg-primary/90 disabled:opacity-50 text-primary-foreground font-semibold py-2.5 rounded-lg shadow-md flex items-center justify-center gap-2 active:scale-[0.98] transition-all text-sm"
+              >
+                <Save size={16} />
+                <span>{t('saveWord') || 'שמור'}</span>
+              </button>
+              <button
+                onClick={handleCancelCustomerEdit}
+                className="flex-1 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-800 dark:text-white font-semibold py-2.5 rounded-lg shadow-md flex items-center justify-center gap-2 active:scale-[0.98] transition-all text-sm"
+              >
+                <X size={16} />
+                <span>{t('cancel') || 'ביטול'}</span>
+              </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-card p-4 rounded-xl shadow-sm border border-border space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                <Building size={20} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-foreground mb-1">
+                  {location.name}
+                </h2>
+                {location.address && (
+                  <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                    <MapPin size={16} className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                    <span className="break-words">{location.address}</span>
+                  </div>
+                )}
+                {(location.city || location.state) && (
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                    {[location.city, location.state].filter(Boolean).join(', ')}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={startEditingCustomer}
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors active:scale-95 shrink-0"
+                title={t('edit') || 'ערוך'}
+              >
+                <Pencil size={18} />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Actions Row */}
         <div className="flex items-stretch gap-2 w-full min-h-14">
@@ -259,7 +392,7 @@ export default function CustomerDetailsView() {
             className="flex-1 min-w-0 flex flex-col items-center justify-center p-1.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-700 shadow-md shadow-blue-200/50 dark:shadow-blue-900/30 hover:shadow-lg hover:shadow-blue-300/60 dark:hover:shadow-blue-800/40 hover:scale-[1.02] hover:border-blue-400 dark:hover:border-blue-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
             title={t('waze')}
           >
-            <Navigation size={18} className="shrink-0" />
+            <WazeLogo size={24} />
             <span className="text-[9px] font-semibold mt-0.5 truncate w-full text-center">{t('waze')}</span>
           </button>
           <button
@@ -267,7 +400,7 @@ export default function CustomerDetailsView() {
             className="flex-1 min-w-0 flex flex-col items-center justify-center p-1.5 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-2 border-green-300 dark:border-green-700 shadow-md shadow-green-200/50 dark:shadow-green-900/30 hover:shadow-lg hover:shadow-green-300/60 dark:hover:shadow-green-800/40 hover:scale-[1.02] hover:border-green-400 dark:hover:border-green-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
             title={t('maps')}
           >
-            <MapLucideIcon size={18} className="shrink-0" />
+            <GoogleMapsLogo size={24} />
             <span className="text-[9px] font-semibold mt-0.5 truncate w-full text-center">{t('maps')}</span>
           </button>
           <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">

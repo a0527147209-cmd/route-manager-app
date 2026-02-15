@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, Navigation, Map as MapIcon } from 'lucide-react';
+import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, Navigation, Map as MapIcon, X, GripVertical } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
+import { useSearch } from './SearchContext';
+import { Reorder } from 'framer-motion';
 
 const EMPTY = '__empty__';
 
@@ -29,13 +31,13 @@ const SORT_OPTIONS = [
 ];
 
 export default function CustomersView() {
-  const { locations, resetAndLoadDemo } = useLocations();
+  const { locations, resetAndLoadDemo, reorderLocations } = useLocations();
   const navigate = useNavigate();
   const routeLocation = useLocation();
   const { areaKey: urlAreaKey } = useParams();
   const { t, isRtl } = useLanguage();
+  const { searchTerm, setSearchTerm } = useSearch();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [searchCustomers, setSearchCustomers] = useState('');
   const [sortBy, setSortBy] = useState('zone');
   const hasAutoLoadedDemo = useRef(false);
 
@@ -54,26 +56,60 @@ export default function CustomersView() {
   }, [validLocations.length, resetAndLoadDemo]);
 
   const searchWords = useMemo(() => {
-    const term = (searchCustomers ?? '').toString().trim().toLowerCase();
+    const term = (searchTerm ?? '').toString().trim().toLowerCase();
     if (!term) return null;
     return term.split(/\s+/).filter(Boolean);
-  }, [searchCustomers]);
+  }, [searchTerm]);
 
   const matchesSearch = (loc) => {
     if (!searchWords?.length) return true;
-    const text = [
-      loc?.name,
-      loc?.address,
-      loc?.city,
-      loc?.region,
-      loc?.zone,
-      loc?.type,
-      loc?.id,
-    ]
-      .filter(Boolean)
-      .map((v) => String(v).toLowerCase())
-      .join(' ');
-    return searchWords.some((word) => text.includes(word));
+
+    try {
+      // Base fields
+      const baseText = [
+        loc?.name,
+        loc?.address,
+        loc?.city,
+        loc?.state,
+        loc?.region,
+        loc?.zone,
+        loc?.type,
+        loc?.id,
+        loc?.notes,     // Customer notes
+        loc?.logNotes,  // Top-level log notes
+        loc?.status,
+        loc?.lastCollection,
+        loc?.commissionRate ? `${Math.round(loc.commissionRate * 100)}%` : null,
+        loc?.bills ? Object.entries(loc.bills || {}).map(([k, v]) => `${k}x${v}`).join(' ') : ''
+      ]
+        .filter(Boolean)
+        .map((v) => String(v).toLowerCase())
+        .join(' ');
+
+      // Check base fields first
+      if (searchWords.every((word) => baseText.includes(word))) return true;
+
+      // Check logs history
+      if (loc?.logs && Array.isArray(loc.logs)) {
+        const allLogsText = loc.logs.map(log =>
+          [
+            log.date,
+            log.collection,
+            log.notes,
+            log.bills ? Object.entries(log.bills || {}).map(([k, v]) => `${k}x${v}`).join(' ') : ''
+          ].join(' ')
+        ).join(' ').toLowerCase();
+
+        const fullText = baseText + ' ' + allLogsText;
+        return searchWords.every((word) => fullText.includes(word));
+      }
+
+      return searchWords.every((word) => baseText.includes(word));
+    } catch (error) {
+      console.error('Search error for loc:', loc, error);
+      // Fallback to name search in case of error
+      return (loc?.name || '').toLowerCase().includes(searchWords[0]);
+    }
   };
 
   const filteredLocations = useMemo(() => validLocations.filter(matchesSearch), [validLocations, searchWords]);
@@ -234,10 +270,19 @@ export default function CustomersView() {
             <input
               type="text"
               placeholder={t('searchCustomer')}
-              value={searchCustomers}
-              onChange={(e) => setSearchCustomers(e.target.value)}
-              className={`w-full py-1 text-[11px] rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-1 text-right' : 'pl-5 pr-1 text-left'}`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full py-1 text-[11px] rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-5 text-right' : 'pl-5 pr-5 text-left'}`}
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors ${isRtl ? 'left-1' : 'right-1'}`}
+                type="button"
+              >
+                <X size={12} />
+              </button>
+            )}
           </div>
           {!isInnerPage && (
             <div className="flex items-center gap-0.5 shrink-0">
@@ -281,8 +326,97 @@ export default function CustomersView() {
               </button>
             </div>
           ) : (
+            <Reorder.Group
+              axis="y"
+              values={areaLocations}
+              onReorder={(newOrder) => {
+                reorderLocations(newOrder.map(loc => loc.id));
+              }}
+              className="space-y-2"
+            >
+              {areaLocations.map((loc) => (
+                <Reorder.Item
+                  key={loc?.id}
+                  value={loc}
+                  className="rounded-lg bg-card p-3 shadow-sm border border-border cursor-grab active:cursor-grabbing active:shadow-lg active:scale-[1.02] transition-shadow"
+                  style={{ touchAction: 'none' }}
+                  whileDrag={{ scale: 1.03, boxShadow: '0 8px 25px rgba(0,0,0,0.15)' }}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="shrink-0 flex items-center pt-1 text-muted-foreground/50">
+                      <GripVertical size={16} />
+                    </div>
+                    <div
+                      className="min-w-0 flex-1 cursor-pointer"
+                      onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
+                    >
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="font-bold text-foreground text-sm truncate">
+                          {loc?.name ?? '—'}
+                        </h3>
+                        {loc?.status === 'visited' && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                            {t('visited')}
+                          </span>
+                        )}
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
+                          {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                        </span>
+                        {loc?.hasChangeMachine && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                            {t('machine')}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-xs mt-0.5 truncate flex items-center gap-0.5">
+                        <MapPin size={12} className="shrink-0" />
+                        {loc?.address ?? '—'}
+                      </p>
+                    </div>
+                    {loc?.lastVisited && (
+                      <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[30%]`}>
+                        <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
+                          {t('lastVisit')}
+                        </p>
+                        <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
+                          {formatVisitDate(loc.lastVisited)}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <a
+                        href={getWazeUrl(loc?.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors active:scale-95"
+                        title={t('waze')}
+                      >
+                        <Navigation size={22} />
+                      </a>
+                      <a
+                        href={getMapsUrl(loc?.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors active:scale-95"
+                        title={t('maps')}
+                      >
+                        <MapIcon size={22} />
+                      </a>
+                    </div>
+                  </div>
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          )
+        ) : searchTerm && searchTerm.trim() ? (
+          filteredLocations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
+              <p className="text-muted-foreground/80 text-sm">{t('tryDifferentKeywords')}</p>
+            </div>
+          ) : (
             <div className="space-y-2">
-              {areaLocations.map((loc, index) => (
+              {filteredLocations.map((loc, index) => (
                 <div
                   key={loc?.id ?? index}
                   onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
@@ -350,7 +484,7 @@ export default function CustomersView() {
           )
         ) : displayGroups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchCustomers}&quot;</p>
+            <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
             <p className="text-muted-foreground/80 text-sm">{t('tryDifferentKeywords')}</p>
           </div>
         ) : (

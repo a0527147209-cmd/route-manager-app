@@ -50,18 +50,32 @@ export default function MenuDrawer({ isOpen, onClose }) {
               <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={16} />
               <input
                 type="text"
-                placeholder={t('searchCustomer')}
+                placeholder={t('search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     onClose();
-                    navigate('/customers', { state: { fromMenu: true } });
+                    const currentPath = window.location.pathname;
+                    if (currentPath.includes('/locations')) {
+                      navigate('/locations', { state: { fromMenu: true } });
+                    } else {
+                      navigate('/customers', { state: { fromMenu: true } });
+                    }
                   }
                 }}
-                className="w-full bg-muted/50 text-foreground rounded-lg py-2 ps-8 pe-2.5 text-sm outline-none focus:ring-2 focus:ring-primary"
+                className="w-full bg-muted/50 text-foreground rounded-lg py-2 ps-8 pe-8 text-sm outline-none focus:ring-2 focus:ring-primary"
                 onClick={(e) => e.stopPropagation()}
               />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  type="button"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
           </div>
           <button

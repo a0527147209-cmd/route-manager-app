@@ -193,6 +193,19 @@ export function LocationsProvider({ children }) {
     saveToStorage(seed);
   };
 
+  const reorderLocations = (reorderedIds) => {
+    setLocations((prev) => {
+      const idToLoc = new Map(prev.map(loc => [String(loc.id), loc]));
+      const reordered = reorderedIds.map(id => idToLoc.get(String(id))).filter(Boolean);
+      // Append any locations not in the reordered list (safety)
+      const reorderedSet = new Set(reorderedIds.map(String));
+      const remaining = prev.filter(loc => !reorderedSet.has(String(loc.id)));
+      const final = [...reordered, ...remaining];
+      saveToStorage(final);
+      return final;
+    });
+  };
+
   return (
     <LocationsContext.Provider
       value={{
@@ -205,6 +218,7 @@ export function LocationsProvider({ children }) {
         clearAllLocations,
         loadDemoData,
         resetAndLoadDemo,
+        reorderLocations,
       }}
     >
       {children}

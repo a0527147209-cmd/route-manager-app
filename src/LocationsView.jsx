@@ -1,9 +1,11 @@
+
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { MapPin, Menu, Banknote, Calendar, ArrowLeft, Search, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
+import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
+import { LinkifyText } from './utils/textUtils';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 import { useSearch } from './SearchContext';
@@ -81,8 +83,8 @@ export default function LocationsView() {
         loc?.logNotes,  // Top-level log notes
         loc?.status,
         loc?.lastCollection,
-        loc?.commissionRate ? `${Math.round(loc.commissionRate * 100)}%` : null,
-        loc?.bills ? Object.entries(loc.bills || {}).map(([k, v]) => `${k}x${v}`).join(' ') : ''
+        loc?.commissionRate ? `${Math.round(loc.commissionRate * 100)}% ` : null,
+        loc?.bills ? Object.entries(loc.bills || {}).map(([k, v]) => `${k}x${v} `).join(' ') : ''
       ]
         .filter(Boolean)
         .map((v) => String(v).toLowerCase())
@@ -98,7 +100,7 @@ export default function LocationsView() {
             log.date,
             log.collection,
             log.notes,
-            log.bills ? Object.entries(log.bills || {}).map(([k, v]) => `${k}x${v}`).join(' ') : ''
+            log.bills ? Object.entries(log.bills || {}).map(([k, v]) => `${k}x${v} `).join(' ') : ''
           ].join(' ')
         ).join(' ').toLowerCase();
 
@@ -180,7 +182,7 @@ export default function LocationsView() {
           lbl = norm(loc?.region ?? loc?.zone ?? loc?.city);
         }
         if (!k || k === EMPTY) continue;
-        const composite = `${dim}${COMPOSITE_SEP}${k}`;
+        const composite = `${dim}${COMPOSITE_SEP}${k} `;
         if (!seen.has(composite)) seen.set(composite, lbl);
       }
     });
@@ -366,7 +368,7 @@ export default function LocationsView() {
                       </p>
                     )}
                     {loc?.subtitle && (
-                      <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{loc.subtitle}</p>
+                      <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block" />
                     )}
                   </div>
                   {loc?.lastVisited && (
@@ -438,7 +440,7 @@ export default function LocationsView() {
                         </p>
                       )}
                       {loc?.subtitle && (
-                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{loc.subtitle}</p>
+                        <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block" />
                       )}
                     </div>
                     {loc?.lastVisited && (

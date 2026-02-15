@@ -230,7 +230,7 @@ export default function CustomerDetailsView() {
           <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
         </button>
         <div className="flex-1 min-w-0 flex items-center justify-center gap-3 text-center px-2">
-          <h1 className="font-bold text-base text-slate-800 dark:text-white">
+          <h1 className="font-bold text-base text-slate-800 dark:text-white break-words leading-tight">
             {location.name}
           </h1>
         </div>

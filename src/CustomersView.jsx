@@ -4,6 +4,7 @@ import { useLocations } from './LocationsContext';
 import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, X } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
+import { LinkifyText } from './utils/textUtils';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 import { useSearch } from './SearchContext';
@@ -352,7 +353,7 @@ export default function CustomersView() {
                       </p>
                     )}
                     {loc?.subtitle && (
-                      <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{loc.subtitle}</p>
+                      <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block" />
                     )}
                   </div>
                   {loc?.lastVisited && (
@@ -424,7 +425,7 @@ export default function CustomersView() {
                         </p>
                       )}
                       {loc?.subtitle && (
-                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{loc.subtitle}</p>
+                        <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block" />
                       )}
                     </div>
                     {loc?.lastVisited && (

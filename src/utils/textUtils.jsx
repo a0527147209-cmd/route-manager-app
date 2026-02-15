@@ -2,16 +2,24 @@ import React from 'react';
 
 export const LinkifyText = ({ text, className = '' }) => {
     if (!text) return null;
-    // Enhanced regex for Israeli mobile (05X-XXXXXXX), landline (0X-XXXXXXX), short (*XXXX), and plain digits (05XXXXXXXX)
-    const phoneRegex = /(\b05\d-?\d{7}\b|\b0[23489]-?\d{7}\b|\b07\d-?\d{7}\b|\*\d{3,5}\b)/g;
+
+    // Improved regex to catch more phone formats:
+    // 050-123-4567, 050-1234567, 0501234567 (Mobile)
+    // 03-1234567, 03-123-4567 (Landline)
+    // *1234 (Short code)
+    // 1-800-..., 1700-... (Toll free)
+    // Capturing group is essential for split to include the separator in the result array
+    const phoneRegex = /(\b0(?:5\d|7\d|[23489])[- ]?\d{7}\b|\b0(?:5\d|7\d|[23489])[- ]?\d{3}[- ]?\d{4}\b|\*\d{3,5}\b|\b1[78]00[- ]?\d{3}[- ]?\d{3}\b)/g;
 
     const parts = text.split(phoneRegex);
 
     return (
-        <span className={`${className} break-words whitespace-pre-wrap`}>
+        <div className={`${className} break-words whitespace-pre-wrap`}>
             {parts.map((part, i) => {
-                if (part.match(phoneRegex)) {
-                    const cleanNumber = part.replace(/-/g, '');
+                // With split(regex_capture_group), odd indices are the matches
+                if (i % 2 === 1) {
+                    // Clean all non-digit characters for the tel: link
+                    const cleanNumber = part.replace(/\D/g, '');
                     return (
                         <a
                             key={i}
@@ -24,8 +32,8 @@ export const LinkifyText = ({ text, className = '' }) => {
                         </a>
                     );
                 }
-                return part;
+                return <span key={i}>{part}</span>;
             })}
-        </span>
+        </div>
     );
 };

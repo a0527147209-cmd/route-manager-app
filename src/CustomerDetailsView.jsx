@@ -54,6 +54,8 @@ export default function CustomerDetailsView() {
       address: location?.address ?? '',
       city: location?.city ?? '',
       state: location?.state ?? '',
+      zipCode: location?.zipCode ?? '',
+      subtitle: location?.subtitle ?? '',
       commissionRate: location?.commissionRate ? Math.round(location.commissionRate * 100) : 40,
       hasChangeMachine: location?.hasChangeMachine ?? false,
     });
@@ -67,6 +69,8 @@ export default function CustomerDetailsView() {
       address: editForm.address.trim(),
       city: editForm.city.trim(),
       state: editForm.state.trim(),
+      zipCode: (editForm.zipCode || '').trim(),
+      subtitle: (editForm.subtitle || '').trim(),
       commissionRate: (parseFloat(editForm.commissionRate) || 40) / 100,
       hasChangeMachine: editForm.hasChangeMachine,
     });
@@ -312,6 +316,26 @@ export default function CustomerDetailsView() {
                     placeholder={t('state') || 'מדינה'}
                   />
                 </div>
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('zipCode') || 'מיקוד'}</label>
+                <input
+                  type="text"
+                  value={editForm.zipCode}
+                  onChange={(e) => setEditForm(f => ({ ...f, zipCode: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                  placeholder={t('zipCode') || 'מיקוד'}
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('subtitle') || 'תיאור קצר'}</label>
+                <input
+                  type="text"
+                  value={editForm.subtitle}
+                  onChange={(e) => setEditForm(f => ({ ...f, subtitle: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                  placeholder={t('subtitlePlaceholder') || 'טקסט שיוצג בתצוגה הראשית'}
+                />
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('commission') || 'עמלה'} (%)</label>

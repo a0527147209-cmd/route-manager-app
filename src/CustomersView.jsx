@@ -355,6 +355,9 @@ export default function CustomersView() {
                       <MapPin size={12} className="shrink-0" />
                       {loc?.address ?? '—'}
                     </p>
+                    {loc?.subtitle && (
+                      <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate italic">{loc.subtitle}</p>
+                    )}
                   </div>
                   {loc?.lastVisited && (
                     <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[30%]`}>
@@ -428,6 +431,9 @@ export default function CustomersView() {
                         <MapPin size={12} className="shrink-0" />
                         {loc?.address ?? '—'}
                       </p>
+                      {loc?.subtitle && (
+                        <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate italic">{loc.subtitle}</p>
+                      )}
                     </div>
                     {loc?.lastVisited && (
                       <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>

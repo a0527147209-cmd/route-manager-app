@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { MapPin, Menu, Banknote, Calendar, ArrowLeft, Search, ChevronRight, SlidersHorizontal, X, GripVertical } from 'lucide-react';
+import { MapPin, Menu, Banknote, Calendar, ArrowLeft, Search, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
+import DraggableCard from './DraggableCard';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 import { useSearch } from './SearchContext';
@@ -335,79 +336,65 @@ export default function LocationsView() {
               className="space-y-2"
             >
               {areaLocations.map((loc, index) => (
-                <Reorder.Item
-                  key={loc?.id}
-                  value={loc}
-                  className="rounded-lg bg-card p-3 shadow-sm border border-border cursor-grab active:cursor-grabbing active:shadow-lg active:scale-[1.02] transition-shadow"
-                  style={{ touchAction: 'none' }}
-                  whileDrag={{ scale: 1.03, boxShadow: '0 8px 25px rgba(0,0,0,0.15)' }}
-                >
-                  <div className="flex items-start gap-2">
-                    <div className="shrink-0 flex flex-col items-center pt-0.5 gap-0.5">
-                      <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">
-                        {index + 1}
-                      </span>
-                      <GripVertical size={14} className="text-muted-foreground/40" />
-                    </div>
-                    <div
-                      className="min-w-0 flex-1 cursor-pointer"
-                      onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-                    >
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-bold text-foreground text-sm truncate">
-                          {loc?.name ?? '—'}
-                        </h3>
-                        {loc?.status === 'visited' && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                            {t('visited')}
-                          </span>
-                        )}
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
-                          {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                <DraggableCard key={loc?.id} loc={loc} index={index}>
+                  <div
+                    className="min-w-0 flex-1 cursor-pointer"
+                    onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
+                  >
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-bold text-foreground text-sm truncate">
+                        {loc?.name ?? '—'}
+                      </h3>
+                      {loc?.status === 'visited' && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                          {t('visited')}
                         </span>
-                        {loc?.hasChangeMachine && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                            {t('machine')}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground text-xs mt-0.5 truncate flex items-center gap-0.5">
-                        <MapPin size={12} className="shrink-0" />
-                        {loc?.address ?? '—'}
+                      )}
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
+                        {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                      </span>
+                      {loc?.hasChangeMachine && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                          {t('machine')}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-xs mt-0.5 truncate flex items-center gap-0.5">
+                      <MapPin size={12} className="shrink-0" />
+                      {loc?.address ?? '—'}
+                    </p>
+                  </div>
+                  {loc?.lastVisited && (
+                    <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[30%]`}>
+                      <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
+                        {t('lastVisit')}
+                      </p>
+                      <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
+                        {formatVisitDate(loc.lastVisited)}
                       </p>
                     </div>
-                    {loc?.lastVisited && (
-                      <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[30%]`}>
-                        <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
-                          {t('lastVisit')}
-                        </p>
-                        <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
-                          {formatVisitDate(loc.lastVisited)}
-                        </p>
-                      </div>
-                    )}
-                    <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <a
-                        href={getWazeUrl(loc?.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('waze')}
-                      >
-                        <WazeLogo size={38} />
-                      </a>
-                      <a
-                        href={getMapsUrl(loc?.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('maps')}
-                      >
-                        <GoogleMapsLogo size={38} />
-                      </a>
-                    </div>
+                  )}
+                  <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <a
+                      href={getWazeUrl(loc?.address)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+                      title={t('waze')}
+                    >
+                      <WazeLogo size={38} />
+                    </a>
+                    <a
+                      href={getMapsUrl(loc?.address)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+                      title={t('maps')}
+                    >
+                      <GoogleMapsLogo size={38} />
+                    </a>
                   </div>
-                </Reorder.Item>
+                </DraggableCard>
               ))}
             </Reorder.Group>
           )

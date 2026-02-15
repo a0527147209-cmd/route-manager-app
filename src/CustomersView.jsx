@@ -207,6 +207,12 @@ export default function CustomersView() {
   const getMapsUrl = (address) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || '')}`;
 
+  const isRecentlyVisited = (loc) => {
+    if (loc?.status !== 'visited' || !loc?.lastVisited) return false;
+    const diff = Date.now() - new Date(loc.lastVisited).getTime();
+    return diff <= 10 * 24 * 60 * 60 * 1000;
+  };
+
   const handleBack = () => {
     if (isInnerPage) {
       navigate('/customers', { replace: true });
@@ -331,7 +337,7 @@ export default function CustomersView() {
                       <h3 className="font-bold text-foreground text-sm truncate">
                         {loc?.name ?? '—'}
                       </h3>
-                      {loc?.status === 'visited' && (
+                      {isRecentlyVisited(loc) && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
                           {t('visited')}
                         </span>
@@ -404,7 +410,7 @@ export default function CustomersView() {
                         <h3 className="font-bold text-foreground text-sm truncate">
                           {loc?.name ?? '—'}
                         </h3>
-                        {loc?.status === 'visited' && (
+                        {isRecentlyVisited(loc) && (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
                             {t('visited')}
                           </span>

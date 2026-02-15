@@ -140,12 +140,7 @@ export default function CustomersView() {
 
   const getLocationsInGroup = (groupKey) => {
     return filteredLocations
-      .filter((loc) => getGroupKey(loc) === groupKey)
-      .sort((a, b) => {
-        const aV = a?.status === 'visited' ? 1 : 0;
-        const bV = b?.status === 'visited' ? 1 : 0;
-        return aV - bV;
-      });
+      .filter((loc) => getGroupKey(loc) === groupKey);
   };
 
   const COMPOSITE_SEP = '|';
@@ -160,21 +155,11 @@ export default function CustomersView() {
           if (dim === 'city') return zoneKey(loc?.city) === kn;
           if (dim === 'state') return zoneKey(loc?.state) === kn;
           return zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn;
-        })
-        .sort((a, b) => {
-          const aV = a?.status === 'visited' ? 1 : 0;
-          const bV = b?.status === 'visited' ? 1 : 0;
-          return aV - bV;
         });
     }
     const kn = keyNorm(compositeKey);
     return filteredLocations
-      .filter((loc) => zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn)
-      .sort((a, b) => {
-        const aV = a?.status === 'visited' ? 1 : 0;
-        const bV = b?.status === 'visited' ? 1 : 0;
-        return aV - bV;
-      });
+      .filter((loc) => zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn);
   }
 
   const groupsAll = useMemo(() => {

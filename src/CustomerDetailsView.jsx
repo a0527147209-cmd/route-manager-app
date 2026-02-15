@@ -13,7 +13,6 @@ import {
   Pencil,
   Plus,
   ChevronDown,
-  ChevronDown,
   X,
   Trash2,
 } from 'lucide-react';

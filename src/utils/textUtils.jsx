@@ -11,7 +11,7 @@ export const LinkifyText = ({ text, className = '' }) => {
     const parts = text.split(phoneRegex);
 
     return (
-        <div className={`${className} break-words whitespace-normal w-full`}>
+        <div className={`${className} break-all whitespace-normal w-full`}>
             {parts.map((part, i) => {
                 // With split(regex_capture_group), odd indices are the matches
                 if (i % 2 === 1) {
@@ -23,7 +23,7 @@ export const LinkifyText = ({ text, className = '' }) => {
                             onClick={(e) => {
                                 e.stopPropagation();
                             }}
-                            className="hover:underline text-blue-600 dark:text-blue-400 font-bold decoration-2 underline-offset-2 break-all inline-block"
+                            className="hover:underline text-blue-600 dark:text-blue-400 font-bold decoration-2 underline-offset-2 relative z-10 pointer-events-auto"
                             style={{ direction: 'ltr', unicodeBidi: 'embed' }}
                         >
                             {part}

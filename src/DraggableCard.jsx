@@ -2,7 +2,7 @@ import { useRef, useCallback } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
 
-export default function DraggableCard({ loc, index, children }) {
+export default function DraggableCard({ loc, index, visited, children }) {
     const controls = useDragControls();
     const longPressTimer = useRef(null);
     const isDragging = useRef(false);
@@ -36,7 +36,7 @@ export default function DraggableCard({ loc, index, children }) {
             value={loc}
             dragListener={false}
             dragControls={controls}
-            className="rounded-lg bg-card p-3 shadow-sm border border-border transition-shadow"
+            className={`rounded-lg p-3 shadow-sm border border-border transition-shadow ${visited ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
             whileDrag={{ scale: 1.03, boxShadow: '0 8px 25px rgba(0,0,0,0.15)', cursor: 'grabbing' }}
         >
             <div className="flex items-start gap-2">

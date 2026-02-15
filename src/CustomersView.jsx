@@ -328,7 +328,7 @@ export default function CustomersView() {
               className="space-y-2"
             >
               {areaLocations.map((loc, index) => (
-                <DraggableCard key={loc?.id} loc={loc} index={index}>
+                <DraggableCard key={loc?.id} loc={loc} index={index} visited={isRecentlyVisited(loc)}>
                   <div
                     className="min-w-0 flex-1 cursor-pointer"
                     onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
@@ -337,11 +337,6 @@ export default function CustomersView() {
                       <h3 className="font-bold text-foreground text-sm truncate">
                         {loc?.name ?? '—'}
                       </h3>
-                      {isRecentlyVisited(loc) && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                          {t('visited')}
-                        </span>
-                      )}
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                         {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                       </span>
@@ -406,7 +401,7 @@ export default function CustomersView() {
                 <div
                   key={loc?.id ?? index}
                   onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-                  className="rounded-lg bg-card p-3 shadow-sm border border-border active:scale-[0.99] transition-transform cursor-pointer"
+                  className={`rounded-lg p-3 shadow-sm border border-border active:scale-[0.99] transition-transform cursor-pointer ${isRecentlyVisited(loc) ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
                 >
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0 flex-1">
@@ -414,11 +409,6 @@ export default function CustomersView() {
                         <h3 className="font-bold text-foreground text-sm truncate">
                           {loc?.name ?? '—'}
                         </h3>
-                        {isRecentlyVisited(loc) && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                            {t('visited')}
-                          </span>
-                        )}
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                           {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                         </span>

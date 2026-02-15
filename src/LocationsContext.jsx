@@ -113,7 +113,56 @@ export function LocationsProvider({ children }) {
         if (logIndex >= 0 && logIndex < newLogs.length) {
           newLogs[logIndex] = { ...newLogs[logIndex], ...updatedLog };
         }
+
+        // If we updated the latest log (index 0), we might need to sync top-level fields
+        // But typically updateLog is used for editing, where we might want to keep them in sync
+        // For simplicity, we'll assume the user edits the log and we don't auto-update top-level here unless requested.
+        // However, specifically for DELETE, we definitely need to sync.
+
         return { ...loc, logs: newLogs };
+      });
+      saveToStorage(updated);
+      return updated;
+    });
+  };
+
+  const removeLog = (locationId, logIndex) => {
+    const idStr = String(locationId);
+    setLocations((prev) => {
+      const updated = prev.map((loc) => {
+        if (String(loc.id) !== idStr) return loc;
+
+        const newLogs = [...(loc.logs || [])];
+        if (logIndex >= 0 && logIndex < newLogs.length) {
+          newLogs.splice(logIndex, 1);
+        }
+
+        // Return updated location with new logs
+        // If we deleted the most recent log (which was at index 0), we must update top-level stats
+        // to reflect the *new* latest log (which is now at index 0 after splice)
+        let updates = {};
+        if (logIndex === 0) {
+          const newLatest = newLogs[0];
+          if (newLatest) {
+            updates = {
+              lastVisited: newLatest.date,
+              lastCollection: newLatest.collection,
+              commissionRate: newLatest.commissionRate, // Optional: revert to previous rate?
+              bills: newLatest.bills,
+              logNotes: newLatest.notes
+            };
+          } else {
+            // No logs left
+            updates = {
+              lastVisited: null,
+              lastCollection: '',
+              bills: {},
+              logNotes: ''
+            };
+          }
+        }
+
+        return { ...loc, logs: newLogs, ...updates };
       });
       saveToStorage(updated);
       return updated;
@@ -151,6 +200,7 @@ export function LocationsProvider({ children }) {
         addLocation,
         updateLocation,
         updateLog,
+        removeLog,
         removeLocation,
         clearAllLocations,
         loadDemoData,

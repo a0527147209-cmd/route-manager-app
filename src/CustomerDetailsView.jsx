@@ -13,7 +13,9 @@ import {
   Pencil,
   Plus,
   ChevronDown,
+  ChevronDown,
   X,
+  Trash2,
 } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 import LogFormModal from './LogFormModal';
@@ -25,7 +27,7 @@ export default function CustomerDetailsView() {
   const navigate = useNavigate();
   const { state: navState } = useLocation();
   const backPath = navState?.fromPath ?? '/customers';
-  const { locations, updateLocation, removeLocation } = useLocations();
+  const { locations, updateLocation, removeLocation, removeLog } = useLocations();
   const { t, isRtl } = useLanguage();
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -427,13 +429,26 @@ export default function CustomerDetailsView() {
                       </td>
                       <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center">
                         {isAdmin && (
-                          <button
-                            onClick={() => handleEditLog(log, index)}
-                            className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                            title={t('editLog') || 'Edit Log'}
-                          >
-                            <Pencil size={14} />
-                          </button>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleEditLog(log, index)}
+                              className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                              title={t('editLog') || 'Edit Log'}
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (window.confirm(t('confirmDeleteLog') || 'Are you sure you want to delete this log?')) {
+                                  removeLog(location.id, index);
+                                }
+                              }}
+                              className="p-1 rounded-md text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                              title={t('deleteLog') || 'Delete Log'}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>

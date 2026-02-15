@@ -58,7 +58,7 @@ export default function CustomerDetailsView() {
       zipCode: location?.zipCode ?? '',
       subtitle: location?.subtitle ?? '',
       commissionRate: location?.commissionRate ? Math.round(location.commissionRate * 100) : 40,
-      hasChangeMachine: location?.hasChangeMachine ?? false,
+      changeMachineCount: location?.changeMachineCount ?? (location?.hasChangeMachine ? 1 : 0),
     });
     setIsEditingCustomer(true);
   };
@@ -74,7 +74,7 @@ export default function CustomerDetailsView() {
       zipCode: (editForm.zipCode || '').trim(),
       subtitle: (editForm.subtitle || '').trim(),
       commissionRate: (parseFloat(editForm.commissionRate) || 40) / 100,
-      hasChangeMachine: editForm.hasChangeMachine,
+      changeMachineCount: parseInt(editForm.changeMachineCount) || 0,
     });
     setIsEditingCustomer(false);
   };
@@ -360,15 +360,19 @@ export default function CustomerDetailsView() {
                   className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
                 />
               </div>
-              <label className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-500 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editForm.hasChangeMachine}
-                  onChange={(e) => setEditForm(f => ({ ...f, hasChangeMachine: e.target.checked }))}
-                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
-                />
-                <span className="text-sm font-medium text-foreground">{t('hasChangeMachine') || 'מכונת עודף'}</span>
-              </label>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('changeMachine') || 'מכונת עודף'}</label>
+                <select
+                  value={editForm.changeMachineCount}
+                  onChange={(e) => setEditForm(f => ({ ...f, changeMachineCount: e.target.value }))}
+                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                >
+                  <option value={0}>{t('none') || 'ללא'}</option>
+                  <option value={1}>x1 Change Machine</option>
+                  <option value={2}>x2 Change Machine</option>
+                  <option value={3}>x3 Change Machine</option>
+                </select>
+              </div>
             </div>
             <div className="flex gap-2 pt-1">
               <button
@@ -447,12 +451,12 @@ export default function CustomerDetailsView() {
           </div>
         </div>
 
-        {location.hasChangeMachine && (
+        {(location.changeMachineCount > 0 || location.hasChangeMachine) && (
           <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
             <div className="flex items-center gap-2.5 py-2 px-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700">
               <Check size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">
-                {t('hasChangeMachine')}
+                x{location.changeMachineCount || 1} {t('changeMachine') || 'Change Machine'}
               </span>
             </div>
           </div>

@@ -340,9 +340,9 @@ export default function CustomersView() {
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                         {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                       </span>
-                      {loc?.hasChangeMachine && (
+                      {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                          {t('machine')}
+                          x{loc.changeMachineCount || 1} {t('machine')}
                         </span>
                       )}
                     </div>
@@ -412,9 +412,9 @@ export default function CustomersView() {
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
                           {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                         </span>
-                        {loc?.hasChangeMachine && (
+                        {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
                           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                            {t('machine')}
+                            x{loc.changeMachineCount || 1} {t('machine')}
                           </span>
                         )}
                       </div>

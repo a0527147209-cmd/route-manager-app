@@ -132,7 +132,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
           )}
 
           <div className="mt-auto p-4 text-center">
-            <p className="text-[10px] text-muted-foreground/50 font-mono">v2.6 (Latest)</p>
+            <p className="text-[10px] text-muted-foreground/50 font-mono">v2.7 (Latest)</p>
           </div>
         </div>
       </div >

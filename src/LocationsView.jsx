@@ -349,37 +349,47 @@ export default function LocationsView() {
                     className="min-w-0 flex-1 cursor-pointer"
                     onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
                   >
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="font-bold text-foreground text-sm">
-                        {loc?.name ?? '—'}
-                      </h3>
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
-                        {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-                      </span>
-                      {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                          x{loc.changeMachineCount || 1} Change Machine
-                        </span>
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-foreground text-sm">
+                            {loc?.name ?? '—'}
+                          </h3>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
+                            {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                          </span>
+                          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                              x{loc.changeMachineCount || 1} {t('machine')}
+                            </span>
+                          )}
+                        </div>
+                        {loc?.locationType && (
+                          <p className="text-muted-foreground text-xs mt-0.5">
+                            {loc.locationType}
+                          </p>
+                        )}
+                      </div>
+                      {loc?.lastVisited && (
+                        <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[30%]`}>
+                          <span className="text-[10px] text-muted-foreground font-medium mb-px whitespace-nowrap">
+                            {t('lastVisit')}
+                          </span>
+                          <span className="text-xs font-bold text-foreground whitespace-nowrap">
+                            {new Date(loc.lastVisited).toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' })}
+                          </span>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Clock size={10} className="text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground truncate max-w-full">
+                              {new Date(loc.lastVisited).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    {loc?.locationType && (
-                      <p className="text-muted-foreground text-xs mt-0.5">
-                        {loc.locationType}
-                      </p>
-                    )}
-                    {loc?.subtitle && (
-                      <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block" />
-                    )}
                   </div>
-                  {loc?.lastVisited && (
-                    <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[30%]`}>
-                      <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
-                        {t('lastVisit')}
-                      </p>
-                      <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
-                        {formatVisitDate(loc.lastVisited)}
-                      </p>
-                    </div>
+                  {loc?.subtitle && (
+                    <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
                   )}
                   <div className="flex gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <a
@@ -439,9 +449,6 @@ export default function LocationsView() {
                           {loc.locationType}
                         </p>
                       )}
-                      {loc?.subtitle && (
-                        <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block" />
-                      )}
                     </div>
                     {loc?.lastVisited && (
                       <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
@@ -468,12 +475,15 @@ export default function LocationsView() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('maps')}
+                        title={t('googleMaps')}
                       >
                         <GoogleMapsLogo size={38} />
                       </a>
                     </div>
                   </div>
+                  {loc?.subtitle && (
+                    <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
+                  )}
                 </div>
               ))}
             </div>
@@ -503,8 +513,9 @@ export default function LocationsView() {
               );
             })}
           </div>
-        )}
-      </main>
-    </div>
+        )
+        }
+      </main >
+    </div >
   );
 }

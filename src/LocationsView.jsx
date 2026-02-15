@@ -348,7 +348,7 @@ export default function LocationsView() {
                     onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
                   >
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="font-bold text-foreground text-sm truncate">
+                      <h3 className="font-bold text-foreground text-sm">
                         {loc?.name ?? '—'}
                       </h3>
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
@@ -361,12 +361,12 @@ export default function LocationsView() {
                       )}
                     </div>
                     {loc?.locationType && (
-                      <p className="text-muted-foreground text-xs mt-0.5 truncate">
+                      <p className="text-muted-foreground text-xs mt-0.5">
                         {loc.locationType}
                       </p>
                     )}
                     {loc?.subtitle && (
-                      <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 truncate">{loc.subtitle}</p>
+                      <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{loc.subtitle}</p>
                     )}
                   </div>
                   {loc?.lastVisited && (
@@ -420,7 +420,7 @@ export default function LocationsView() {
                   <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-bold text-foreground text-sm truncate">
+                        <h3 className="font-bold text-foreground text-sm">
                           {loc?.name ?? '—'}
                         </h3>
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
@@ -433,12 +433,12 @@ export default function LocationsView() {
                         )}
                       </div>
                       {loc?.locationType && (
-                        <p className="text-muted-foreground text-xs mt-0.5 truncate">
+                        <p className="text-muted-foreground text-xs mt-0.5">
                           {loc.locationType}
                         </p>
                       )}
                       {loc?.subtitle && (
-                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 truncate">{loc.subtitle}</p>
+                        <p className="text-xs font-bold text-red-600 dark:text-red-400 mt-1">{loc.subtitle}</p>
                       )}
                     </div>
                     {loc?.lastVisited && (

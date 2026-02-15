@@ -370,7 +370,7 @@ export default function LocationsView() {
                       {loc?.address ?? '—'}
                     </p>
                     {loc?.subtitle && (
-                      <p className="text-[10px] text-muted-foreground/70 mt-0.5 truncate italic">{loc.subtitle}</p>
+                      <p className="text-[10px] mt-0.5 truncate italic" style={{ color: '#00ff00' }}>{loc.subtitle}</p>
                     )}
                   </div>
                   {loc?.lastVisited && (

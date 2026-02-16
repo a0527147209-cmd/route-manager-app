@@ -92,7 +92,7 @@ export default function LoginView() {
                 </form>
 
                 <div className="text-center text-xs text-muted-foreground">
-                    {t('defaultLoginInfo') || 'Default: admin / 123'}
+                    {t('defaultLoginInfo') || 'Users: Mardi, Eli, Pj, Hershey, Yuda / 123'}
                 </div>
             </div>
         </div>

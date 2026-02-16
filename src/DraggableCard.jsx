@@ -36,10 +36,10 @@ export default function DraggableCard({ loc, index, visited, children }) {
             value={loc}
             dragListener={false}
             dragControls={controls}
-            className={`rounded-lg p-3 shadow-sm border border-border transition-shadow ${visited ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
+            className={`rounded-lg p-2 shadow-sm border border-border transition-shadow ${visited ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
             whileDrag={{ scale: 1.03, boxShadow: '0 8px 25px rgba(0,0,0,0.15)', cursor: 'grabbing' }}
         >
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-1.5">
                 <div
                     className="shrink-0 flex flex-col items-center pt-0.5 gap-0.5 cursor-grab active:cursor-grabbing select-none"
                     onPointerDown={handlePointerDown}
@@ -48,7 +48,7 @@ export default function DraggableCard({ loc, index, visited, children }) {
                     onContextMenu={(e) => e.preventDefault()}
                     style={{ touchAction: 'none' }}
                 >
-                    <span className="w-5 h-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center">
                         {index + 1}
                     </span>
                     <GripVertical size={14} className="text-muted-foreground/40" />

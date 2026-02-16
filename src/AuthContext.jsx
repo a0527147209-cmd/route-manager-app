@@ -7,8 +7,12 @@ const AuthContext = createContext();
 
 // Initial mock users if none exist
 const DEFAULT_USERS = [
-    { id: 'admin-1', username: 'admin', password: '123', role: 'admin', name: 'Admin' },
-    { id: 'emp-1', username: 'worker', password: '123', role: 'employee', name: 'Employee' },
+    { id: 'user-1', username: 'Mardi', password: '123', role: 'admin', name: 'Mardi' },
+    { id: 'user-2', username: 'Eli', password: '123', role: 'admin', name: 'Eli' },
+    { id: 'user-3', username: 'Pj', password: '123', role: 'admin', name: 'Pj' },
+    { id: 'user-4', username: 'Hershey', password: '123', role: 'admin', name: 'Hershey' },
+    { id: 'user-5', username: 'Yuda', password: '123', role: 'admin', name: 'Yuda' },
+    { id: 'user-6', username: 'admin', password: '123', role: 'admin', name: 'Admin' },
 ];
 
 export function AuthProvider({ children }) {
@@ -19,15 +23,9 @@ export function AuthProvider({ children }) {
     // Load users and session on mount
     useEffect(() => {
         try {
-            // Load users list
-            const storedUsers = localStorage.getItem(STORAGE_KEY_USERS);
-            if (storedUsers) {
-                setUsers(JSON.parse(storedUsers));
-            } else {
-                // Initialize with defaults if empty
-                setUsers(DEFAULT_USERS);
-                localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
-            }
+            // Load users list - always use DEFAULT_USERS to ensure updates take effect
+            setUsers(DEFAULT_USERS);
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
 
             // Load active session
             const storedSession = localStorage.getItem(STORAGE_KEY_AUTH);

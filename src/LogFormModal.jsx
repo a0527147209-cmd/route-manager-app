@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
+import { useAuth } from './AuthContext';
 import {
   X,
   Save,
@@ -18,6 +19,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
   const { updateLocation, updateLog } = useLocations();
   const { t, isRtl } = useLanguage();
   const { confirm } = useConfirmation();
+  const { user } = useAuth();
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
@@ -118,7 +120,8 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
         collection: amount,
         bills,
         notes,
-        id: Date.now().toString()
+        id: Date.now().toString(),
+        user: user?.name || 'Unknown'
       };
 
       // Create new logs array: New log first, then existing logs

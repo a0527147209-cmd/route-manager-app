@@ -531,6 +531,9 @@ export default function CustomerDetailsView() {
                   <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
                     {t('logDate')}
                   </th>
+                  <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
+                    {t('logUser') || 'User'}
+                  </th>
                   {isAdmin && (
                     <>
                       <th className={`px-2 py-2 border border-slate-300 dark:border-slate-600 font-semibold ${isRtl ? 'text-right' : 'text-left'}`}>
@@ -570,6 +573,9 @@ export default function CustomerDetailsView() {
                     <tr key={log.id || index} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors">
                       <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
                         {formatLogDate(log.date)}
+                      </td>
+                      <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 whitespace-nowrap ${isRtl ? 'text-right' : 'text-left'}`}>
+                        {log.user || '—'}
                       </td>
                       {/* Financials - Admin Only */}
                       {isAdmin && (
@@ -646,7 +652,7 @@ export default function CustomerDetailsView() {
                   ))
                 ) : (
                   <tr className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20">
-                    <td colSpan={isAdmin ? "11" : "9"} className="px-4 py-4 text-center text-slate-500 italic">
+                    <td colSpan={isAdmin ? "12" : "10"} className="px-4 py-4 text-center text-slate-500 italic">
                       {t('noHistory') || 'No history available'}
                     </td>
                   </tr>

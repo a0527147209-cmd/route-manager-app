@@ -362,13 +362,13 @@ export default function CustomersView() {
                                 {loc.locationType}
                               </p>
                             )}
-                            <div className="flex items-center gap-1.5 mt-1">
+                            <div className="flex items-start gap-2 mt-1 flex-nowrap">
                               {loc?.lastVisited && (
-                                <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
+                                <div className="flex flex-col items-start">
                                   <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
                                     {t('lastVisit')}
                                   </span>
-                                  <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
+                                  <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
                                     {(() => {
                                       const d = new Date(loc.lastVisited);
                                       return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
@@ -376,13 +376,23 @@ export default function CustomersView() {
                                   </span>
                                 </div>
                               )}
-                              {(loc?.lastCollection || loc?.logs?.[0]?.user) && (
-                                <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
+                              {loc?.lastCollection && (
+                                <div className="flex flex-col items-start">
                                   <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
                                     {t('lastCollection')}
                                   </span>
-                                  <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
-                                    {[loc?.lastCollection, loc?.logs?.[0]?.user].filter(Boolean).join(' · ')}
+                                  <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
+                                    {loc.lastCollection}
+                                  </span>
+                                </div>
+                              )}
+                              {loc?.logs?.[0]?.user && (
+                                <div className="flex flex-col items-start">
+                                  <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
+                                    {t('logUser')}
+                                  </span>
+                                  <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
+                                    {loc.logs[0].user}
                                   </span>
                                 </div>
                               )}
@@ -447,11 +457,11 @@ export default function CustomersView() {
                           )}
                         </div>
                         {loc?.address && <p className="text-muted-foreground text-[10px] mt-0.5">{loc.address}</p>}
-                        <div className="flex items-center gap-1.5 mt-1">
+                        <div className="flex items-start gap-2 mt-1 flex-nowrap">
                           {loc?.lastVisited && (
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastVisit')}</span>
-                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
+                              <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
                                 {(() => {
                                   const d = new Date(loc.lastVisited);
                                   return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
@@ -459,10 +469,16 @@ export default function CustomersView() {
                               </span>
                             </div>
                           )}
-                          {(loc?.lastCollection || loc?.logs?.[0]?.user) && (
+                          {loc?.lastCollection && (
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastCollection')}</span>
-                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{[loc?.lastCollection, loc?.logs?.[0]?.user].filter(Boolean).join(' · ')}</span>
+                              <span className="text-[10px] font-bold text-foreground whitespace-nowrap">{loc.lastCollection}</span>
+                            </div>
+                          )}
+                          {loc?.logs?.[0]?.user && (
+                            <div className="flex flex-col items-start">
+                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('logUser')}</span>
+                              <span className="text-[10px] font-bold text-foreground whitespace-nowrap">{loc.logs[0].user}</span>
                             </div>
                           )}
                         </div>

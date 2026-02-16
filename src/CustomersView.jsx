@@ -385,38 +385,39 @@ export default function CustomersView() {
                           </div>
 
                         </div>
-                        <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex gap-1">
-                            <a
-                              href={getWazeUrl(loc?.address)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                              title={t('waze')}
-                            >
-                              <WazeLogo size={28} />
-                            </a>
-                            <a
-                              href={getMapsUrl(loc?.address)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                              title={t('maps')}
-                            >
-                              <GoogleMapsLogo size={28} />
-                            </a>
-                          </div>
-                          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                              x{loc.changeMachineCount || 1} {t('machine')}
-                            </span>
-                          )}
-                        </div>
                       </div>
-                      {loc?.subtitle && (
-                        <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
-                      )}
+                      <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-1">
+                          <a
+                            href={getWazeUrl(loc?.address)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+                            title={t('waze')}
+                          >
+                            <WazeLogo size={28} />
+                          </a>
+                          <a
+                            href={getMapsUrl(loc?.address)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+                            title={t('maps')}
+                          >
+                            <GoogleMapsLogo size={28} />
+                          </a>
+                        </div>
+                        {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                            x{loc.changeMachineCount || 1} {t('machine')}
+                          </span>
+                        )}
+                      </div>
                     </div>
+                    {loc?.subtitle && (
+                      <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
+                    )}
+                  </div>
                 </DraggableCard>
               ))}
             </Reorder.Group>

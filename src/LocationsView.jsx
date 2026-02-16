@@ -371,7 +371,7 @@ export default function LocationsView() {
                               {loc.locationType}
                             </p>
                           )}
-                          <div className="flex items-center flex-wrap gap-2.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                          <div className="flex items-center gap-1.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
                             {loc?.lastVisited && (
                               <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
                                 <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
@@ -466,7 +466,7 @@ export default function LocationsView() {
                           </span>
                         </div>
                         {loc?.address && <p className="text-muted-foreground text-[10px] mt-0.5">{loc.address}</p>}
-                        <div className="flex items-center flex-wrap gap-2.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                        <div className="flex items-center gap-1.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
                           {loc?.lastVisited && (
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastVisit')}</span>

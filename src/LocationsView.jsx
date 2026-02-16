@@ -395,6 +395,16 @@ export default function LocationsView() {
                                 </span>
                               </div>
                             )}
+                            {loc?.logs?.[0]?.user && (
+                              <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
+                                <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
+                                  {t('logUser') || 'User'}
+                                </span>
+                                <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
+                                  {loc.logs[0].user}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -472,6 +482,12 @@ export default function LocationsView() {
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastCollection')}</span>
                               <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc.lastCollection}</span>
+                            </div>
+                          )}
+                          {loc?.logs?.[0]?.user && (
+                            <div className="flex flex-col items-start">
+                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('logUser') || 'User'}</span>
+                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc.logs[0].user}</span>
                             </div>
                           )}
                         </div>

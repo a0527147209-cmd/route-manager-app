@@ -8,7 +8,7 @@ export const LinkifyText = ({ text, className = '' }) => {
     // Must be at least 8 chars long for standard nums, or 4 for short codes
     const phoneRegex = /(\b0[\d\-\s]{8,}\b|\*\d{3,5}\b)/g;
 
-    const parts = text.split(phoneRegex);
+    const parts = String(text).split(phoneRegex);
 
     return (
         <div className={`${className} break-all whitespace-normal w-full`}>

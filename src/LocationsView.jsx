@@ -497,7 +497,7 @@ export default function LocationsView() {
                     </div>
                   </div>
                 </div>
-              )))}
+              ))}
             </div>
           ) : searchTerm && searchTerm.trim() ? (
             filteredLocations.length === 0 ? (

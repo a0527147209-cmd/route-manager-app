@@ -361,6 +361,11 @@ export default function LocationsView() {
                             <span className="px-1 py-px rounded text-[9px] font-bold bg-muted/60 text-muted-foreground border border-border/30 shrink-0">
                               {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                             </span>
+                            {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                              <span className="px-1 py-px rounded text-[9px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                                x{loc.changeMachineCount || 1} {t('machine')}
+                              </span>
+                            )}
 
                           </div>
                           {loc?.address && (
@@ -371,7 +376,7 @@ export default function LocationsView() {
                               {loc.locationType}
                             </p>
                           )}
-                          <div className="flex items-center gap-1.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                          <div className="flex items-center gap-1.5 mt-1">
                             {loc?.lastVisited && (
                               <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
                                 <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
@@ -421,11 +426,6 @@ export default function LocationsView() {
                           <GoogleMapsLogo size={28} />
                         </a>
                       </div>
-                      {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                          x{loc.changeMachineCount || 1} {t('machine')}
-                        </span>
-                      )}
                     </div>
                   </div>
                   {loc?.subtitle && (
@@ -454,9 +454,14 @@ export default function LocationsView() {
                           <span className="px-1 py-px rounded text-[9px] font-bold bg-muted/60 text-muted-foreground border border-border/30 shrink-0">
                             {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                           </span>
+                          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                            <span className="px-1 py-px rounded text-[9px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                              x{loc.changeMachineCount || 1} {t('machine')}
+                            </span>
+                          )}
                         </div>
                         {loc?.address && <p className="text-muted-foreground text-[10px] mt-0.5">{loc.address}</p>}
-                        <div className="flex items-center gap-1.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                        <div className="flex items-center gap-1.5 mt-1">
                           {loc?.lastVisited && (
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastVisit')}</span>
@@ -490,95 +495,89 @@ export default function LocationsView() {
                         <GoogleMapsLogo size={28} />
                       </a>
                     </div>
-                    {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                        x{loc.changeMachineCount || 1} {t('machine')}
-                      </span>
-                    )}
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
-          )
-        ) : searchTerm && searchTerm.trim() ? (
-          filteredLocations.length === 0 ? (
+          ) : searchTerm && searchTerm.trim() ? (
+            filteredLocations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
+                <p className="text-muted-foreground/80 text-sm">{t('tryDifferentKeywords')}</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredLocations.map((loc, index) => (
+                  <div
+                    key={loc?.id ?? index}
+                    onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
+                    className={`rounded-lg p-3 shadow-sm border border-border active:scale-[0.99] transition-transform cursor-pointer ${isRecentlyVisited(loc) ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-foreground text-sm">
+                            {loc?.name ?? '—'}
+                          </h3>
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
+                            {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                          </span>
+                          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                              x{loc.changeMachineCount || 1} {t('machine')}
+                            </span>
+                          )}
+                        </div>
+                        {loc?.locationType && (
+                          <p className="text-muted-foreground text-xs mt-0.5">
+                            {loc.locationType}
+                          </p>
+                        )}
+                      </div>
+                      {loc?.lastVisited && (
+                        <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
+                          <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
+                            {t('lastVisit')}
+                          </p>
+                          <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
+                            {formatVisitDate(loc.lastVisited)}
+                          </p>
+                        </div>
+                      )}
+                      <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
+                        <a
+                          href={getWazeUrl(loc?.address)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+                          title={t('waze')}
+                        >
+                          <WazeLogo size={38} />
+                        </a>
+                        <a
+                          href={getMapsUrl(loc?.address)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
+                          title={t('googleMaps')}
+                        >
+                          <GoogleMapsLogo size={38} />
+                        </a>
+                      </div>
+                    </div>
+                    {loc?.subtitle && (
+                      <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          ) : displayGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
               <p className="text-muted-foreground/80 text-sm">{t('tryDifferentKeywords')}</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {filteredLocations.map((loc, index) => (
-                <div
-                  key={loc?.id ?? index}
-                  onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-                  className={`rounded-lg p-3 shadow-sm border border-border active:scale-[0.99] transition-transform cursor-pointer ${isRecentlyVisited(loc) ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
-                >
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="font-bold text-foreground text-sm">
-                          {loc?.name ?? '—'}
-                        </h3>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted text-muted-foreground shrink-0">
-                          {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-                        </span>
-                        {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                            x{loc.changeMachineCount || 1} {t('machine')}
-                          </span>
-                        )}
-                      </div>
-                      {loc?.locationType && (
-                        <p className="text-muted-foreground text-xs mt-0.5">
-                          {loc.locationType}
-                        </p>
-                      )}
-                    </div>
-                    {loc?.lastVisited && (
-                      <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
-                        <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
-                          {t('lastVisit')}
-                        </p>
-                        <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
-                          {formatVisitDate(loc.lastVisited)}
-                        </p>
-                      </div>
-                    )}
-                    <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
-                      <a
-                        href={getWazeUrl(loc?.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('waze')}
-                      >
-                        <WazeLogo size={38} />
-                      </a>
-                      <a
-                        href={getMapsUrl(loc?.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('googleMaps')}
-                      >
-                        <GoogleMapsLogo size={38} />
-                      </a>
-                    </div>
-                  </div>
-                  {loc?.subtitle && (
-                    <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
-                  )}
-                </div>
-              ))}
-            </div>
-          )
-        ) : displayGroups.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-muted-foreground font-medium mb-1">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
-            <p className="text-muted-foreground/80 text-sm">{t('tryDifferentKeywords')}</p>
-          </div>
-        ) : (
           <div className="space-y-1">
             {displayGroups.map((area) => {
               const openKey = sortBy === 'all' ? area.key : `${sortBy}${COMPOSITE_SEP}${area.key}`;

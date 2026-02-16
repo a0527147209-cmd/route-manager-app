@@ -347,6 +347,11 @@ export default function CustomersView() {
                               <span className="px-1 py-px rounded text-[9px] font-bold bg-muted/60 text-muted-foreground border border-border/30 shrink-0">
                                 {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                               </span>
+                              {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                                <span className="px-1 py-px rounded text-[9px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                                  x{loc.changeMachineCount || 1} {t('machine')}
+                                </span>
+                              )}
 
                             </div>
                             {loc?.address && (
@@ -357,7 +362,7 @@ export default function CustomersView() {
                                 {loc.locationType}
                               </p>
                             )}
-                            <div className="flex items-center gap-1.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                            <div className="flex items-center gap-1.5 mt-1">
                               {loc?.lastVisited && (
                                 <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
                                   <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
@@ -407,11 +412,6 @@ export default function CustomersView() {
                             <GoogleMapsLogo size={28} />
                           </a>
                         </div>
-                        {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                            x{loc.changeMachineCount || 1} {t('machine')}
-                          </span>
-                        )}
                       </div>
                     </div>
                     {loc?.subtitle && (
@@ -440,9 +440,14 @@ export default function CustomersView() {
                           <span className="px-1 py-px rounded text-[9px] font-bold bg-muted/60 text-muted-foreground border border-border/30 shrink-0">
                             {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                           </span>
+                          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                            <span className="px-1 py-px rounded text-[9px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                              x{loc.changeMachineCount || 1} {t('machine')}
+                            </span>
+                          )}
                         </div>
                         {loc?.address && <p className="text-muted-foreground text-[10px] mt-0.5">{loc.address}</p>}
-                        <div className="flex items-center gap-1.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                        <div className="flex items-center gap-1.5 mt-1">
                           {loc?.lastVisited && (
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastVisit')}</span>
@@ -476,11 +481,6 @@ export default function CustomersView() {
                         <GoogleMapsLogo size={28} />
                       </a>
                     </div>
-                    {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
-                        x{loc.changeMachineCount || 1} {t('machine')}
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
@@ -584,8 +584,9 @@ export default function CustomersView() {
               );
             })}
           </div>
-        )}
-      </main>
-    </div>
+        )
+        }
+      </main >
+    </div >
   );
 }

@@ -2,7 +2,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
@@ -385,23 +385,13 @@ export default function LocationsView() {
                                 </span>
                               </div>
                             )}
-                            {loc?.lastCollection && (
+                            {(loc?.lastCollection || loc?.logs?.[0]?.user) && (
                               <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
                                 <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
                                   {t('lastCollection')}
                                 </span>
                                 <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
-                                  {loc.lastCollection}
-                                </span>
-                              </div>
-                            )}
-                            {loc?.logs?.[0]?.user && (
-                              <div className={`flex flex-col ${isRtl ? 'items-start' : 'items-start'}`}>
-                                <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
-                                  {t('logUser') || 'User'}
-                                </span>
-                                <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
-                                  {loc.logs[0].user}
+                                  {[loc?.lastCollection, loc?.logs?.[0]?.user].filter(Boolean).join(' · ')}
                                 </span>
                               </div>
                             )}
@@ -478,16 +468,10 @@ export default function LocationsView() {
                               </span>
                             </div>
                           )}
-                          {loc?.lastCollection && (
+                          {(loc?.lastCollection || loc?.logs?.[0]?.user) && (
                             <div className="flex flex-col items-start">
                               <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastCollection')}</span>
-                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc.lastCollection}</span>
-                            </div>
-                          )}
-                          {loc?.logs?.[0]?.user && (
-                            <div className="flex flex-col items-start">
-                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('logUser') || 'User'}</span>
-                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc.logs[0].user}</span>
+                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{[loc?.lastCollection, loc?.logs?.[0]?.user].filter(Boolean).join(' · ')}</span>
                             </div>
                           )}
                         </div>

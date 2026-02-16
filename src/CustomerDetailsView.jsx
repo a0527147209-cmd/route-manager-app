@@ -29,7 +29,7 @@ export default function CustomerDetailsView() {
   const backPath = navState?.fromPath ?? '/customers';
   const { locations, updateLocation, removeLocation, removeLog } = useLocations();
   const { t, isRtl } = useLanguage();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const { confirm } = useConfirmation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
@@ -350,17 +350,19 @@ export default function CustomerDetailsView() {
                   placeholder={t('subtitlePlaceholder') || 'טקסט שיוצג בתצוגה הראשית'}
                 />
               </div>
-              <div>
-                <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('commission') || 'עמלה'} (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={editForm.commissionRate}
-                  onChange={(e) => setEditForm(f => ({ ...f, commissionRate: e.target.value }))}
-                  className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
-                />
-              </div>
+              {isAdmin && (
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('commission') || 'עמלה'} (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editForm.commissionRate}
+                    onChange={(e) => setEditForm(f => ({ ...f, commissionRate: e.target.value }))}
+                    className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
+                  />
+                </div>
+              )}
               <div>
                 <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('changeMachine') || 'מכונת עודף'}</label>
                 <select
@@ -619,34 +621,44 @@ export default function CustomerDetailsView() {
                         </div>
                       </td>
                       <td className="px-1 py-1 border border-slate-300 dark:border-slate-600 text-center">
-                        {isAdmin && (
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => handleEditLog(log, index)}
-                              className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                              title={t('editLog') || 'Edit Log'}
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (await confirm({
-                                  title: t('deleteLog') || 'Delete Log',
-                                  message: t('confirmDeleteLog') || 'Are you sure you want to delete this log?',
-                                  confirmText: t('delete') || 'Delete',
-                                  cancelText: t('cancel') || 'Cancel',
-                                  isDelete: true
-                                })) {
-                                  removeLog(location.id, index);
-                                }
-                              }}
-                              className="p-1 rounded-md text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                              title={t('deleteLog') || 'Delete Log'}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        )}
+                        {(() => {
+                          // Admin can always edit/delete; employee can only edit/delete their own last log within 24h
+                          const canEdit = isAdmin || (
+                            index === 0 &&
+                            log.user === user?.name &&
+                            log.date &&
+                            (Date.now() - new Date(log.date).getTime()) < 24 * 60 * 60 * 1000
+                          );
+                          if (!canEdit) return null;
+                          return (
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleEditLog(log, index)}
+                                className="p-1 rounded-md text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                title={t('editLog') || 'Edit Log'}
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (await confirm({
+                                    title: t('deleteLog') || 'Delete Log',
+                                    message: t('confirmDeleteLog') || 'Are you sure you want to delete this log?',
+                                    confirmText: t('delete') || 'Delete',
+                                    cancelText: t('cancel') || 'Cancel',
+                                    isDelete: true
+                                  })) {
+                                    removeLog(location.id, index);
+                                  }
+                                }}
+                                className="p-1 rounded-md text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                title={t('deleteLog') || 'Delete Log'}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))

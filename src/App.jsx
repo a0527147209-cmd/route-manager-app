@@ -14,6 +14,7 @@ import CustomerDetailsView from './CustomerDetailsView';
 import SettingsView from './SettingsView';
 import LoginView from './LoginView';
 import MapsView from './MapsView';
+import ManageUsersView from './ManageUsersView';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 
@@ -50,6 +51,7 @@ function AppContent() {
         <Route path="/customer/:id" element={<CustomerDetailsView />} />
         <Route path="/settings" element={<SettingsView />} />
         <Route path="/maps" element={<MapsView />} />
+        <Route path="/manage-users" element={<ManageUsersView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

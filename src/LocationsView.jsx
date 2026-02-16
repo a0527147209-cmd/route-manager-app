@@ -8,6 +8,7 @@ import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
+import { useAuth } from './AuthContext';
 import { useSearch } from './SearchContext';
 import { Reorder } from 'framer-motion';
 
@@ -41,6 +42,7 @@ export default function LocationsView() {
   const { areaKey: urlAreaKey } = useParams();
   const { t, isRtl } = useLanguage();
   const { searchTerm, setSearchTerm } = useSearch();
+  const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
   const hasAutoLoadedDemo = useRef(false);
@@ -334,7 +336,7 @@ export default function LocationsView() {
                 {t('back')}
               </button>
             </div>
-          ) : (
+          ) : isAdmin ? (
             <Reorder.Group
               axis="y"
               values={areaLocations}
@@ -433,6 +435,70 @@ export default function LocationsView() {
               </DraggableCard>
               )}
             </Reorder.Group>
+          ) : (
+            <div className="space-y-1">
+              {areaLocations.map((loc, index) => (
+                <div
+                  key={loc?.id}
+                  className="flex items-stretch gap-1.5 p-2 rounded-xl bg-card border border-border shadow-sm cursor-pointer"
+                  onClick={() => loc?.id != null && navigate(`/location/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
+                >
+                  <div className="flex items-center justify-center w-4">
+                    <span className="text-[9px] font-bold text-muted-foreground">{index + 1}</span>
+                  </div>
+                  <div className="flex-1 min-w-0 w-full">
+                    <div className="flex justify-between items-start gap-1.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-foreground text-xs leading-tight">{loc?.name ?? '—'}</h3>
+                          <span className="px-1 py-px rounded text-[9px] font-bold bg-muted/60 text-muted-foreground border border-border/30 shrink-0">
+                            {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                          </span>
+                        </div>
+                        {loc?.address && <p className="text-muted-foreground text-[10px] mt-0.5">{loc.address}</p>}
+                        <div className="flex items-center gap-2.5 mt-1 px-1.5 py-0.5 rounded bg-muted/40 border border-border/20">
+                          {loc?.lastVisited && (
+                            <div className="flex flex-col items-start">
+                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastVisit')}</span>
+                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">
+                                {(() => {
+                                  const d = new Date(loc.lastVisited);
+                                  return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                          {loc?.lastCollection && (
+                            <div className="flex flex-col items-start">
+                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastCollection')}</span>
+                              <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc.lastCollection}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {loc?.subtitle && (
+                      <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1">
+                      <a href={getWazeUrl(loc?.address)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('waze')}>
+                        <WazeLogo size={28} />
+                      </a>
+                      <a href={getMapsUrl(loc?.address)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('maps')}>
+                        <GoogleMapsLogo size={28} />
+                      </a>
+                    </div>
+                    {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-400 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-950 shrink-0">
+                        x{loc.changeMachineCount || 1} {t('machine')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )
         ) : searchTerm && searchTerm.trim() ? (
           filteredLocations.length === 0 ? (

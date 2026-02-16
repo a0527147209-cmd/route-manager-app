@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, Search, UserPlus, Users, LogOut, LogIn } from 'lucide-react';
+import { Settings, X, Search, UserPlus, Users, LogOut, LogIn, Shield } from 'lucide-react';
 import { useSearch } from './SearchContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
@@ -9,7 +9,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const { searchTerm, setSearchTerm } = useSearch();
   const { t, isRtl } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { confirm } = useConfirmation();
 
   const goTo = (path) => {
@@ -45,6 +45,12 @@ export default function MenuDrawer({ isOpen, onClose }) {
           </button>
         </div>
         <div className="p-2 flex flex-col gap-0.5">
+          {user && (
+            <div className="px-3 py-2.5 mb-2 rounded-lg bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border border-indigo-200 dark:border-indigo-800">
+              <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200">Hi, {user.name} 👋</p>
+              <p className="text-[10px] text-indigo-600 dark:text-indigo-400 capitalize">{user.role}</p>
+            </div>
+          )}
           <div className="px-2 pb-2 border-b border-border mb-2">
             <div className="relative">
               <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={16} />
@@ -99,6 +105,16 @@ export default function MenuDrawer({ isOpen, onClose }) {
             <Settings size={20} />
             <span>{t('settings')}</span>
           </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => goTo('/manage-users')}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors w-full text-start text-sm font-semibold active:scale-[0.98]"
+            >
+              <Shield size={20} />
+              <span>{t('manageUsers') || 'Manage Users'}</span>
+            </button>
+          )}
 
 
 

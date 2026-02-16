@@ -7,11 +7,11 @@ const AuthContext = createContext();
 
 // Initial mock users if none exist
 const DEFAULT_USERS = [
-    { id: 'user-1', username: 'Mardi', password: '123', role: 'admin', name: 'Mardi' },
-    { id: 'user-2', username: 'Eli', password: '123', role: 'admin', name: 'Eli' },
-    { id: 'user-3', username: 'Pj', password: '123', role: 'admin', name: 'Pj' },
-    { id: 'user-4', username: 'Hershey', password: '123', role: 'admin', name: 'Hershey' },
-    { id: 'user-5', username: 'Yuda', password: '123', role: 'admin', name: 'Yuda' },
+    { id: 'user-1', username: 'Mardi', password: '123', role: 'employee', name: 'Mardi' },
+    { id: 'user-2', username: 'Eli', password: '123', role: 'employee', name: 'Eli' },
+    { id: 'user-3', username: 'Pj', password: '123', role: 'employee', name: 'Pj' },
+    { id: 'user-4', username: 'Hershey', password: '123', role: 'employee', name: 'Hershey' },
+    { id: 'user-5', username: 'Yuda', password: '123', role: 'employee', name: 'Yuda' },
     { id: 'user-6', username: 'admin', password: '123', role: 'admin', name: 'Admin' },
 ];
 

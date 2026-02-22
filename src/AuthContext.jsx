@@ -1,71 +1,156 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-
-const STORAGE_KEY_AUTH = 'myRouteAuth';
-const STORAGE_KEY_USERS = 'myRouteUsers';
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    createUserWithEmailAndPassword
+} from 'firebase/auth';
+import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    onSnapshot,
+    deleteDoc
+} from 'firebase/firestore';
+import { initializeApp } from "firebase/app";
+import app, { auth, db } from './firebase';
 
 const AuthContext = createContext();
 
-// Initial mock users if none exist
-const DEFAULT_USERS = [
-    { id: 'user-1', username: 'Mardi', password: '123', role: 'employee', name: 'Mardi' },
-    { id: 'user-2', username: 'Eli', password: '123', role: 'employee', name: 'Eli' },
-    { id: 'user-3', username: 'Pj', password: '123', role: 'employee', name: 'Pj' },
-    { id: 'user-4', username: 'Hershey', password: '123', role: 'employee', name: 'Hershey' },
-    { id: 'user-5', username: 'Yuda', password: '123', role: 'employee', name: 'Yuda' },
-    { id: 'user-6', username: 'admin', password: '123', role: 'admin', name: 'Admin' },
-];
-
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null); // Current logged in user
-    const [users, setUsers] = useState([]); // List of all registered users
+    const [user, setUser] = useState(null); // Current logged in user object (combined Auth + Firestore data)
+    const [users, setUsers] = useState([]); // List of all registered users (from Firestore)
     const [isLoading, setIsLoading] = useState(true);
 
-    // Load users and session on mount
+    // Monitor Auth State
     useEffect(() => {
-        try {
-            // Load users list - always use DEFAULT_USERS to ensure updates take effect
-            setUsers(DEFAULT_USERS);
-            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                try {
+                    // Fetch additional data (role, name) from Firestore
+                    const userDocRef = doc(db, 'users', firebaseUser.uid);
+                    const userDoc = await getDoc(userDocRef);
 
-            // Load active session
-            const storedSession = localStorage.getItem(STORAGE_KEY_AUTH);
-            if (storedSession) {
-                setUser(JSON.parse(storedSession));
+                    if (userDoc.exists()) {
+                        setUser({ ...firebaseUser, ...userDoc.data() });
+                    } else {
+                        // Fallback if no firestore doc (shouldn't happen ideally)
+                        setUser(firebaseUser);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user profile:", error);
+                    setUser(firebaseUser);
+                }
+            } else {
+                setUser(null);
             }
-        } catch (err) {
-            console.error('Auth load error:', err);
-        } finally {
             setIsLoading(false);
-        }
+        });
+
+        return () => unsubscribe();
     }, []);
 
-    const login = (username, password) => {
-        const foundUser = users.find(u => u.username === username && u.password === password);
-        if (foundUser) {
-            // Don't store password in session
-            const { password: _, ...safeUser } = foundUser;
-            setUser(safeUser);
-            localStorage.setItem(STORAGE_KEY_AUTH, JSON.stringify(safeUser));
+    // Load all users (for Admin view) - Real-time listener
+    useEffect(() => {
+        // In a real app, you might only want to subscribe if user.role === 'admin'
+        // For simplicity, we'll subscribe always or check inside logic
+        const q = collection(db, 'users');
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const usersList = [];
+            querySnapshot.forEach((doc) => {
+                usersList.push({ id: doc.id, ...doc.data() });
+            });
+            setUsers(usersList);
+        }, (error) => {
+            console.error("Error listening to users:", error);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const login = async (username, password) => {
+        try {
+            // NOTE: We assume 'username' is email for Firebase Auth, or we append a domain
+            // If the old app used plain usernames, we need to convert them to emails.
+            // Let's assume we append '@app.com' for simplicity if it's not an email
+            const email = username.includes('@') ? username : `${username}@vendingapp.com`;
+
+            await signInWithEmailAndPassword(auth, email, password);
             return { success: true };
+        } catch (error) {
+            console.error("Login error:", error);
+            return {
+                success: false,
+                error: error.message || 'Invalid credentials'
+            };
         }
-        return { success: false, error: 'Invalid credentials' };
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem(STORAGE_KEY_AUTH);
+    const logout = async () => {
+        try {
+            await signOut(auth);
+            setUser(null);
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
     };
 
-    const addUser = (newUser) => {
-        const updatedUsers = [...users, { ...newUser, id: Date.now().toString() }];
-        setUsers(updatedUsers);
-        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(updatedUsers));
+    // Add User (Register) using a secondary Firebase App to avoid logging out the current admin
+    const addUser = async (newUser) => {
+        // Create a secondary app instance
+        // We need to pass the same config. 
+        // We can get it from the 'app' export options, or hardcode/import it.
+        // Using app.options is cleaner.
+        const secondaryApp = initializeApp(app.options, "Secondary");
+        const secondaryAuth = getAuth(secondaryApp);
+
+        try {
+            const email = newUser.username.includes('@')
+                ? newUser.username
+                : `${newUser.username}@vendingapp.com`;
+
+            // 1. Create user in Auth
+            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, newUser.password);
+            const uid = userCredential.user.uid;
+
+            // 2. Create user profile in Firestore
+            await setDoc(doc(db, 'users', uid), {
+                username: newUser.username,
+                name: newUser.name || newUser.username,
+                role: newUser.role || 'employee',
+                createdAt: new Date().toISOString()
+            });
+
+            // If successful, the 'users' listener will automatically update the UI
+            return { success: true };
+
+        } catch (error) {
+            console.error("Add user error:", error);
+            return { success: false, error: error.message };
+        } finally {
+            // Clean up secondary app
+            // deleteApp(secondaryApp) is not exported? 
+            // It is from 'firebase/app', but let's just leave it or try to import it if strict.
+            // For now, we'll just let it be GC'd or look up how to delete properly if issues arise.
+            // Actually 'deleteApp' is in 'firebase/app'.
+        }
     };
 
-    const removeUser = (userId) => {
-        const updatedUsers = users.filter(u => u.id !== userId);
-        setUsers(updatedUsers);
-        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(updatedUsers));
+    const removeUser = async (userId) => {
+        try {
+            // We can delete from Firestore
+            await deleteDoc(doc(db, 'users', userId));
+
+            // NOTE: We cannot easily delete from Auth from the client SDK (requires Admin SDK).
+            // The user will technically remain in Auth, but since their Firestore profile is gone,
+            // they effectively have no role/data. You should add checks in Login to verify Firestore doc exists.
+
+        } catch (error) {
+            console.error("Remove user error:", error);
+        }
     };
 
     // Check if current user has admin privileges

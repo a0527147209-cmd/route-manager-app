@@ -7,6 +7,8 @@ import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Languages } from 'lucide-rea
 import MenuDrawer from './MenuDrawer';
 
 import { useAuth } from './AuthContext';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from './firebase';
 
 export default function SettingsView() {
   const navigate = useNavigate();
@@ -137,6 +139,27 @@ export default function SettingsView() {
               English
             </button>
           </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-red-100 dark:border-red-900/30">
+          <h2 className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-3">{t('dangerZone') || 'Danger Zone'}</h2>
+          <button
+            onClick={async () => {
+              if (confirm("Reset ALL data? This cannot be undone.")) {
+                const { getDocs, writeBatch, collection } = await import('firebase/firestore');
+                const col = collection(db, 'customers');
+                const snap = await getDocs(col);
+                const batch = writeBatch(db);
+                snap.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                window.location.reload();
+              }
+            }}
+            className="w-full py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 active:scale-[0.98] transition-all"
+          >
+            {t('resetData') || 'Reset All Data'}
+          </button>
         </div>
 
         {/* App Info */}

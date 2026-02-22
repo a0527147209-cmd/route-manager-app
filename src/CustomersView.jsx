@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
 import { Users, Menu, ArrowLeft, Search, ChevronRight, SlidersHorizontal, MapPin, X, Clock } from 'lucide-react';
@@ -9,7 +9,7 @@ import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import { useSearch } from './SearchContext';
-import { Reorder } from 'framer-motion';
+import { Reorder, motion } from 'framer-motion';
 
 const EMPTY = '__empty__';
 
@@ -44,21 +44,12 @@ export default function CustomersView() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
-  const hasAutoLoadedDemo = useRef(false);
 
   const isInnerPage = Boolean(urlAreaKey);
   const areaKeyDecoded = urlAreaKey ? decodeURIComponent(urlAreaKey) : null;
 
   const safeLocations = Array.isArray(locations) ? locations : [];
   const validLocations = safeLocations.filter((loc) => loc != null && typeof loc === 'object');
-
-  useEffect(() => {
-    if (!resetAndLoadDemo || hasAutoLoadedDemo.current) return;
-    if (validLocations.length < 10) {
-      hasAutoLoadedDemo.current = true;
-      resetAndLoadDemo();
-    }
-  }, [validLocations.length, resetAndLoadDemo]);
 
   const searchWords = useMemo(() => {
     const term = (searchTerm ?? '').toString().trim().toLowerCase();
@@ -170,6 +161,7 @@ export default function CustomersView() {
   const groupsAll = useMemo(() => {
     const seen = new Map();
     filteredLocations.forEach((loc) => {
+      let addedToAtLeastOne = false;
       for (const dim of ['city', 'state', 'zone']) {
         let k, lbl;
         if (dim === 'city') {
@@ -184,9 +176,18 @@ export default function CustomersView() {
         }
         if (!k || k === EMPTY) continue;
         const composite = `${dim}${COMPOSITE_SEP}${k}`;
-        if (!seen.has(composite)) seen.set(composite, lbl);
+        if (!seen.has(composite)) {
+          seen.set(composite, lbl);
+          addedToAtLeastOne = true;
+        }
+      }
+      // Guarantee it appears somewhere in "All" view if dimensions are empty
+      if (!addedToAtLeastOne) {
+        const fallbackKey = `zone${COMPOSITE_SEP}other`;
+        if (!seen.has(fallbackKey)) seen.set(fallbackKey, 'Other');
       }
     });
+
     return [...seen.entries()]
       .map(([key, labelVal]) => ({ key, label: labelVal }))
       .sort((a, b) => (a.label.localeCompare(b.label)));

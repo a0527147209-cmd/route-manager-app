@@ -1,209 +1,176 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  writeBatch,
+  getDocs,
+} from 'firebase/firestore';
+import { db } from './firebase';
 
-const STORAGE_KEY = 'myRouteLocations';
+const COLLECTION_NAME = 'customers';
 
 const LocationsContext = createContext();
 
-function loadFromStorage() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return [];
-    const parsed = JSON.parse(saved);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.error('Failed to load locations:', err);
-    return [];
-  }
-}
-
-function seedFictionalLocations() {
-  const now = Date.now();
-  const today = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-  return [
-    { id: `seed-${now}-1`, name: 'Cafe Central', address: '123 Main St', city: 'Tel Aviv', state: 'Israel', region: 'Center', status: 'visited', commissionRate: 0.4, hasChangeMachine: true, lastVisited: today, lastCollection: '245.00', notes: '', logNotes: 'מילוי מכונה הושלם. מנגנון מטבעות עובד תקין.', bills: { 50: 4, 20: 2, 10: 0, 5: 1, 1: 0 }, logs: [{ date: today, commissionRate: 0.4, collection: '245.00', bills: { 50: 4, 20: 2, 10: 0, 5: 1, 1: 0 }, notes: 'מילוי מכונה הושלם. מנגנון מטבעות עובד תקין.' }] },
-    { id: `seed-${now}-2`, name: 'Mini Market North', address: '45 Dizengoff St', city: 'Tel Aviv', state: 'Israel', region: 'Center', status: 'visited', commissionRate: 0.35, hasChangeMachine: false, lastVisited: today, lastCollection: '180.50', notes: '', logNotes: 'ביקור שגרתי. אין בעיות.', bills: { 50: 3, 20: 1, 10: 1, 5: 1, 1: 0 }, logs: [{ date: today, commissionRate: 0.35, collection: '180.50', bills: { 50: 3, 20: 1, 10: 1, 5: 1, 1: 0 }, notes: 'ביקור שגרתי. אין בעיות.' }] },
-    { id: `seed-${now}-3`, name: 'Kiosk Beach', address: '78 Hayarkon St', city: 'Tel Aviv', state: 'Israel', region: 'North', status: 'visited', commissionRate: 0.5, hasChangeMachine: true, lastVisited: yesterday, lastCollection: '312.00', notes: '', logNotes: 'עומס גבוה בסוף השבוע. מטבעות חסרים – להביא בפעם הבאה.', bills: { 50: 6, 20: 0, 10: 1, 5: 0, 1: 2 }, logs: [{ date: yesterday, commissionRate: 0.5, collection: '312.00', bills: { 50: 6, 20: 0, 10: 1, 5: 0, 1: 2 }, notes: 'עומס גבוה בסוף השבוע. מטבעות חסרים – להביא בפעם הבאה.' }] },
-    { id: `seed-${now}-4`, name: 'Restaurant Downtown', address: '22 Allenby St', city: 'Tel Aviv', state: 'Israel', region: 'Center', status: 'visited', commissionRate: 0.38, hasChangeMachine: false, lastVisited: lastWeek, lastCollection: '95.00', notes: '', logNotes: '', bills: { 50: 1, 20: 2, 10: 0, 5: 1, 1: 0 }, logs: [{ date: lastWeek, commissionRate: 0.38, collection: '95.00', bills: { 50: 1, 20: 2, 10: 0, 5: 1, 1: 0 }, notes: '' }] },
-    { id: `seed-${now}-5`, name: 'Super Express', address: '5 Ibn Gabirol St', city: 'Tel Aviv', state: 'Israel', region: 'Center', status: 'visited', commissionRate: 0.42, hasChangeMachine: true, lastVisited: today, lastCollection: '428.00', notes: '', logNotes: 'מכונה מלאה. הלקוח ביקש להעלות מחיר למוצרים מסוימים – לבדוק.', bills: { 50: 8, 20: 1, 10: 0, 5: 1, 1: 3 }, logs: [{ date: today, commissionRate: 0.42, collection: '428.00', bills: { 50: 8, 20: 1, 10: 0, 5: 1, 1: 3 }, notes: 'מכונה מלאה. הלקוח ביקש להעלות מחיר למוצרים מסוימים – לבדוק.' }] },
-    { id: `seed-${now}-6`, name: 'Brooklyn Deli', address: '100 Flatbush Ave', city: 'New York', state: 'NY', region: 'Brooklyn', status: 'visited', commissionRate: 0.4, hasChangeMachine: true, lastVisited: today, lastCollection: '156.00', notes: '', logNotes: 'Machine refilled. Coin mech jammed once – reset OK.', bills: { 50: 2, 20: 2, 10: 1, 5: 2, 1: 1 }, logs: [{ date: today, commissionRate: 0.4, collection: '156.00', bills: { 50: 2, 20: 2, 10: 1, 5: 2, 1: 1 }, notes: 'Machine refilled. Coin mech jammed once – reset OK.' }] },
-    { id: `seed-${now}-7`, name: 'Brooklyn Bodega', address: '55 Atlantic Ave', city: 'New York', state: 'NY', region: 'Brooklyn', status: 'visited', commissionRate: 0.35, hasChangeMachine: false, lastVisited: yesterday, lastCollection: '89.50', notes: '', logNotes: 'Product restocked. All good.', bills: { 50: 1, 20: 1, 10: 2, 5: 0, 1: 4 }, logs: [{ date: yesterday, commissionRate: 0.35, collection: '89.50', bills: { 50: 1, 20: 1, 10: 2, 5: 0, 1: 4 }, notes: 'Product restocked. All good.' }] },
-    { id: `seed-${now}-8`, name: 'Queens Mini Mart', address: '45 Queens Blvd', city: 'New York', state: 'NY', region: 'Queens', status: 'pending', commissionRate: 0.35, hasChangeMachine: false, lastVisited: null, lastCollection: '', notes: '', logNotes: 'עדיין לא ביקור ראשון', bills: { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 }, logs: [] },
-    { id: `seed-${now}-9`, name: 'Queens Express', address: '120 Roosevelt Ave', city: 'New York', state: 'NY', region: 'Queens', status: 'visited', commissionRate: 0.42, hasChangeMachine: true, lastVisited: today, lastCollection: '267.00', notes: '', logNotes: 'הכל תקין. תשלום מלא.', bills: { 50: 5, 20: 0, 10: 1, 5: 3, 1: 2 }, logs: [{ date: today, commissionRate: 0.42, collection: '267.00', bills: { 50: 5, 20: 0, 10: 1, 5: 3, 1: 2 }, notes: 'הכל תקין. תשלום מלא.' }] },
-    { id: `seed-${now}-10`, name: 'Staten Island Kiosk', address: '22 Victory Blvd', city: 'New York', state: 'NY', region: 'Staten Island', status: 'visited', commissionRate: 0.42, hasChangeMachine: true, lastVisited: yesterday, lastCollection: '198.00', notes: '', logNotes: 'ביקור קצר. סכום איסוף בינוני.', bills: { 50: 3, 20: 2, 10: 0, 5: 1, 1: 3 }, logs: [{ date: yesterday, commissionRate: 0.42, collection: '198.00', bills: { 50: 3, 20: 2, 10: 0, 5: 1, 1: 3 }, notes: 'ביקור קצר. סכום איסוף בינוני.' }] },
-    { id: `seed-${now}-11`, name: 'Bronx Express', address: '88 Grand Concourse', city: 'New York', state: 'NY', region: 'Bronx', status: 'visited', commissionRate: 0.38, hasChangeMachine: false, lastVisited: today, lastCollection: '334.50', notes: '', logNotes: 'מכונה דורשת תחזוקה קלה – דלת לא נסגרת חלק. לתאם עם טכנאי.', bills: { 50: 6, 20: 1, 10: 2, 5: 1, 1: 0 }, logs: [{ date: today, commissionRate: 0.38, collection: '334.50', bills: { 50: 6, 20: 1, 10: 2, 5: 1, 1: 0 }, notes: 'מכונה דורשת תחזוקה קלה – דלת לא נסגרת חלק. לתאם עם טכנאי.' }] },
-    { id: `seed-${now}-12`, name: 'Bronx Mini Mart', address: '200 Fordham Rd', city: 'New York', state: 'NY', region: 'Bronx', status: 'pending', commissionRate: 0.4, hasChangeMachine: true, lastVisited: null, lastCollection: '', notes: '', logNotes: '', bills: { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 }, logs: [] },
-    { id: `seed-${now}-13`, name: 'Manhattan Central', address: '200 Broadway', city: 'New York', state: 'NY', region: 'Manhattan', status: 'visited', commissionRate: 0.45, hasChangeMachine: true, lastVisited: today, lastCollection: '512.00', notes: '', logNotes: 'High traffic location. Full collection. Request for extra snacks next delivery.', bills: { 50: 10, 20: 0, 10: 1, 5: 0, 1: 2 }, logs: [{ date: today, commissionRate: 0.45, collection: '512.00', bills: { 50: 10, 20: 0, 10: 1, 5: 0, 1: 2 }, notes: 'High traffic location. Full collection. Request for extra snacks next delivery.' }] },
-    { id: `seed-${now}-14`, name: 'Manhattan Deli', address: '350 5th Ave', city: 'New York', state: 'NY', region: 'Manhattan', status: 'visited', commissionRate: 0.38, hasChangeMachine: false, lastVisited: lastWeek, lastCollection: '72.00', notes: '', logNotes: 'סכום נמוך – שבוע חלש.', bills: { 50: 1, 20: 1, 10: 0, 5: 0, 1: 2 }, logs: [{ date: lastWeek, commissionRate: 0.38, collection: '72.00', bills: { 50: 1, 20: 1, 10: 0, 5: 0, 1: 2 }, notes: 'סכום נמוך – שבוע חלש.' }] },
-    { id: `seed-${now}-15`, name: 'New Jersey Mart', address: '100 Newark Ave', city: 'Jersey City', state: 'NJ', region: 'New Jersey', status: 'visited', commissionRate: 0.4, hasChangeMachine: true, lastVisited: yesterday, lastCollection: '221.00', notes: '', logNotes: 'מכונת מטבעות עובדת מעולה. אין הערות.', bills: { 50: 4, 20: 0, 10: 2, 5: 0, 1: 1 }, logs: [{ date: yesterday, commissionRate: 0.4, collection: '221.00', bills: { 50: 4, 20: 0, 10: 2, 5: 0, 1: 1 }, notes: 'מכונת מטבעות עובדת מעולה. אין הערות.' }] },
-  ];
-}
-
-function saveToStorage(locations) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(locations));
-  } catch (err) {
-    console.error('Failed to persist locations:', err);
-  }
-}
-
-const MIN_LOCATIONS_FOR_FULL_LIST = 10;
-
-// Check if locations look like old seed (no log history: missing bills or lastCollection on all)
-function hasNoLogHistory(stored) {
-  if (!Array.isArray(stored) || stored.length === 0) return true;
-  const withLog = stored.some(
-    (loc) =>
-      (loc.bills && Object.keys(loc.bills).length > 0) ||
-      (loc.lastCollection != null && String(loc.lastCollection).trim() !== '')
-  );
-  return !withLog;
-}
-
 export function LocationsProvider({ children }) {
-  const [locations, setLocations] = useState(() => loadFromStorage());
-  const hasEnsuredDemo = useRef(false);
+  const [locations, setLocations] = useState([]);
 
-  // Once on app load: load full demo with log history when storage is empty, too few locations, or existing data has no log history (old seed)
+  // Real-time listener on the 'customers' collection
   useEffect(() => {
-    if (hasEnsuredDemo.current) return;
-    hasEnsuredDemo.current = true;
-    const stored = loadFromStorage();
-    const tooFew = !Array.isArray(stored) || stored.length < MIN_LOCATIONS_FOR_FULL_LIST;
-    const existingWithoutLog = Array.isArray(stored) && stored.length >= MIN_LOCATIONS_FOR_FULL_LIST && hasNoLogHistory(stored);
-    if (tooFew || existingWithoutLog) {
-      const seed = seedFictionalLocations();
-      setLocations(seed);
-      saveToStorage(seed);
-    }
+    const colRef = collection(db, COLLECTION_NAME);
+
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
+      const loaded = snapshot.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+      }));
+      // Sort by order field client-side
+      loaded.sort((a, b) => (a.order || 0) - (b.order || 0));
+      setLocations(loaded);
+      window.debugLocations = loaded;
+      console.log(`[LocationsContext] Loaded ${loaded.length} customers from Firestore.`);
+    }, (error) => {
+      console.error("[LocationsContext] onSnapshot error:", error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (!Array.isArray(locations) || locations.length === 0) return;
-    saveToStorage(locations);
-  }, [locations]);
-
-  const addLocation = (location) => {
-    setLocations((prev) => [location, ...prev]);
-  };
-
-  const updateLocation = (id, updatedFields) => {
-    const idStr = String(id);
-    setLocations((prev) => {
-      const updated = prev.map((loc) =>
-        String(loc.id) === idStr ? { ...loc, ...updatedFields } : loc
-      );
-      saveToStorage(updated);
-      return updated;
-    });
-  };
-
-
-
-
-
-  const updateLog = (locationId, logIndex, updatedLog) => {
-    const idStr = String(locationId);
-    setLocations((prev) => {
-      const updated = prev.map((loc) => {
-        if (String(loc.id) !== idStr) return loc;
-
-        const newLogs = [...(loc.logs || [])];
-        if (logIndex >= 0 && logIndex < newLogs.length) {
-          newLogs[logIndex] = { ...newLogs[logIndex], ...updatedLog };
-        }
-
-        // If we updated the latest log (index 0), we might need to sync top-level fields
-        // But typically updateLog is used for editing, where we might want to keep them in sync
-        // For simplicity, we'll assume the user edits the log and we don't auto-update top-level here unless requested.
-        // However, specifically for DELETE, we definitely need to sync.
-
-        return { ...loc, logs: newLogs };
+  // Add a new customer using addDoc (Firestore generates the ID)
+  const addLocation = async (locationData) => {
+    try {
+      const colRef = collection(db, COLLECTION_NAME);
+      const maxOrder = locations.reduce((max, loc) => Math.max(max, loc.order || 0), -1);
+      const docRef = await addDoc(colRef, {
+        ...locationData,
+        order: maxOrder + 1,
+        createdAt: new Date().toISOString(),
       });
-      saveToStorage(updated);
-      return updated;
-    });
+      console.log("[LocationsContext] Customer added with ID:", docRef.id);
+      return docRef.id;
+    } catch (e) {
+      console.error("Error adding customer:", e);
+      throw e;
+    }
   };
 
-  const removeLog = (locationId, logIndex) => {
-    const idStr = String(locationId);
-    setLocations((prev) => {
-      const updated = prev.map((loc) => {
-        if (String(loc.id) !== idStr) return loc;
+  const updateLocation = async (id, updatedFields) => {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      await updateDoc(docRef, updatedFields);
+    } catch (e) {
+      console.error("Error updating customer:", e);
+    }
+  };
 
-        const newLogs = [...(loc.logs || [])];
-        if (logIndex >= 0 && logIndex < newLogs.length) {
-          newLogs.splice(logIndex, 1);
+  const updateLog = async (locationId, logIndex, updatedLog) => {
+    try {
+      const location = locations.find(l => l.id === locationId);
+      if (!location) return;
+
+      const newLogs = [...(location.logs || [])];
+      if (logIndex >= 0 && logIndex < newLogs.length) {
+        newLogs[logIndex] = { ...newLogs[logIndex], ...updatedLog };
+        const docRef = doc(db, COLLECTION_NAME, locationId);
+        await updateDoc(docRef, { logs: newLogs });
+      }
+    } catch (e) {
+      console.error("Error updating log:", e);
+    }
+  };
+
+  const removeLog = async (locationId, logIndex) => {
+    try {
+      const location = locations.find(l => l.id === locationId);
+      if (!location) return;
+
+      const newLogs = [...(location.logs || [])];
+      if (logIndex >= 0 && logIndex < newLogs.length) {
+        newLogs.splice(logIndex, 1);
+      }
+
+      let updates = { logs: newLogs };
+      if (logIndex === 0) {
+        const newLatest = newLogs[0];
+        if (newLatest) {
+          updates = {
+            ...updates,
+            lastVisited: newLatest.date,
+            lastCollection: newLatest.collection,
+            commissionRate: newLatest.commissionRate,
+            bills: newLatest.bills,
+            logNotes: newLatest.notes
+          };
+        } else {
+          updates = {
+            ...updates,
+            lastVisited: null,
+            lastCollection: '',
+            bills: {},
+            logNotes: ''
+          };
         }
+      }
 
-        // Return updated location with new logs
-        // If we deleted the most recent log (which was at index 0), we must update top-level stats
-        // to reflect the *new* latest log (which is now at index 0 after splice)
-        let updates = {};
-        if (logIndex === 0) {
-          const newLatest = newLogs[0];
-          if (newLatest) {
-            updates = {
-              lastVisited: newLatest.date,
-              lastCollection: newLatest.collection,
-              commissionRate: newLatest.commissionRate, // Optional: revert to previous rate?
-              bills: newLatest.bills,
-              logNotes: newLatest.notes
-            };
-          } else {
-            // No logs left
-            updates = {
-              lastVisited: null,
-              lastCollection: '',
-              bills: {},
-              logNotes: ''
-            };
-          }
-        }
+      const docRef = doc(db, COLLECTION_NAME, locationId);
+      await updateDoc(docRef, updates);
+    } catch (e) {
+      console.error("Error removing log:", e);
+    }
+  };
 
-        return { ...loc, logs: newLogs, ...updates };
-      });
-      saveToStorage(updated);
-      return updated;
+  const removeLocation = async (id) => {
+    try {
+      await deleteDoc(doc(db, COLLECTION_NAME, id));
+    } catch (e) {
+      console.error("Error removing customer:", e);
+    }
+  };
+
+  const clearAllLocations = async () => {
+    const colRef = collection(db, COLLECTION_NAME);
+    const snapshot = await getDocs(colRef);
+    const batch = writeBatch(db);
+    snapshot.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  };
+
+  const loadDemoData = async () => {
+    const colRef = collection(db, COLLECTION_NAME);
+    const snapshot = await getDocs(colRef);
+    if (!snapshot.empty) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+
+    const seed = [
+      { name: 'Cafe Central', address: '123 Main St', city: 'Tel Aviv', state: 'Israel', region: 'Center', status: 'visited', commissionRate: 0.4, hasChangeMachine: true, lastVisited: today, lastCollection: '245.00', notes: '', logNotes: 'מילוי מכונה הושלם.', bills: { 50: 4, 20: 2, 10: 0, 5: 1, 1: 0 }, logs: [{ date: today, commissionRate: 0.4, collection: '245.00', bills: { 50: 4, 20: 2, 10: 0, 5: 1, 1: 0 }, notes: 'מילוי מכונה הושלם.' }] },
+      { name: 'Brooklyn Deli', address: '100 Flatbush Ave', city: 'New York', state: 'NY', region: 'Brooklyn', status: 'visited', commissionRate: 0.4, hasChangeMachine: true, lastVisited: today, lastCollection: '156.00', notes: '', logNotes: 'Machine refilled.', bills: { 50: 2, 20: 2, 10: 1, 5: 2, 1: 1 }, logs: [{ date: today, commissionRate: 0.4, collection: '156.00', bills: { 50: 2, 20: 2, 10: 1, 5: 2, 1: 1 }, notes: 'Machine refilled.' }] },
+    ];
+
+    const batch = writeBatch(db);
+    seed.forEach((loc, index) => {
+      const docRef = doc(colRef);
+      batch.set(docRef, { ...loc, order: index });
     });
+    await batch.commit();
   };
 
-  const removeLocation = (id) => {
-    const idStr = String(id);
-    setLocations((prev) => {
-      const updated = prev.filter((loc) => String(loc.id) !== idStr);
-      saveToStorage(updated);
-      return updated;
+  const resetAndLoadDemo = async () => {
+    await clearAllLocations();
+  };
+
+  const reorderLocations = async (reorderedIds) => {
+    const batch = writeBatch(db);
+    reorderedIds.forEach((id, index) => {
+      const docRef = doc(db, COLLECTION_NAME, id);
+      batch.update(docRef, { order: index });
     });
-  };
-
-  const clearAllLocations = () => {
-    setLocations([]);
-  };
-
-  const loadDemoData = () => {
-    const seed = seedFictionalLocations();
-    setLocations((prev) => [...(prev || []), ...seed]);
-  };
-
-  const resetAndLoadDemo = () => {
-    const seed = seedFictionalLocations();
-    setLocations(seed);
-    saveToStorage(seed);
-  };
-
-  const reorderLocations = (reorderedIds) => {
-    setLocations((prev) => {
-      const idToLoc = new Map(prev.map(loc => [String(loc.id), loc]));
-      const reordered = reorderedIds.map(id => idToLoc.get(String(id))).filter(Boolean);
-      // Append any locations not in the reordered list (safety)
-      const reorderedSet = new Set(reorderedIds.map(String));
-      const remaining = prev.filter(loc => !reorderedSet.has(String(loc.id)));
-      const final = [...reordered, ...remaining];
-      saveToStorage(final);
-      return final;
-    });
+    await batch.commit();
   };
 
   return (

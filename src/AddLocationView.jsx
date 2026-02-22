@@ -34,21 +34,10 @@ export default function AddLocationView() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Generate ID prefix based on Zone
-    let prefix = 'BRK';
-    if (formData.zone === 'Bronx') prefix = 'BNX';
-    if (formData.zone === 'Queens') prefix = 'QNS';
-    if (formData.zone === 'Manhattan') prefix = 'MAN';
-    if (formData.zone === 'Staten Island') prefix = 'STI';
-
-    const randomNum = Math.floor(100 + Math.random() * 900);
-    const newId = `${prefix}-${randomNum}`;
-
     const newLocation = {
-      id: newId,
       name: formData.name,
       region: formData.zone,
       commissionRate: parseFloat(formData.commissionRate) || 0.4,
@@ -64,8 +53,14 @@ export default function AddLocationView() {
       status: 'pending'
     };
 
-    addLocation(newLocation);
-    navigate('/customers');
+    try {
+      const newId = await addLocation(newLocation);
+      console.log("Customer added with Firestore ID:", newId);
+      navigate('/customers');
+    } catch (error) {
+      console.error("Failed to add customer:", error);
+      alert("שגיאה בהוספת לקוח: " + error.message);
+    }
   };
 
   // עיצוב ניגודיות גבוהה – קומפקטי למובייל

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LocationsProvider } from './LocationsContext';
 import { SearchProvider } from './SearchContext';
@@ -40,20 +41,31 @@ function AppContent() {
     <div
       className="min-h-screen w-full max-w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden"
     >
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<HomeView />} />
-        <Route path="/locations/area/:areaKey" element={<LocationsView />} />
-        <Route path="/locations" element={<LocationsView />} />
-        <Route path="/customers/area/:areaKey" element={<CustomersView />} />
-        <Route path="/customers" element={<CustomersView />} />
-        <Route path="/add" element={<AddLocationView />} />
-        <Route path="/location/:id" element={<LocationDetailsView />} />
-        <Route path="/customer/:id" element={<CustomerDetailsView />} />
-        <Route path="/settings" element={<SettingsView />} />
-        <Route path="/maps" element={<MapsView />} />
-        <Route path="/manage-users" element={<ManageUsersView />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25, ease: 'easeInOut' }}
+          className="w-full"
+        >
+          <Routes location={location}>
+            <Route path="/" element={<HomeView />} />
+            <Route path="/locations/area/:areaKey" element={<LocationsView />} />
+            <Route path="/locations" element={<LocationsView />} />
+            <Route path="/customers/area/:areaKey" element={<CustomersView />} />
+            <Route path="/customers" element={<CustomersView />} />
+            <Route path="/add" element={<AddLocationView />} />
+            <Route path="/location/:id" element={<LocationDetailsView />} />
+            <Route path="/customer/:id" element={<CustomerDetailsView />} />
+            <Route path="/settings" element={<SettingsView />} />
+            <Route path="/maps" element={<MapsView />} />
+            <Route path="/manage-users" element={<ManageUsersView />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

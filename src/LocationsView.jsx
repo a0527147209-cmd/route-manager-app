@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react';
+import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, ArrowLeft, MoreVertical } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
@@ -34,6 +34,48 @@ const SORT_OPTIONS = [
   { value: 'state', labelKey: 'sortByState' },
   { value: 'zone', labelKey: 'sortByZone' },
 ];
+
+function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-7 h-7 flex items-center justify-center rounded-lg bg-muted/60 hover:bg-muted active:scale-90 transition-all"
+      >
+        <MoreVertical size={16} className="text-muted-foreground" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[50]" onClick={() => setOpen(false)} />
+          <div className={`absolute top-full mt-1 z-[51] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 overflow-hidden min-w-[130px] ${isRtl ? 'left-0' : 'right-0'}`}>
+            <a
+              href={wazeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            >
+              <WazeLogo size={18} />
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('waze')}</span>
+            </a>
+            <div className="border-t border-slate-100 dark:border-slate-700" />
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+            >
+              <GoogleMapsLogo size={18} />
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('maps')}</span>
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function LocationsView() {
   const { locations, resetAndLoadDemo, reorderLocations } = useLocations();
@@ -409,28 +451,7 @@ export default function LocationsView() {
 
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex gap-1">
-                        <a
-                          href={getWazeUrl(loc?.address)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                          title={t('waze')}
-                        >
-                          <WazeLogo size={28} />
-                        </a>
-                        <a
-                          href={getMapsUrl(loc?.address)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                          title={t('maps')}
-                        >
-                          <GoogleMapsLogo size={28} />
-                        </a>
-                      </div>
-                    </div>
+                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                   </div>
                   {loc?.subtitle && (
                     <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
@@ -496,16 +517,7 @@ export default function LocationsView() {
                       <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
                     )}
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-1">
-                      <a href={getWazeUrl(loc?.address)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('waze')}>
-                        <WazeLogo size={28} />
-                      </a>
-                      <a href={getMapsUrl(loc?.address)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('maps')}>
-                        <GoogleMapsLogo size={28} />
-                      </a>
-                    </div>
-                  </div>
+                  <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                 </div>
               ))}
             </div>
@@ -555,26 +567,7 @@ export default function LocationsView() {
                         </p>
                       </div>
                     )}
-                    <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
-                      <a
-                        href={getWazeUrl(loc?.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('waze')}
-                      >
-                        <WazeLogo size={38} />
-                      </a>
-                      <a
-                        href={getMapsUrl(loc?.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
-                        title={t('googleMaps')}
-                      >
-                        <GoogleMapsLogo size={38} />
-                      </a>
-                    </div>
+                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                   </div>
                   {loc?.subtitle && (
                     <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />

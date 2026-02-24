@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, ArrowLeft, Search, ChevronRight, X } from 'lucide-react';
+import { Users, Menu, ArrowLeft, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
@@ -43,6 +43,48 @@ function formatDate(isoStr) {
   } catch {
     return null;
   }
+}
+
+function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-90 transition-all"
+      >
+        <MoreVertical size={16} className="text-slate-500 dark:text-slate-400" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-[50]" onClick={() => setOpen(false)} />
+          <div className={`absolute top-full mt-1 z-[51] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 overflow-hidden min-w-[130px] ${isRtl ? 'left-0' : 'right-0'}`}>
+            <a
+              href={wazeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            >
+              <WazeLogo size={18} />
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('waze')}</span>
+            </a>
+            <div className="border-t border-slate-100 dark:border-slate-700" />
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+            >
+              <GoogleMapsLogo size={18} />
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('maps')}</span>
+            </a>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visited, showIndex }) {
@@ -108,27 +150,7 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
         )}
       </div>
 
-      {/* Nav icons */}
-      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <a
-          href={getWazeUrl(loc)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 transition-opacity active:scale-90 shrink-0"
-          title={t('waze')}
-        >
-          <WazeLogo size={28} />
-        </a>
-        <a
-          href={getMapsUrl(loc)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 transition-opacity active:scale-90 shrink-0"
-          title={t('maps')}
-        >
-          <GoogleMapsLogo size={28} />
-        </a>
-      </div>
+      <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
     </div>
   );
 }
@@ -395,10 +417,7 @@ export default function CustomersView() {
                           </div>
                           {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
                         </div>
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <a href={getWazeUrl(loc)} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 active:scale-90 shrink-0"><WazeLogo size={28} /></a>
-                          <a href={getMapsUrl(loc)} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 active:scale-90 shrink-0"><GoogleMapsLogo size={28} /></a>
-                        </div>
+                        <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
                       </div>
                     </DraggableCard>
                   ))}

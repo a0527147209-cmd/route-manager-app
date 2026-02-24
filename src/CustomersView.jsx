@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, ArrowLeft, Search, ChevronRight, X } from 'lucide-react';
+import { Users, Menu, ArrowLeft, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
@@ -45,86 +45,116 @@ function formatDate(isoStr) {
   }
 }
 
-function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visited, showIndex }) {
+function NavPopup({ loc, getWazeUrl, getMapsUrl, t, onClose }) {
   return (
-    <div
-      className={`flex items-center gap-2 px-3 py-2.5 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800/60 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : ''}`}
-      onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-    >
-      {showIndex && (
-        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums w-4 text-center shrink-0">
-          {index + 1}
-        </span>
-      )}
-
-      {/* Main content */}
-      <div className="flex-1 min-w-0">
-        {/* Row 1: Name + badges */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">
-            {loc?.name ?? '—'}
-          </span>
-          <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
-            {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-          </span>
-          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-            <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shrink-0">
-              x{loc.changeMachineCount || 1}
-            </span>
-          )}
-        </div>
-
-        {/* Row 2: Address */}
-        {loc?.address && (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
-            {loc.address}
-          </p>
-        )}
-
-        {/* Row 3: Meta info */}
-        <div className="flex items-center gap-3 mt-1">
-          {loc?.lastVisited && (
-            <span className="text-[10px] text-slate-400 dark:text-slate-500">
-              {formatDate(loc.lastVisited)}
-            </span>
-          )}
-          {loc?.lastCollection && (
-            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
-              ${loc.lastCollection}
-            </span>
-          )}
-          {loc?.logs?.[0]?.user && (
-            <span className="text-[10px] text-slate-400 dark:text-slate-500">
-              {loc.logs[0].user}
-            </span>
-          )}
-        </div>
-
-        {loc?.subtitle && (
-          <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />
-        )}
-      </div>
-
-      {/* Nav icons */}
-      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+    <>
+      <div className="fixed inset-0 z-40" onClick={onClose} />
+      <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 min-w-[160px]">
         <a
           href={getWazeUrl(loc)}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 transition-opacity active:scale-90 shrink-0"
-          title={t('waze')}
+          className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+          onClick={onClose}
         >
-          <WazeLogo size={28} />
+          <WazeLogo size={22} />
+          <span className="text-[13px] font-medium text-slate-700 dark:text-slate-200">Waze</span>
         </a>
         <a
           href={getMapsUrl(loc)}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 transition-opacity active:scale-90 shrink-0"
-          title={t('maps')}
+          className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+          onClick={onClose}
         >
-          <GoogleMapsLogo size={28} />
+          <GoogleMapsLogo size={22} />
+          <span className="text-[13px] font-medium text-slate-700 dark:text-slate-200">Google Maps</span>
         </a>
+      </div>
+    </>
+  );
+}
+
+function ColumnHeader({ t }) {
+  return (
+    <div className="flex items-center w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+      <span className="w-7 shrink-0 text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">#</span>
+      <span className="flex-[2] min-w-0 text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t('address') || 'Address'}</span>
+      <span className="w-12 shrink-0 text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">%</span>
+      <span className="flex-1 min-w-0 text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t('lastVisit')}</span>
+      <span className="w-8 shrink-0 text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center">{t('logUser') || 'User'}</span>
+      <span className="w-7 shrink-0" />
+    </div>
+  );
+}
+
+function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visited, showIndex }) {
+  const [navOpen, setNavOpen] = useState(false);
+  const pct = Math.round((loc?.commissionRate ?? 0.4) * 100);
+  const pctColor = pct >= 50 ? 'text-emerald-600 dark:text-emerald-400' : pct >= 35 ? 'text-amber-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400';
+  const dotColor = pct >= 50 ? 'bg-emerald-500' : pct >= 35 ? 'bg-amber-500' : 'bg-red-500';
+  const userInitial = loc?.logs?.[0]?.user ? loc.logs[0].user.charAt(0).toUpperCase() : null;
+
+  return (
+    <div
+      className={`flex items-center w-full px-3 py-2 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800/60 transition-colors ${visited ? 'bg-slate-50/80 dark:bg-slate-800/40' : ''}`}
+      onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
+    >
+      {/* # */}
+      <span className="w-7 shrink-0 text-[11px] font-bold text-slate-500 dark:text-slate-400 tabular-nums text-center">
+        {showIndex ? index + 1 : ''}
+      </span>
+
+      {/* Address col */}
+      <div className="flex-[2] min-w-0 pr-2">
+        <p className="text-[12px] font-bold text-slate-900 dark:text-white truncate leading-tight">{loc?.name ?? '—'}</p>
+        {loc?.address && <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate leading-tight">{loc.address}</p>}
+        {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[9px] font-semibold text-red-500 dark:text-red-400 block truncate" />}
+      </div>
+
+      {/* Status */}
+      <div className="w-14 shrink-0 flex flex-col items-center justify-center">
+        <div className="flex items-center gap-1">
+          <span className={`w-1.5 h-1.5 rounded-full ${dotColor} shrink-0`} />
+          <span className={`text-[11px] font-bold ${pctColor} tabular-nums`}>{pct}%</span>
+        </div>
+        {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+          <span className="text-[8px] font-semibold text-emerald-600 dark:text-emerald-400 leading-tight">
+            x{loc.changeMachineCount || 1} {t('machine')}
+          </span>
+        )}
+      </div>
+
+      {/* Last Visit + Collection */}
+      <div className="flex-1 min-w-0 px-1">
+        {loc?.lastVisited && (
+          <p className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 leading-tight tabular-nums">{formatDate(loc.lastVisited)}</p>
+        )}
+        {loc?.lastCollection && (
+          <p className="text-[9px] text-slate-400 dark:text-slate-500 leading-tight">col: {loc.lastCollection}</p>
+        )}
+      </div>
+
+      {/* User */}
+      <div className="w-8 shrink-0 flex items-center justify-center">
+        {userInitial ? (
+          <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold flex items-center justify-center">
+            {userInitial}
+          </span>
+        ) : <span className="w-6 h-6" />}
+      </div>
+
+      {/* 3-dot */}
+      <div className="w-7 shrink-0 relative" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={() => setNavOpen(!navOpen)}
+          className="w-7 h-7 flex items-center justify-center rounded-md text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90"
+        >
+          <MoreVertical size={15} />
+        </button>
+        {navOpen && (
+          <NavPopup loc={loc} getWazeUrl={getWazeUrl} getMapsUrl={getMapsUrl} t={t} onClose={() => setNavOpen(false)} />
+        )}
       </div>
     </div>
   );
@@ -361,7 +391,8 @@ export default function CustomersView() {
                 </button>
               </div>
             ) : isAdmin ? (
-              <div className="bg-white dark:bg-slate-900 rounded-lg mx-3 mt-3 overflow-hidden border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
+                <ColumnHeader t={t} />
                 <Reorder.Group
                   axis="y"
                   values={areaLocations}
@@ -369,40 +400,14 @@ export default function CustomersView() {
                 >
                   {areaLocations.map((loc, index) => (
                     <DraggableCard key={loc?.id} loc={loc} index={index} visited={isRecentlyVisited(loc)}>
-                      <div className="flex-1 min-w-0 flex items-center gap-2"
-                        onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-                      >
-                        <div className="flex-1 min-w-0 cursor-pointer">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{loc?.name ?? '—'}</span>
-                            <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
-                              {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-                            </span>
-                            {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                              <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shrink-0">
-                                x{loc.changeMachineCount || 1}
-                              </span>
-                            )}
-                          </div>
-                          {loc?.address && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{loc.address}</p>}
-                          <div className="flex items-center gap-3 mt-1">
-                            {loc?.lastVisited && <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(loc.lastVisited)}</span>}
-                            {loc?.lastCollection && <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">${loc.lastCollection}</span>}
-                            {loc?.logs?.[0]?.user && <span className="text-[10px] text-slate-400 dark:text-slate-500">{loc.logs[0].user}</span>}
-                          </div>
-                          {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <a href={getWazeUrl(loc)} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 active:scale-90 shrink-0"><WazeLogo size={28} /></a>
-                          <a href={getMapsUrl(loc)} target="_blank" rel="noopener noreferrer" className="w-7 h-7 rounded-lg overflow-hidden hover:opacity-70 active:scale-90 shrink-0"><GoogleMapsLogo size={28} /></a>
-                        </div>
-                      </div>
+                      <CustomerRow loc={loc} index={index} visited={false} showIndex={false} {...rowProps} />
                     </DraggableCard>
                   ))}
                 </Reorder.Group>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 rounded-lg mx-3 mt-3 overflow-hidden border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
+                <ColumnHeader t={t} />
                 {areaLocations.map((loc, index) => (
                   <div key={loc?.id} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
                     <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex {...rowProps} />
@@ -417,7 +422,8 @@ export default function CustomersView() {
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 rounded-lg mx-3 mt-3 overflow-hidden border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
+                <ColumnHeader t={t} />
                 {filteredLocations.map((loc, index) => (
                   <div key={loc?.id ?? index} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
                     <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex={false} {...rowProps} />
@@ -431,7 +437,7 @@ export default function CustomersView() {
               <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
             </div>
           ) : (
-            <div className="bg-white dark:bg-slate-900 rounded-lg mx-3 mt-3 overflow-hidden border border-slate-100 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
               {displayGroups.map((area) => {
                 const openKey = sortBy === 'all' ? area.key : `${sortBy}${COMPOSITE_SEP}${area.key}`;
                 return (

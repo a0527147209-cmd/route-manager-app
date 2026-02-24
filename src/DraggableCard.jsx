@@ -8,7 +8,6 @@ export default function DraggableCard({ loc, index, visited, children }) {
     const isDragging = useRef(false);
 
     const handlePointerDown = useCallback((e) => {
-        // Start a long-press timer
         isDragging.current = false;
         longPressTimer.current = setTimeout(() => {
             isDragging.current = true;
@@ -36,22 +35,22 @@ export default function DraggableCard({ loc, index, visited, children }) {
             value={loc}
             dragListener={false}
             dragControls={controls}
-            className={`rounded-lg p-2 shadow-sm border border-border transition-shadow ${visited ? 'bg-gray-200 dark:bg-gray-700/60' : 'bg-card'}`}
-            whileDrag={{ scale: 1.03, boxShadow: '0 8px 25px rgba(0,0,0,0.15)', cursor: 'grabbing' }}
+            className={`border-b border-slate-100 dark:border-slate-800 last:border-b-0 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}`}
+            whileDrag={{ scale: 1.02, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', cursor: 'grabbing', zIndex: 50 }}
         >
-            <div className="flex items-start gap-1.5">
+            <div className="flex items-center gap-2 px-3 py-2.5">
                 <div
-                    className="shrink-0 flex flex-col items-center pt-0.5 gap-0.5 cursor-grab active:cursor-grabbing select-none"
+                    className="shrink-0 flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing select-none"
                     onPointerDown={handlePointerDown}
                     onPointerUp={handlePointerUp}
                     onPointerCancel={handlePointerCancel}
                     onContextMenu={(e) => e.preventDefault()}
                     style={{ touchAction: 'none' }}
                 >
-                    <span className="w-4 h-4 rounded-full bg-primary/15 text-primary text-[9px] font-bold flex items-center justify-center">
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums w-4 text-center">
                         {index + 1}
                     </span>
-                    <GripVertical size={14} className="text-muted-foreground/40" />
+                    <GripVertical size={12} className="text-slate-300 dark:text-slate-600" />
                 </div>
                 {children}
             </div>

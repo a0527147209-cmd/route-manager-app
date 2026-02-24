@@ -13,6 +13,7 @@ import {
   Clock,
   Plus,
   Minus,
+  MoreVertical,
 } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 
@@ -24,6 +25,7 @@ export default function LocationDetailsView() {
   const { locations, updateLocation } = useLocations();
   const { t, isRtl } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showNavMenu, setShowNavMenu] = useState(false);
 
   const [location, setLocation] = useState(null);
   const [amount, setAmount] = useState('');
@@ -243,24 +245,61 @@ export default function LocationDetailsView() {
       )}
 
       <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
-        <div className="flex items-stretch gap-2.5 w-full min-h-16">
-          <button
-            onClick={openWaze}
-            className="flex-1 min-w-0 flex flex-col items-center justify-center p-2.5 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-700 shadow-md shadow-blue-200/50 dark:shadow-blue-900/30 hover:shadow-lg hover:shadow-blue-300/60 dark:hover:shadow-blue-800/40 hover:scale-[1.02] hover:border-blue-400 dark:hover:border-blue-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
-            title={t('waze')}
-          >
-            <Navigation size={22} className="shrink-0" />
-            <span className="text-[10px] font-semibold mt-1 truncate w-full text-center">{t('waze')}</span>
-          </button>
-          <button
-            onClick={openGoogleMaps}
-            className="flex-1 min-w-0 flex flex-col items-center justify-center p-2.5 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-2 border-green-300 dark:border-green-700 shadow-md shadow-green-200/50 dark:shadow-green-900/30 hover:shadow-lg hover:shadow-green-300/60 dark:hover:shadow-green-800/40 hover:scale-[1.02] hover:border-green-400 dark:hover:border-green-600 active:scale-[0.98] active:shadow-sm transition-all duration-200 cursor-pointer"
-            title={t('maps')}
-          >
-            <MapLucideIcon size={22} className="shrink-0" />
-            <span className="text-[10px] font-semibold mt-1 truncate w-full text-center">{t('maps')}</span>
-          </button>
-          <div className="flex-1 min-w-0 flex flex-col items-center justify-center px-2 py-2 rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">
+        <div className="flex items-stretch gap-2.5 w-full">
+          <div className="relative shrink-0 flex">
+            <button
+              onClick={() => setShowNavMenu((v) => !v)}
+              className="flex items-center justify-center px-2.5 py-3 rounded-xl bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-95 transition-all"
+              title={t('maps')}
+            >
+              <MoreVertical size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
+            {showNavMenu && (
+              <>
+                <div className="fixed inset-0 z-[50]" onClick={() => setShowNavMenu(false)} />
+                <div className={`absolute top-full mt-1.5 z-[51] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 overflow-hidden min-w-[150px] ${isRtl ? 'right-0' : 'left-0'}`}>
+                  <button
+                    onClick={() => { openWaze(); setShowNavMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                  >
+                    <Navigation size={18} className="text-blue-600 dark:text-blue-400 shrink-0" />
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('waze')}</span>
+                  </button>
+                  <div className="border-t border-slate-100 dark:border-slate-700" />
+                  <button
+                    onClick={() => { openGoogleMaps(); setShowNavMenu(false); }}
+                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                  >
+                    <MapLucideIcon size={18} className="text-green-600 dark:text-green-400 shrink-0" />
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{t('maps')}</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex-1 min-w-0 flex flex-col gap-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('lastVisit')}</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                {location.lastVisited ? formatVisitDateShort(location.lastVisited) : '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('lastCollection')}</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                {location.lastCollection || '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('logUser')}</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                {location.logs?.[0]?.user || '—'}
+              </span>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex flex-col items-center justify-center px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500">
             <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 leading-tight">{t('commission')}</p>
             <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
               {Number.isFinite(rate) ? `${Math.round(rate * 100)}%` : '—'}

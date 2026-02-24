@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Users, UserPlus, TrendingUp, MapPin, Clock } from 'lucide-react';
+import { Menu, Users, Clock, MapPin, ChevronRight, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
@@ -18,7 +18,7 @@ function getGreeting(t) {
 export default function HomeView() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, isRtl } = useLanguage();
   const { locations } = useLocations();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,125 +30,149 @@ export default function HomeView() {
     }
   }, [location.state?.openMenu, navigate]);
 
-  // Quick stats
   const totalCustomers = locations.length;
   const visitedToday = locations.filter(l => l.lastVisited === new Date().toISOString().slice(0, 10)).length;
   const pendingCount = locations.filter(l => l.status === 'pending').length;
 
   const stagger = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.08 } }
+    show: { transition: { staggerChildren: 0.06 } }
   };
 
   const fadeUp = {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } }
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } }
   };
 
+  const stats = [
+    { label: t('total') || 'Total', value: totalCustomers, icon: Users, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/30' },
+    { label: t('today') || 'Today', value: visitedToday, icon: Clock, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
+    { label: t('pending') || 'Pending', value: pendingCount, icon: MapPin, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30' },
+  ];
+
   return (
-    <div className="h-full flex flex-col bg-background overflow-hidden">
-      {/* Solid Header - stays at top */}
-      <header className="shrink-0 glass" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-[380px] mx-auto w-full p-4 flex justify-between items-center gap-2">
-          <div className="w-10 h-10 flex-shrink-0" aria-hidden="true" />
-          <h1 className="text-xl font-bold text-slate-800 dark:text-white flex-1 text-center min-w-0 truncate font-display tracking-tight">
+    <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
+
+      {/* Clean header */}
+      <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="max-w-[420px] mx-auto w-full px-5 py-3 flex justify-between items-center">
+          <div className="w-9 shrink-0" aria-hidden="true" />
+          <h1 className="text-[17px] font-semibold text-slate-800 dark:text-white tracking-tight">
             {t('appTitle')}
           </h1>
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2.5 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors shrink-0 active:scale-95"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95"
             title={t('menu')}
           >
-            <Menu size={24} />
+            <Menu size={20} />
           </button>
         </div>
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      {/* Scrollable content area */}
+      {/* Scrollable content */}
       <motion.main
-        className="flex-1 overflow-y-auto p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] max-w-[380px] mx-auto w-full space-y-5"
+        className="flex-1 overflow-y-auto"
         variants={stagger}
         initial="hidden"
         animate="show"
       >
+        <div className="max-w-[420px] mx-auto w-full px-5 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
 
-        {/* Greeting */}
-        <motion.div variants={fadeUp} className="space-y-1">
-          <h2 className="text-2xl font-bold text-foreground font-display tracking-tight">
-            {getGreeting(t)}, {user?.name || 'Guest'} 👋
-          </h2>
-          <p className="text-sm text-muted-foreground">{t('homeSubtitle') || "Here's your overview"}</p>
-        </motion.div>
+          {/* Greeting */}
+          <motion.div variants={fadeUp} className="mb-6">
+            <h2 className="text-[22px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+              {getGreeting(t)}, {user?.name || 'Guest'}
+            </h2>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+              {t('homeSubtitle') || "Here's your overview"}
+            </p>
+          </motion.div>
 
-        {/* Quick Stats */}
-        <motion.div variants={fadeUp} className="grid grid-cols-3 gap-2.5">
-          <div className="bg-card rounded-2xl p-3 shadow-sm border border-slate-200/60 dark:border-slate-700/50 text-center">
-            <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center mx-auto mb-1.5">
-              <Users size={16} className="text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <p className="text-xl font-bold text-foreground font-display">{totalCustomers}</p>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{t('total') || 'Total'}</p>
-          </div>
-          <div className="bg-card rounded-2xl p-3 shadow-sm border border-slate-200/60 dark:border-slate-700/50 text-center">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mx-auto mb-1.5">
-              <Clock size={16} className="text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <p className="text-xl font-bold text-foreground font-display">{visitedToday}</p>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{t('today') || 'Today'}</p>
-          </div>
-          <div className="bg-card rounded-2xl p-3 shadow-sm border border-slate-200/60 dark:border-slate-700/50 text-center">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mx-auto mb-1.5">
-              <MapPin size={16} className="text-amber-600 dark:text-amber-400" />
-            </div>
-            <p className="text-xl font-bold text-foreground font-display">{pendingCount}</p>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{t('pending') || 'Pending'}</p>
-          </div>
-        </motion.div>
-
-        {/* Hero Card - Customers */}
-        <motion.div variants={fadeUp}>
-          <button
-            type="button"
-            onClick={() => navigate('/customers')}
-            className="w-full relative overflow-hidden group rounded-3xl p-6 h-[180px] flex flex-col items-center justify-center text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
-          >
-            {/* Animated Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 dark:from-indigo-500 dark:via-violet-500 dark:to-purple-600 animate-gradient" />
-            <div className="absolute inset-0 animate-shimmer" />
-
-            {/* Content */}
-            <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner ring-1 ring-white/10 group-active:scale-95 transition-transform">
-                <Users size={32} className="text-white drop-shadow-md" />
+          {/* Stats - slim horizontal cards */}
+          <motion.div variants={fadeUp} className="space-y-2.5 mb-6">
+            {stats.map((stat, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3.5 bg-white dark:bg-slate-900 rounded-xl px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800"
+              >
+                <div className={`w-9 h-9 rounded-lg ${stat.bg} flex items-center justify-center shrink-0`}>
+                  <stat.icon size={17} className={stat.color} />
+                </div>
+                <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium flex-1">
+                  {stat.label}
+                </span>
+                <span className="text-xl font-bold text-slate-900 dark:text-white tabular-nums">
+                  {stat.value}
+                </span>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white font-display tracking-tight mb-0.5">{t('customers')}</h2>
-                <p className="text-white/70 text-xs font-medium">{t('viewAccounts') || 'View & manage all accounts'}</p>
+            ))}
+          </motion.div>
+
+          {/* Customers - slim elegant banner */}
+          <motion.div variants={fadeUp} className="mb-4">
+            <button
+              type="button"
+              onClick={() => navigate('/customers')}
+              className="w-full flex items-center gap-4 bg-white dark:bg-slate-900 rounded-xl px-4 py-4 shadow-[0_2px_8px_rgba(99,102,241,0.08)] dark:shadow-none border border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all active:scale-[0.99] group"
+            >
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shrink-0 shadow-sm">
+                <Users size={20} className="text-white" />
               </div>
-            </div>
-          </button>
-        </motion.div>
+              <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : 'text-left'}`}>
+                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white leading-tight">
+                  {t('customers')}
+                </h3>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {t('viewAccounts') || 'View & manage all accounts'}
+                </p>
+              </div>
+              <ChevronRight size={18} className={`text-slate-400 dark:text-slate-500 shrink-0 group-hover:text-indigo-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
+            </button>
+          </motion.div>
 
-        {/* Add Customer Card */}
-        <motion.div variants={fadeUp}>
-          <button
-            type="button"
-            onClick={() => navigate('/add')}
-            className="w-full relative overflow-hidden group rounded-2xl p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] bg-card border border-slate-200/60 dark:border-slate-700/50"
-          >
-            <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <UserPlus size={24} className="text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div className="text-start flex-1 min-w-0">
-              <h3 className="font-bold text-foreground text-sm">{t('addNewCustomer')}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">{t('addSubtitle') || 'Register a new location'}</p>
-            </div>
-            <TrendingUp size={18} className="text-muted-foreground/40 shrink-0" />
-          </button>
-        </motion.div>
+          {/* Locations - matching slim card */}
+          <motion.div variants={fadeUp}>
+            <button
+              type="button"
+              onClick={() => navigate('/locations')}
+              className="w-full flex items-center gap-4 bg-white dark:bg-slate-900 rounded-xl px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.99] group"
+            >
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm">
+                <MapPin size={20} className="text-white" />
+              </div>
+              <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : 'text-left'}`}>
+                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white leading-tight">
+                  {t('locations') || 'Locations'}
+                </h3>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {t('viewLocations') || 'Browse all locations'}
+                </p>
+              </div>
+              <ChevronRight size={18} className={`text-slate-400 dark:text-slate-500 shrink-0 group-hover:text-emerald-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
+            </button>
+          </motion.div>
 
+        </div>
       </motion.main>
+
+      {/* FAB - Add Customer */}
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.3, type: 'spring', stiffness: 260, damping: 20 }}
+        onClick={() => navigate('/add')}
+        className="fixed z-40 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25 flex items-center justify-center active:scale-90 transition-transform hover:shadow-xl"
+        style={{
+          bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+          right: isRtl ? 'auto' : '1.5rem',
+          left: isRtl ? '1.5rem' : 'auto',
+        }}
+        title={t('addNewCustomer')}
+      >
+        <Plus size={26} strokeWidth={2.5} />
+      </motion.button>
     </div>
   );
 }

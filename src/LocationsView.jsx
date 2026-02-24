@@ -175,7 +175,7 @@ export default function LocationsView() {
           lbl = norm(loc?.region ?? loc?.zone ?? loc?.city);
         }
         if (!k || k === EMPTY) continue;
-        const composite = `${dim}${COMPOSITE_SEP}${k} `;
+        const composite = `${dim}${COMPOSITE_SEP}${k}`;
         if (!seen.has(composite)) seen.set(composite, lbl);
       }
     });

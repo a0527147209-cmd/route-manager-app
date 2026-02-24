@@ -129,7 +129,6 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
       </div>
 
       <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
         <div className="flex flex-col gap-0.5">
           <div>
             <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastVisit')}</span>
@@ -144,6 +143,7 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
             <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
           </div>
         </div>
+        <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
       </div>
     </div>
   );
@@ -407,7 +407,6 @@ export default function CustomersView() {
                           {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
                         </div>
                         <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
                           <div className="flex flex-col gap-0.5">
                             <div>
                               <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastVisit')}</span>
@@ -422,6 +421,7 @@ export default function CustomersView() {
                               <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
                             </div>
                           </div>
+                          <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
                         </div>
                       </div>
                     </DraggableCard>

@@ -417,7 +417,6 @@ export default function LocationsView() {
                       </div>
                     </div>
                     <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                       <div className="flex flex-col gap-0.5">
                         <div>
                           <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
@@ -432,6 +431,7 @@ export default function LocationsView() {
                           <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
                         </div>
                       </div>
+                      <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                     </div>
                   </div>
                   {loc?.subtitle && (
@@ -474,7 +474,6 @@ export default function LocationsView() {
                     )}
                   </div>
                   <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                     <div className="flex flex-col gap-0.5">
                       <div>
                         <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
@@ -489,6 +488,7 @@ export default function LocationsView() {
                         <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
                       </div>
                     </div>
+                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                   </div>
                 </div>
               ))}
@@ -530,7 +530,6 @@ export default function LocationsView() {
                       )}
                     </div>
                     <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                       <div className="flex flex-col gap-0.5">
                         <div>
                           <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
@@ -545,6 +544,7 @@ export default function LocationsView() {
                           <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
                         </div>
                       </div>
+                      <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
                     </div>
                   </div>
                   {loc?.subtitle && (

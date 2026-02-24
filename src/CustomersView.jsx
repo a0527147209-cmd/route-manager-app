@@ -128,19 +128,19 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
         )}
       </div>
 
-      <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-col gap-0.5">
-          <div>
-            <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastVisit')}</span>
-            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
+      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 min-w-[135px]">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST VISIT</span>
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
           </div>
-          <div>
-            <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastCollection')}</span>
-            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastCollection || '—'}</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST COLLECTION</span>
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastCollection || '—'}</span>
           </div>
-          <div>
-            <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('logUser')}</span>
-            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">USER</span>
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
           </div>
         </div>
         <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
@@ -406,19 +406,19 @@ export default function CustomersView() {
                           {loc?.address && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{loc.address}</p>}
                           {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
                         </div>
-                        <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex flex-col gap-0.5">
-                            <div>
-                              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastVisit')}</span>
-                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 min-w-[135px]">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST VISIT</span>
+                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
                             </div>
-                            <div>
-                              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastCollection')}</span>
-                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastCollection || '—'}</span>
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST COLLECTION</span>
+                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastCollection || '—'}</span>
                             </div>
-                            <div>
-                              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('logUser')}</span>
-                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">USER</span>
+                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
                             </div>
                           </div>
                           <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />

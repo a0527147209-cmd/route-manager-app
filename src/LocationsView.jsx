@@ -228,12 +228,12 @@ export default function LocationsView() {
 
   const displayGroups = sortBy === 'all' ? groupsAll : groups;
 
-  const formatVisitDate = (isoStr) => {
+  const formatDateNumeric = (isoStr) => {
     if (!isoStr) return null;
     try {
       const d = new Date(isoStr);
       if (Number.isNaN(d.getTime())) return null;
-      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+      return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
     } catch {
       return null;
     }
@@ -416,19 +416,19 @@ export default function LocationsView() {
 
                       </div>
                     </div>
-                    <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex flex-col gap-0.5">
-                        <div>
-                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
-                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastVisited ? (() => { const d = new Date(loc.lastVisited); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}/${d.getFullYear()}`; })() : '—'}</span>
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-border bg-card min-w-[135px]">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">LAST VISIT</span>
+                          <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.lastVisited ? formatDateNumeric(loc.lastVisited) : '—'}</span>
                         </div>
-                        <div>
-                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastCollection')}</span>
-                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastCollection || '—'}</span>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">LAST COLLECTION</span>
+                          <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.lastCollection || '—'}</span>
                         </div>
-                        <div>
-                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('logUser')}</span>
-                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">USER</span>
+                          <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
                         </div>
                       </div>
                       <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
@@ -473,19 +473,19 @@ export default function LocationsView() {
                       <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
                     )}
                   </div>
-                  <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex flex-col gap-0.5">
-                      <div>
-                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
-                        <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastVisited ? (() => { const d = new Date(loc.lastVisited); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}/${d.getFullYear()}`; })() : '—'}</span>
+                  <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-border bg-card min-w-[135px]">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">LAST VISIT</span>
+                        <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.lastVisited ? formatDateNumeric(loc.lastVisited) : '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastCollection')}</span>
-                        <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastCollection || '—'}</span>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">LAST COLLECTION</span>
+                        <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.lastCollection || '—'}</span>
                       </div>
-                      <div>
-                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('logUser')}</span>
-                        <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">USER</span>
+                        <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
                       </div>
                     </div>
                     <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
@@ -529,19 +529,19 @@ export default function LocationsView() {
                         </p>
                       )}
                     </div>
-                    <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex flex-col gap-0.5">
-                        <div>
-                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
-                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastVisited ? formatVisitDate(loc.lastVisited) : '—'}</span>
+                    <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-border bg-card min-w-[135px]">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">LAST VISIT</span>
+                          <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.lastVisited ? formatDateNumeric(loc.lastVisited) : '—'}</span>
                         </div>
-                        <div>
-                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastCollection')}</span>
-                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastCollection || '—'}</span>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">LAST COLLECTION</span>
+                          <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.lastCollection || '—'}</span>
                         </div>
-                        <div>
-                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('logUser')}</span>
-                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold whitespace-nowrap">USER</span>
+                          <span className="text-[11px] font-bold text-foreground whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
                         </div>
                       </div>
                       <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />

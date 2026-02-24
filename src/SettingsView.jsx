@@ -32,10 +32,10 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300">
+    <div className="h-full flex flex-col bg-background text-foreground overflow-hidden transition-colors duration-300">
 
       {/* Header – compact for mobile */}
-      <div className="bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between max-w-[380px] mx-auto w-full">
+      <div className="shrink-0 bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between w-full gap-2">
           <button
             onClick={() => navigate('/', location.state?.fromMenu ? { state: { openMenu: true } } : {})}
@@ -56,7 +56,7 @@ export default function SettingsView() {
       </div>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
         {/* Appearance – smaller box for mobile */}
         <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t('appearance')}</h2>

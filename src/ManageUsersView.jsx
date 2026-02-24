@@ -91,9 +91,9 @@ export default function ManageUsersView() {
 
     return (
         <>
-            <div className={`min-h-screen bg-background ${isRtl ? 'text-right' : 'text-left'}`}>
+            <div className={`h-full flex flex-col bg-background overflow-hidden ${isRtl ? 'text-right' : 'text-left'}`}>
                 {/* Header */}
-                <div className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+                <div className="shrink-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
                     <div className="flex items-center justify-between px-3 py-2.5">
                         <div className="flex items-center gap-2">
                             <button
@@ -113,7 +113,7 @@ export default function ManageUsersView() {
                     </div>
                 </div>
 
-                <div className="p-4 space-y-3 max-w-lg mx-auto">
+                <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3 max-w-lg mx-auto">
                     {/* Users List */}
                     {users.map((u) => {
                         const online = isOnline(u.lastSeen);

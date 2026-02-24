@@ -69,9 +69,9 @@ export default function AddLocationView() {
   const labelStyle = "block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
+    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
       {/* Header – compact for mobile */}
-      <div className="bg-white dark:bg-slate-800 shadow-sm p-3 min-h-[50px] flex items-center sticky top-0 z-10 max-w-[380px] mx-auto w-full">
+      <div className="shrink-0 bg-white dark:bg-slate-800 shadow-sm p-3 min-h-[50px] flex items-center z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between w-full gap-2">
           <button
             onClick={() => navigate('/', location.state?.fromMenu ? { state: { openMenu: true } } : {})}
@@ -92,7 +92,7 @@ export default function AddLocationView() {
       </div>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <div className="max-w-[380px] mx-auto p-3">
+      <div className="flex-1 overflow-y-auto max-w-[380px] mx-auto p-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm space-y-3">
             <h2 className="flex items-center gap-2 text-base font-semibold text-indigo-600 dark:text-indigo-400">

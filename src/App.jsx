@@ -48,7 +48,7 @@ function AppContent() {
 
   return (
     <div
-      className="h-full w-full max-w-full bg-background text-foreground transition-colors duration-300 flex flex-col"
+      className="h-full w-full max-w-full bg-background text-foreground transition-colors duration-300 flex flex-col overflow-hidden"
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -57,8 +57,7 @@ function AppContent() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2, ease: 'easeInOut' }}
-          className="w-full"
-          style={{ overflow: 'visible' }}
+          className="w-full h-full flex flex-col overflow-hidden"
         >
           <Routes location={location}>
             <Route path="/" element={<HomeView />} />

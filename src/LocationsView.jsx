@@ -228,8 +228,8 @@ export default function LocationsView() {
   const getAreaCount = (area) => (sortBy === 'all' ? getLocationsByCompositeKey(area.key).length : getLocationsInGroup(area.key).length);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="fixed top-0 inset-x-0 bg-card p-2 min-h-[50px] flex flex-col justify-center z-50 shadow-sm border-b border-border">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
+      <header className="shrink-0 bg-card p-2 min-h-[50px] flex flex-col justify-center shadow-sm border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[380px] mx-auto w-full">
           <div className="flex justify-between items-center gap-1.5 w-full">
             <button
@@ -295,7 +295,7 @@ export default function LocationsView() {
       </header>
 
       {/* Adjust 80px to match the header's height so content isn't hidden beneath it */}
-      <main className="p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(80px+env(safe-area-inset-top))] max-w-[380px] mx-auto w-full">
+      <main className="flex-1 overflow-y-auto p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] max-w-[380px] mx-auto w-full">
         {validLocations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <MapPin className="w-16 h-16 text-muted-foreground/50 mb-4" />
@@ -610,7 +610,7 @@ export default function LocationsView() {
           </div>
         )
         }
-      </main >
-    </div >
+      </main>
+    </div>
   );
 }

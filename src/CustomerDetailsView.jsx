@@ -224,8 +224,8 @@ export default function CustomerDetailsView() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col pb-10">
-      <header className="bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 sticky top-0 z-10 shrink-0 max-w-[380px] mx-auto w-full">
+    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
+      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <button
           onClick={handleBackClick}
           className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0 ${isRtl ? '-me-1' : '-ms-1'}`}
@@ -271,7 +271,7 @@ export default function CustomerDetailsView() {
 
 
 
-      <div className="p-4 space-y-4 max-w-[380px] mx-auto w-full flex-1">
+      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
         {/* Customer Info Card */}
         {isEditingCustomer ? (
           <div className="bg-card p-4 rounded-xl shadow-sm border-2 border-primary/40 space-y-3">

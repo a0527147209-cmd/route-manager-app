@@ -2,10 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 
 const GOOGLE_MAPS_KEY = 'AIzaSyC_a59N6ddV6m3gc46R57SYBaVFpVEpHJM';
 
+// Detect if running inside Capacitor (native app)
+const isCapacitor = typeof window !== 'undefined' && (
+    window.location.protocol === 'capacitor:' ||
+    window.location.hostname === 'localhost' && window.Capacitor?.isNativePlatform?.()
+);
+
 let googleMapsLoaded = false;
 let googleMapsLoadPromise = null;
 
 function loadGoogleMaps() {
+    // Skip loading in Capacitor — CORS will block apis.google.com
+    if (isCapacitor) return Promise.resolve();
     if (googleMapsLoaded) return Promise.resolve();
     if (googleMapsLoadPromise) return googleMapsLoadPromise;
 
@@ -18,7 +26,10 @@ function loadGoogleMaps() {
             googleMapsLoaded = true;
             resolve();
         };
-        script.onerror = reject;
+        script.onerror = (err) => {
+            console.warn('Google Maps failed to load (may be blocked in native app):', err);
+            resolve(); // Don't reject — let the input work as a plain text field
+        };
         document.head.appendChild(script);
     });
 
@@ -35,6 +46,9 @@ function loadGoogleMaps() {
  *   placeholder   - input placeholder
  *   className     - CSS classes
  *   required      - HTML required
+ * 
+ * Note: In Capacitor (native iOS/Android), Google Maps API is disabled
+ * to avoid CORS issues. The input works as a regular text field.
  */
 export default function AddressAutocomplete({
     value,
@@ -54,6 +68,8 @@ export default function AddressAutocomplete({
 
     useEffect(() => {
         if (!loaded || !inputRef.current || autocompleteRef.current) return;
+        // In Capacitor or if Google Maps failed to load, skip autocomplete
+        if (!window.google?.maps?.places) return;
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
             types: ['address'],

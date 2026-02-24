@@ -237,71 +237,74 @@ export default function CustomersView() {
   const getAreaCount = (area) => (sortBy === 'all' ? getLocationsByCompositeKey(area.key).length : getLocationsInGroup(area.key).length);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="bg-card p-2 min-h-[50px] flex flex-col justify-center sticky top-0 z-10 shadow-sm shrink-0 max-w-[380px] mx-auto w-full border-b border-border">
-        <div className="flex justify-between items-center gap-1.5 w-full">
-          <button
-            onClick={handleBack}
-            className="p-2 -ms-1 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
-            title={isInnerPage ? t('backToCustomers') : t('backToHome')}
-          >
-            <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
-          </button>
-          <h1 className="text-base font-bold text-foreground truncate flex-1 text-center min-w-0">
-            {isInnerPage ? areaDisplayLabel : t('customers')}
-          </h1>
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
-            title={t('menu')}
-          >
-            <Menu size={22} />
-          </button>
-        </div>
-        <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+    <div className="min-h-screen bg-background pb-20">
+      <header className="fixed top-0 inset-x-0 bg-card p-2 min-h-[50px] flex flex-col justify-center z-50 shadow-sm border-b border-border">
+        <div className="max-w-[380px] mx-auto w-full">
+          <div className="flex justify-between items-center gap-1.5 w-full">
+            <button
+              onClick={handleBack}
+              className="p-2 -ms-1 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
+              title={isInnerPage ? t('backToCustomers') : t('backToHome')}
+            >
+              <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
+            </button>
+            <h1 className="text-base font-bold text-foreground truncate flex-1 text-center min-w-0">
+              {isInnerPage ? areaDisplayLabel : t('customers')}
+            </h1>
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="p-2 rounded-xl text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
+              title={t('menu')}
+            >
+              <Menu size={22} />
+            </button>
+          </div>
+          <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-        {/* Search + Sort row - compact, narrow width */}
-        <div className="mt-1.5 flex items-center gap-1.5">
-          <div className="relative w-[120px] max-w-[35vw] shrink-0">
-            <Search size={12} className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none ${isRtl ? 'right-1.5' : 'left-1.5'}`} />
-            <input
-              type="text"
-              placeholder={t('searchCustomer')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full py-1 text-[11px] rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-5 text-right' : 'pl-5 pr-5 text-left'}`}
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors ${isRtl ? 'left-1' : 'right-1'}`}
-                type="button"
-              >
-                <X size={12} />
-              </button>
+          {/* Search + Sort row - compact, narrow width */}
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <div className="relative w-[120px] max-w-[35vw] shrink-0">
+              <Search size={12} className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none ${isRtl ? 'right-1.5' : 'left-1.5'}`} />
+              <input
+                type="text"
+                placeholder={t('searchCustomer')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full py-1 text-[11px] rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:ring-1 focus:ring-primary focus:border-transparent outline-none ${isRtl ? 'pr-5 pl-5 text-right' : 'pl-5 pr-5 text-left'}`}
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors ${isRtl ? 'left-1' : 'right-1'}`}
+                  type="button"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+            {!isInnerPage && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <SlidersHorizontal size={12} className="text-muted-foreground" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className={`py-1 text-[11px] rounded-md border border-input bg-background text-foreground focus:ring-1 focus:ring-primary outline-none cursor-pointer ${isRtl ? 'pr-1 pl-5 text-right' : 'pl-1 pr-5 text-left'}`}
+                  title={t('sortBy')}
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
-          {!isInnerPage && (
-            <div className="flex items-center gap-0.5 shrink-0">
-              <SlidersHorizontal size={12} className="text-muted-foreground" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className={`py-1 text-[11px] rounded-md border border-input bg-background text-foreground focus:ring-1 focus:ring-primary outline-none cursor-pointer ${isRtl ? 'pr-1 pl-5 text-right' : 'pl-1 pr-5 text-left'}`}
-                title={t('sortBy')}
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(opt.labelKey)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto p-3 max-w-[380px] mx-auto w-full">
+      {/* Adjust 80px to match the header's height so content isn't hidden beneath it */}
+      <main className="p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(80px+env(safe-area-inset-top))] max-w-[380px] mx-auto w-full">
         {validLocations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Users className="w-16 h-16 text-muted-foreground/50 mb-4" />

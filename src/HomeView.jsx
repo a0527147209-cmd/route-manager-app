@@ -46,9 +46,9 @@ export default function HomeView() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-20">
-      {/* Glass Header */}
-      <header className="fixed top-0 inset-x-0 z-10 glass">
+    <div className="min-h-screen bg-background">
+      {/* Glass Header - Fixed to top */}
+      <header className="fixed top-0 inset-x-0 z-50 glass">
         <div className="max-w-[380px] mx-auto w-full p-4 flex justify-between items-center gap-2">
           <div className="w-10 h-10 flex-shrink-0" aria-hidden="true" />
           <h1 className="text-xl font-bold text-slate-800 dark:text-white flex-1 text-center min-w-0 truncate font-display tracking-tight">
@@ -65,8 +65,9 @@ export default function HomeView() {
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
+      {/* Scrollable Main Area - Padded top to clear header + notch */}
       <motion.main
-        className="flex-1 p-4 max-w-[380px] mx-auto w-full mt-[72px] space-y-5"
+        className="pt-[calc(72px+env(safe-area-inset-top))] pb-[calc(5rem+env(safe-area-inset-bottom))] p-4 max-w-[380px] mx-auto w-full space-y-5"
         variants={stagger}
         initial="hidden"
         animate="show"

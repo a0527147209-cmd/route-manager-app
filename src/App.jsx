@@ -19,6 +19,8 @@ import ManageUsersView from './ManageUsersView';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 
+import { useEffect } from 'react';
+
 function AppWithAuth() {
   const { user, isLoading } = useAuth();
 
@@ -38,18 +40,25 @@ function AppContent() {
   const { isTransitioning } = useLanguage();
   const location = useLocation();
 
+  // Scroll #root to top on every route change
+  useEffect(() => {
+    const root = document.getElementById('root');
+    if (root) root.scrollTop = 0;
+  }, [location.pathname]);
+
   return (
     <div
-      className="min-h-screen w-full max-w-full bg-background text-foreground transition-colors duration-300 overflow-x-hidden"
+      className="h-full w-full max-w-full bg-background text-foreground transition-colors duration-300 flex flex-col"
     >
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
           className="w-full"
+          style={{ overflow: 'visible' }}
         >
           <Routes location={location}>
             <Route path="/" element={<HomeView />} />

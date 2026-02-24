@@ -36,22 +36,23 @@ export default function DraggableCard({ loc, index, visited, children }) {
             dragListener={false}
             dragControls={controls}
             className={`border-b border-slate-100 dark:border-slate-800 last:border-b-0 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}`}
-            whileDrag={{ scale: 1.01, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', cursor: 'grabbing', zIndex: 50 }}
+            whileDrag={{ scale: 1.02, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', cursor: 'grabbing', zIndex: 50 }}
         >
-            <div className="flex items-center">
+            <div className="flex items-center gap-2 px-3 py-2.5">
                 <div
-                    className="shrink-0 flex items-center justify-center w-7 cursor-grab active:cursor-grabbing select-none pl-1"
+                    className="shrink-0 flex flex-col items-center gap-0.5 cursor-grab active:cursor-grabbing select-none"
                     onPointerDown={handlePointerDown}
                     onPointerUp={handlePointerUp}
                     onPointerCancel={handlePointerCancel}
                     onContextMenu={(e) => e.preventDefault()}
                     style={{ touchAction: 'none' }}
                 >
-                    <GripVertical size={14} className="text-slate-300 dark:text-slate-600" />
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums w-4 text-center">
+                        {index + 1}
+                    </span>
+                    <GripVertical size={12} className="text-slate-300 dark:text-slate-600" />
                 </div>
-                <div className="flex-1 min-w-0">
-                    {children}
-                </div>
+                {children}
             </div>
         </Reorder.Item>
     );

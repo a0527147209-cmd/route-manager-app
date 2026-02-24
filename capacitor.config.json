@@ -7,6 +7,12 @@
     "preferredContentMode": "mobile",
     "scrollEnabled": false
   },
+  "plugins": {
+    "Keyboard": {
+      "resize": "none",
+      "scrollPadding": false
+    }
+  },
   "server": {
     "iosScheme": "capacitor"
   }

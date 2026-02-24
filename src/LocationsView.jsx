@@ -1,5 +1,5 @@
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
 import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, ArrowLeft } from 'lucide-react';
@@ -45,21 +45,12 @@ export default function LocationsView() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
-  const hasAutoLoadedDemo = useRef(false);
 
   const isInnerPage = Boolean(urlAreaKey);
   const areaKeyDecoded = urlAreaKey ? decodeURIComponent(urlAreaKey) : null;
 
   const safeLocations = Array.isArray(locations) ? locations : [];
   const validLocations = safeLocations.filter((loc) => loc != null && typeof loc === 'object');
-
-  useEffect(() => {
-    if (!resetAndLoadDemo || hasAutoLoadedDemo.current) return;
-    if (validLocations.length < 10) {
-      hasAutoLoadedDemo.current = true;
-      resetAndLoadDemo();
-    }
-  }, [validLocations.length, resetAndLoadDemo]);
 
   const searchWords = useMemo(() => {
     const term = (searchTerm ?? '').toString().trim().toLowerCase();

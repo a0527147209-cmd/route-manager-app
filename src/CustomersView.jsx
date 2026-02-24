@@ -206,10 +206,10 @@ export default function CustomersView() {
     }
   };
 
-  const getWazeUrl = (address) =>
-    `https://waze.com/ul?q=${encodeURIComponent(address || '')}&navigate=yes`;
-  const getMapsUrl = (address) =>
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || '')}`;
+  const getWazeUrl = (loc) =>
+    `https://waze.com/ul?q=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}&navigate=yes`;
+  const getMapsUrl = (loc) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}`;
 
   const isRecentlyVisited = (loc) => {
     if (loc?.status !== 'visited' || !loc?.lastVisited) return false;
@@ -405,7 +405,7 @@ export default function CustomersView() {
                       <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-1">
                           <a
-                            href={getWazeUrl(loc?.address)}
+                            href={getWazeUrl(loc)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
@@ -414,7 +414,7 @@ export default function CustomersView() {
                             <WazeLogo size={28} />
                           </a>
                           <a
-                            href={getMapsUrl(loc?.address)}
+                            href={getMapsUrl(loc)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
@@ -491,10 +491,10 @@ export default function CustomersView() {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
-                      <a href={getWazeUrl(loc?.address)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('waze')}>
+                      <a href={getWazeUrl(loc)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('waze')}>
                         <WazeLogo size={28} />
                       </a>
-                      <a href={getMapsUrl(loc?.address)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('maps')}>
+                      <a href={getMapsUrl(loc)} target="_blank" rel="noopener noreferrer" className="w-[28px] h-[28px] rounded-md overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0" title={t('maps')}>
                         <GoogleMapsLogo size={28} />
                       </a>
                     </div>
@@ -553,7 +553,7 @@ export default function CustomersView() {
                     )}
                     <div className={`flex gap-1.5 shrink-0 ${isRtl ? 'me-4' : 'ms-4'}`} onClick={(e) => e.stopPropagation()}>
                       <a
-                        href={getWazeUrl(loc?.address)}
+                        href={getWazeUrl(loc)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"
@@ -562,7 +562,7 @@ export default function CustomersView() {
                         <WazeLogo size={38} />
                       </a>
                       <a
-                        href={getMapsUrl(loc?.address)}
+                        href={getMapsUrl(loc)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-[38px] h-[38px] rounded-lg overflow-hidden hover:opacity-80 transition-opacity active:scale-95 shrink-0"

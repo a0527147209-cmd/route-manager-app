@@ -11,11 +11,12 @@ import {
     doc,
     getDoc,
     setDoc,
+    updateDoc,
     collection,
     onSnapshot,
     deleteDoc
 } from 'firebase/firestore';
-import { initializeApp } from "firebase/app";
+import { initializeApp, deleteApp } from "firebase/app";
 import app, { auth, db } from './firebase';
 
 const AuthContext = createContext();
@@ -30,19 +31,17 @@ export function AuthProvider({ children }) {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
-                    // Fetch additional data (role, name) from Firestore
                     const userDocRef = doc(db, 'users', firebaseUser.uid);
                     const userDoc = await getDoc(userDocRef);
 
                     if (userDoc.exists()) {
-                        setUser({ ...firebaseUser, ...userDoc.data() });
+                        setUser({ ...firebaseUser, ...userDoc.data(), id: firebaseUser.uid });
                     } else {
-                        // Fallback if no firestore doc (shouldn't happen ideally)
-                        setUser(firebaseUser);
+                        setUser({ ...firebaseUser, id: firebaseUser.uid });
                     }
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
-                    setUser(firebaseUser);
+                    setUser({ ...firebaseUser, id: firebaseUser.uid });
                 }
             } else {
                 setUser(null);
@@ -52,6 +51,34 @@ export function AuthProvider({ children }) {
 
         return () => unsubscribe();
     }, []);
+
+    // Presence heartbeat — writes lastSeen every 60 seconds
+    useEffect(() => {
+        if (!user?.uid) return;
+
+        const userDocRef = doc(db, 'users', user.uid);
+
+        // Write immediately on mount
+        const writeHeartbeat = () => {
+            updateDoc(userDocRef, { lastSeen: new Date().toISOString() }).catch(() => { });
+        };
+        writeHeartbeat();
+
+        // Then every 60 seconds
+        const interval = setInterval(writeHeartbeat, 60_000);
+
+        // On tab close / navigate away, mark offline
+        const handleBeforeUnload = () => {
+            // Use navigator.sendBeacon for reliability
+            // But since Firestore doesn't support that, we just let lastSeen expire naturally
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [user?.uid]);
 
     // Load all users (for Admin view) - Real-time listener
     useEffect(() => {
@@ -73,12 +100,20 @@ export function AuthProvider({ children }) {
 
     const login = async (username, password) => {
         try {
-            // NOTE: We assume 'username' is email for Firebase Auth, or we append a domain
-            // If the old app used plain usernames, we need to convert them to emails.
-            // Let's assume we append '@app.com' for simplicity if it's not an email
             const email = username.includes('@') ? username : `${username}@vendingapp.com`;
 
-            await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+            // Save last login timestamp to Firestore
+            try {
+                const userDocRef = doc(db, 'users', userCredential.user.uid);
+                await updateDoc(userDocRef, {
+                    lastLogin: new Date().toISOString()
+                });
+            } catch (e) {
+                console.warn('Could not update lastLogin:', e);
+            }
+
             return { success: true };
         } catch (error) {
             console.error("Login error:", error);
@@ -100,14 +135,12 @@ export function AuthProvider({ children }) {
 
     // Add User (Register) using a secondary Firebase App to avoid logging out the current admin
     const addUser = async (newUser) => {
-        // Create a secondary app instance
-        // We need to pass the same config. 
-        // We can get it from the 'app' export options, or hardcode/import it.
-        // Using app.options is cleaner.
-        const secondaryApp = initializeApp(app.options, "Secondary");
-        const secondaryAuth = getAuth(secondaryApp);
-
+        const appName = `secondary_${Date.now()}`;
+        let secondaryApp;
         try {
+            secondaryApp = initializeApp(app.options, appName);
+            const secondaryAuth = getAuth(secondaryApp);
+
             const email = newUser.username.includes('@')
                 ? newUser.username
                 : `${newUser.username}@vendingapp.com`;
@@ -124,18 +157,14 @@ export function AuthProvider({ children }) {
                 createdAt: new Date().toISOString()
             });
 
-            // If successful, the 'users' listener will automatically update the UI
             return { success: true };
-
         } catch (error) {
             console.error("Add user error:", error);
             return { success: false, error: error.message };
         } finally {
-            // Clean up secondary app
-            // deleteApp(secondaryApp) is not exported? 
-            // It is from 'firebase/app', but let's just leave it or try to import it if strict.
-            // For now, we'll just let it be GC'd or look up how to delete properly if issues arise.
-            // Actually 'deleteApp' is in 'firebase/app'.
+            if (secondaryApp) {
+                try { await deleteApp(secondaryApp); } catch (e) { /* ignore */ }
+            }
         }
     };
 

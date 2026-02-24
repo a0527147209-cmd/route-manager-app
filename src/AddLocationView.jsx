@@ -4,6 +4,7 @@ import { useLocations } from "./LocationsContext";
 import { useLanguage } from './LanguageContext';
 import { ArrowLeft, Save, MapPin, Building, Menu, Percent, Banknote } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
+import AddressAutocomplete from './AddressAutocomplete';
 
 export default function AddLocationView() {
   const navigate = useNavigate();
@@ -113,17 +114,25 @@ export default function AddLocationView() {
               />
             </div>
 
-            {/* 2. כתובת */}
+            {/* 2. כתובת — Google Maps Autocomplete */}
             <div>
               <label className={labelStyle}>{t('address')}</label>
-              <input
-                type="text"
-                name="address"
-                required
+              <AddressAutocomplete
                 value={formData.address}
-                onChange={handleChange}
-                placeholder="123 Main St"
+                onChange={(val) => setFormData(prev => ({ ...prev, address: val }))}
+                onPlaceSelect={(place) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    address: place.address,
+                    city: place.city || prev.city,
+                    state: place.state || prev.state,
+                    zipCode: place.zipCode || prev.zipCode,
+                    fullAddress: place.fullAddress || prev.fullAddress,
+                  }));
+                }}
+                placeholder="Start typing an address..."
                 className={inputStyle}
+                required
               />
             </div>
 
@@ -194,18 +203,6 @@ export default function AddLocationView() {
               />
             </div>
 
-            {/* 8. כתובת מלאה */}
-            <div>
-              <label className={labelStyle}>{t('fullAddress')}</label>
-              <input
-                type="text"
-                name="fullAddress"
-                value={formData.fullAddress}
-                onChange={handleChange}
-                placeholder={t('fullAddress')}
-                className={inputStyle}
-              />
-            </div>
 
             {/* עמלה, מכונה, הערות */}
             <div className="bg-muted/30 p-4 rounded-xl border border-border space-y-2">
@@ -232,20 +229,6 @@ export default function AddLocationView() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border">
-              <input
-                type="checkbox"
-                id="hasChangeMachine"
-                name="hasChangeMachine"
-                checked={formData.hasChangeMachine}
-                onChange={handleChange}
-                className="w-5 h-5 rounded border-input text-primary focus:ring-primary"
-              />
-              <label htmlFor="hasChangeMachine" className="flex items-center gap-2 text-foreground font-medium cursor-pointer">
-                <Banknote size={18} />
-                {t('hasChangeMachine')}
-              </label>
-            </div>
 
             <div>
               <label className={labelStyle}>{t('initialNotes')}</label>

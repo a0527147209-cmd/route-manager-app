@@ -18,6 +18,7 @@ import {
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import MenuDrawer from './MenuDrawer';
 import LogFormModal from './LogFormModal';
+import AddressAutocomplete from './AddressAutocomplete';
 
 import { useAuth } from './AuthContext';
 import { useConfirmation } from './ConfirmationContext';
@@ -76,6 +77,7 @@ export default function CustomerDetailsView() {
       commissionRate: (parseFloat(editForm.commissionRate) || 40) / 100,
       changeMachineCount: parseInt(editForm.changeMachineCount) || 0,
       hasChangeMachine: false,
+      fullAddress: (editForm.fullAddress || '').trim(),
     });
     setIsEditingCustomer(false);
   };
@@ -154,16 +156,18 @@ export default function CustomerDetailsView() {
   };
 
   const openWaze = () => {
-    if (!location?.address) return;
+    const addr = location?.fullAddress || location?.address;
+    if (!addr) return;
     window.open(
-      `https://waze.com/ul?q=${encodeURIComponent(location.address)}&navigate=yes`,
+      `https://waze.com/ul?q=${encodeURIComponent(addr)}&navigate=yes`,
       '_blank'
     );
   };
 
   const openGoogleMaps = () => {
-    if (!location?.address) return;
-    navigate(`/maps?q=${encodeURIComponent(location.address)}`);
+    const addr = location?.fullAddress || location?.address;
+    if (!addr) return;
+    navigate(`/maps?q=${encodeURIComponent(addr)}`);
   };
 
   const formatLogDate = (isoStr) => {
@@ -290,12 +294,21 @@ export default function CustomerDetailsView() {
               </div>
               <div>
                 <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-0.5 block">{t('address') || 'כתובת'}</label>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   value={editForm.address}
-                  onChange={(e) => setEditForm(f => ({ ...f, address: e.target.value }))}
+                  onChange={(val) => setEditForm(f => ({ ...f, address: val }))}
+                  onPlaceSelect={(place) => {
+                    setEditForm(f => ({
+                      ...f,
+                      address: place.address,
+                      city: place.city || f.city,
+                      state: place.state || f.state,
+                      zipCode: place.zipCode || f.zipCode,
+                      fullAddress: place.fullAddress || f.fullAddress,
+                    }));
+                  }}
                   className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"
-                  placeholder={t('address') || 'כתובת'}
+                  placeholder={t('address') || 'Start typing an address...'}
                 />
               </div>
               <div>
@@ -734,10 +747,10 @@ export default function CustomerDetailsView() {
               </div>
             </div>
 
-            {/* Yearly Summary */}
+            {/* All-Time Summary */}
             <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                {t('yearlySummary') || 'Yearly Summary'}
+                {t('yearlySummary') || 'All-Time Summary'}
               </h3>
               <div className="space-y-3">
                 <div>
@@ -747,28 +760,16 @@ export default function CustomerDetailsView() {
                   <div className="flex items-baseline gap-2">
                     <p className="text-lg font-bold text-foreground">
                       {(() => {
-                        const now = new Date();
-                        const currentYear = now.getFullYear();
                         const total = (location.logs || []).reduce((sum, log) => {
-                          const d = new Date(log.date);
-                          if (d.getFullYear() === currentYear) {
-                            return sum + (parseFloat(log.collection) || 0);
-                          }
-                          return sum;
+                          return sum + (parseFloat(log.collection) || 0);
                         }, 0);
                         return total.toFixed(2);
                       })()}
                     </p>
                     <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
                       {(() => {
-                        const now = new Date();
-                        const currentYear = now.getFullYear();
                         const total = (location.logs || []).reduce((sum, log) => {
-                          const d = new Date(log.date);
-                          if (d.getFullYear() === currentYear) {
-                            return sum + (parseFloat(log.collection) || 0);
-                          }
-                          return sum;
+                          return sum + (parseFloat(log.collection) || 0);
                         }, 0);
                         return `$${(total * 20).toLocaleString()}`;
                       })()}
@@ -782,37 +783,33 @@ export default function CustomerDetailsView() {
                   <div className="flex items-baseline gap-2">
                     <p className="text-lg font-bold text-primary">
                       {(() => {
-                        const now = new Date();
-                        const currentYear = now.getFullYear();
                         const total = (location.logs || []).reduce((sum, log) => {
-                          const d = new Date(log.date);
-                          if (d.getFullYear() === currentYear) {
-                            const collection = parseFloat(log.collection) || 0;
-                            const rate = parseFloat(log.commissionRate) || 0;
-                            return sum + (collection * (1 - rate));
-                          }
-                          return sum;
+                          const collection = parseFloat(log.collection) || 0;
+                          const rate = parseFloat(log.commissionRate) || 0;
+                          return sum + (collection * (1 - rate));
                         }, 0);
                         return total.toFixed(2);
                       })()}
                     </p>
                     <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
                       {(() => {
-                        const now = new Date();
-                        const currentYear = now.getFullYear();
                         const total = (location.logs || []).reduce((sum, log) => {
-                          const d = new Date(log.date);
-                          if (d.getFullYear() === currentYear) {
-                            const collection = parseFloat(log.collection) || 0;
-                            const rate = parseFloat(log.commissionRate) || 0;
-                            return sum + (collection * (1 - rate));
-                          }
-                          return sum;
+                          const collection = parseFloat(log.collection) || 0;
+                          const rate = parseFloat(log.commissionRate) || 0;
+                          return sum + (collection * (1 - rate));
                         }, 0);
                         return `$${(total * 20).toLocaleString()}`;
                       })()}
                     </span>
                   </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-0.5">
+                    Total Visits
+                  </p>
+                  <p className="text-lg font-bold text-foreground">
+                    {(location.logs || []).length}
+                  </p>
                 </div>
               </div>
             </div>

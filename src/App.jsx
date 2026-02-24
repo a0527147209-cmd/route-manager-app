@@ -23,13 +23,14 @@ function AppWithAuth() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-500">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 text-slate-500">
+        <p className="text-lg font-medium animate-pulse">Loading...</p>
+      </div>
+    );
   }
 
-  if (!user) {
-    return <LoginView />;
-  }
-
+  if (!user) return <LoginView />;
   return <AppContent />;
 }
 

@@ -109,37 +109,7 @@ export default function SettingsView() {
           </div>
         </div>
 
-        {/* Language – smaller box for mobile */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Languages size={16} />
-            {t('language')}
-          </h2>
-          <div dir="ltr" className="flex rounded-lg bg-slate-100 dark:bg-slate-700/50 p-1 gap-0.5 min-w-[180px] w-full max-w-[240px]">
-            <button
-              type="button"
-              onClick={() => setLanguage('he')}
-              title={language === 'he' ? undefined : t('hebrew')}
-              className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${language === 'he'
-                ? 'bg-card text-primary shadow-sm ring-1 ring-primary/20'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-            >
-              עברית
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage('en')}
-              title={language === 'en' ? undefined : t('english')}
-              className={`flex-1 min-w-0 py-2 px-2.5 rounded-md font-semibold text-sm transition-all duration-200 ${language === 'en'
-                ? 'bg-card text-primary shadow-sm ring-1 ring-primary/20'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-            >
-              English
-            </button>
-          </div>
-        </div>
+
 
         {/* Danger Zone */}
         <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-red-100 dark:border-red-900/30">

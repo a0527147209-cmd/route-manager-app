@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { useLanguage } from './LanguageContext';
-import { Lock, User, LogIn } from 'lucide-react';
+import { Lock, User, LogIn, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 
 export default function LoginView() {
     const navigate = useNavigate();
@@ -13,20 +16,53 @@ export default function LoginView() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [shaking, setShaking] = useState(false);
+    const [setupMsg, setSetupMsg] = useState('');
+    const [isSettingUp, setIsSettingUp] = useState(false);
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        const result = login(username, password);
-        if (result.success) {
-            setTimeout(() => {
-                navigate('/', { replace: true });
-            }, 50);
-        } else {
+        setIsLoggingIn(true);
+        const result = await login(username, password);
+        if (!result.success) {
             setError(t('loginError') || 'Invalid username or password');
             setShaking(true);
             setTimeout(() => setShaking(false), 600);
+            setIsLoggingIn(false);
         }
+        // On success, AppWithAuth will detect the user and switch to AppContent automatically
+    };
+
+    const handleSetupAdmin = async () => {
+        setIsSettingUp(true);
+        setSetupMsg('');
+        try {
+            // Create admin user in Firebase Auth
+            const cred = await createUserWithEmailAndPassword(auth, 'admin@vendingapp.com', '123456');
+
+            // Create Firestore profile with admin role
+            await setDoc(doc(db, 'users', cred.user.uid), {
+                username: 'admin',
+                name: 'Admin',
+                role: 'admin',
+                createdAt: new Date().toISOString()
+            });
+
+            setSetupMsg('✅ Admin created! Username: admin / Password: 123456');
+            // Auto-fill the login form
+            setUsername('admin');
+            setPassword('123456');
+        } catch (e) {
+            if (e.code === 'auth/email-already-in-use') {
+                setSetupMsg('⚠️ Admin already exists. Try logging in with: admin / 123456');
+                setUsername('admin');
+                setPassword('123456');
+            } else {
+                setSetupMsg('❌ Error: ' + e.message);
+            }
+        }
+        setIsSettingUp(false);
     };
 
     return (
@@ -42,8 +78,9 @@ export default function LoginView() {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className={`relative w-full max-w-[340px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/50 p-7 space-y-6 ${shaking ? 'animate-shake' : ''}`}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className={`relative w-full max-w-[340px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 dark:border-slate-700/50 p-7 space-y-6 ${shaking ? 'animate-shake' : ''} ${isLoggingIn ? 'pointer-events-none' : ''}`}
+                style={isLoggingIn ? { opacity: 0.6 } : {}}
             >
 
                 <div className="text-center space-y-2">
@@ -109,12 +146,36 @@ export default function LoginView() {
 
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+                        disabled={isLoggingIn}
+                        className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-70"
                     >
                         <LogIn size={20} />
-                        <span>{t('login') || 'Sign In'}</span>
+                        <span>{isLoggingIn ? 'Signing in...' : (t('login') || 'Sign In')}</span>
                     </button>
                 </form>
+
+                {/* Setup message */}
+                {setupMsg && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs text-center font-medium"
+                    >
+                        {setupMsg}
+                    </motion.div>
+                )}
+
+                {/* First-time setup */}
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                    <button
+                        onClick={handleSetupAdmin}
+                        disabled={isSettingUp}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all disabled:opacity-50"
+                    >
+                        <Shield size={14} />
+                        <span>{isSettingUp ? 'Creating...' : 'First time? Create Admin Account'}</span>
+                    </button>
+                </div>
             </motion.div>
         </div>
     );

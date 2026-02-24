@@ -123,34 +123,28 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
           </p>
         )}
 
-        {/* Row 3: Meta info - stretched across full width */}
-        <div className="flex items-center mt-1 w-full">
-          {loc?.lastVisited && (
-            <div className="flex-1 min-w-0">
-              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">{t('lastVisit')}</span>
-              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{formatDate(loc.lastVisited)}</span>
-            </div>
-          )}
-          {loc?.lastCollection && (
-            <div className="flex-1 min-w-0">
-              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">{t('lastCollection')}</span>
-              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc.lastCollection}</span>
-            </div>
-          )}
-          {loc?.logs?.[0]?.user && (
-            <div className="flex-1 min-w-0">
-              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold">{t('logUser')}</span>
-              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc.logs[0].user}</span>
-            </div>
-          )}
-        </div>
-
         {loc?.subtitle && (
           <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />
         )}
       </div>
 
-      <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
+      <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
+        <div className="flex flex-col gap-0.5">
+          <div>
+            <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastVisit')}</span>
+            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
+          </div>
+          <div>
+            <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastCollection')}</span>
+            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastCollection || '—'}</span>
+          </div>
+          <div>
+            <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('logUser')}</span>
+            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -410,14 +404,25 @@ export default function CustomersView() {
                             )}
                           </div>
                           {loc?.address && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{loc.address}</p>}
-                          <div className="flex items-center gap-3 mt-1">
-                            {loc?.lastVisited && <span className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(loc.lastVisited)}</span>}
-                            {loc?.lastCollection && <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">${loc.lastCollection}</span>}
-                            {loc?.logs?.[0]?.user && <span className="text-[10px] text-slate-400 dark:text-slate-500">{loc.logs[0].user}</span>}
-                          </div>
                           {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
                         </div>
-                        <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
+                        <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
+                          <div className="flex flex-col gap-0.5">
+                            <div>
+                              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastVisit')}</span>
+                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('lastCollection')}</span>
+                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.lastCollection || '—'}</span>
+                            </div>
+                            <div>
+                              <span className="text-[8px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-semibold block leading-none">{t('logUser')}</span>
+                              <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </DraggableCard>
                   ))}

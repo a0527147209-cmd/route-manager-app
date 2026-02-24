@@ -412,46 +412,27 @@ export default function LocationsView() {
                               {loc.locationType}
                             </p>
                           )}
-                          <div className="flex items-start gap-2 mt-1 flex-nowrap">
-                            {loc?.lastVisited && (
-                              <div className="flex flex-col items-start">
-                                <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
-                                  {t('lastVisit')}
-                                </span>
-                                <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
-                                  {(() => {
-                                    const d = new Date(loc.lastVisited);
-                                    return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
-                                  })()}
-                                </span>
-                              </div>
-                            )}
-                            {loc?.lastCollection && (
-                              <div className="flex flex-col items-start">
-                                <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
-                                  {t('lastCollection')}
-                                </span>
-                                <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
-                                  {loc.lastCollection}
-                                </span>
-                              </div>
-                            )}
-                            {loc?.logs?.[0]?.user && (
-                              <div className="flex flex-col items-start">
-                                <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">
-                                  {t('logUser')}
-                                </span>
-                                <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
-                                  {loc.logs[0].user}
-                                </span>
-                              </div>
-                            )}
-                          </div>
                         </div>
 
                       </div>
                     </div>
-                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
+                    <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
+                      <div className="flex flex-col gap-0.5">
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
+                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastVisited ? (() => { const d = new Date(loc.lastVisited); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}/${d.getFullYear()}`; })() : '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastCollection')}</span>
+                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastCollection || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('logUser')}</span>
+                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   {loc?.subtitle && (
                     <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
@@ -486,38 +467,29 @@ export default function LocationsView() {
                           )}
                         </div>
                         {loc?.address && <p className="text-muted-foreground text-[10px] mt-0.5">{loc.address}</p>}
-                        <div className="flex items-start gap-2 mt-1 flex-nowrap">
-                          {loc?.lastVisited && (
-                            <div className="flex flex-col items-start">
-                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastVisit')}</span>
-                              <span className="text-[10px] font-bold text-foreground whitespace-nowrap">
-                                {(() => {
-                                  const d = new Date(loc.lastVisited);
-                                  return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
-                                })()}
-                              </span>
-                            </div>
-                          )}
-                          {loc?.lastCollection && (
-                            <div className="flex flex-col items-start">
-                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('lastCollection')}</span>
-                              <span className="text-[10px] font-bold text-foreground whitespace-nowrap">{loc.lastCollection}</span>
-                            </div>
-                          )}
-                          {loc?.logs?.[0]?.user && (
-                            <div className="flex flex-col items-start">
-                              <span className="text-[9px] text-muted-foreground font-medium mb-px whitespace-nowrap">{t('logUser')}</span>
-                              <span className="text-[10px] font-bold text-foreground whitespace-nowrap">{loc.logs[0].user}</span>
-                            </div>
-                          )}
-                        </div>
                       </div>
                     </div>
                     {loc?.subtitle && (
                       <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />
                     )}
                   </div>
-                  <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
+                  <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
+                    <div className="flex flex-col gap-0.5">
+                      <div>
+                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
+                        <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastVisited ? (() => { const d = new Date(loc.lastVisited); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}/${d.getFullYear()}`; })() : '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastCollection')}</span>
+                        <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastCollection || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('logUser')}</span>
+                        <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -557,17 +529,23 @@ export default function LocationsView() {
                         </p>
                       )}
                     </div>
-                    {loc?.lastVisited && (
-                      <div className={`shrink-0 ${isRtl ? 'text-right' : 'text-left'} flex flex-col ${isRtl ? 'items-end' : 'items-start'} justify-center min-w-0 max-w-[40%] ${isRtl ? 'me-3' : 'ms-3'}`}>
-                        <p className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap leading-tight">
-                          {t('lastVisit')}
-                        </p>
-                        <p className="text-xs font-semibold text-primary whitespace-nowrap leading-tight mt-0.5">
-                          {formatVisitDate(loc.lastVisited)}
-                        </p>
+                    <div className="flex items-start gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
+                      <div className="flex flex-col gap-0.5">
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastVisit')}</span>
+                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastVisited ? formatVisitDate(loc.lastVisited) : '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('lastCollection')}</span>
+                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.lastCollection || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase tracking-wider text-muted-foreground font-semibold block leading-none">{t('logUser')}</span>
+                          <span className="text-[10px] font-bold text-foreground block leading-tight">{loc?.logs?.[0]?.user || '—'}</span>
+                        </div>
                       </div>
-                    )}
-                    <NavMenuButton wazeUrl={getWazeUrl(loc?.address)} mapsUrl={getMapsUrl(loc?.address)} t={t} isRtl={isRtl} />
+                    </div>
                   </div>
                   {loc?.subtitle && (
                     <LinkifyText text={loc.subtitle} className="text-xs font-bold text-red-600 dark:text-red-400 mt-1 block w-full" />

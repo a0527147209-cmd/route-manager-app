@@ -75,10 +75,10 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
 
     if (hasChanges) {
       if (await confirm({
-        title: t('discardChanges') || 'Discard Changes',
-        message: t('confirmDiscardChanges') || 'Are you sure you want to leave? Your changes will not be saved.',
-        confirmText: t('discard') || 'Discard',
-        cancelText: t('keepEditing') || 'Keep Editing'
+        title: 'Are you sure?',
+        message: 'Your changes will not be saved.',
+        confirmText: 'Discard',
+        cancelText: 'Keep Editing'
       })) {
         onClose();
       }
@@ -155,7 +155,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
     <>
       <div
         className="fixed inset-0 bg-black/50 z-[60]"
-        onClick={onClose}
+        onClick={handleClose}
         aria-hidden="true"
       />
       <div

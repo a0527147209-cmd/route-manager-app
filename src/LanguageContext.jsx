@@ -1,6 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-
-const STORAGE_KEY = 'myRouteLanguage';
+import { createContext, useContext, useEffect } from 'react';
 
 const translations = {
   en: {
@@ -199,270 +197,37 @@ const translations = {
     generatedOn: 'Generated on',
     period: 'Period',
     visits: 'Visits',
-  },
-  he: {
-    appTitle: 'המסלול שלי',
-    menu: 'תפריט',
-    back: 'חזרה',
-    routes: 'מסלולים',
-    locations: 'מיקומים',
-    customers: 'לקוחות',
-    settings: 'הגדרות',
-    manageUsers: 'ניהול משתמשים',
-    addUser: 'הוסף משתמש',
-    deleteUser: 'מחק משתמש',
-    confirmDeleteUser: 'האם אתה בטוח שברצונך למחוק את',
-    employee: 'עובד',
-    admin: 'מנהל',
-    addCustomer: 'הוסף לקוח',
-    searchCustomer: 'חיפוש לקוח...',
-    searchLocation: 'חיפוש מיקום...',
-    week: 'שבוע',
-    month: 'חודש',
-    locationsOnThisDay: 'מיקומים ביום זה (עריכה למטה)',
-    addLocation: 'הוסף מיקום...',
-    close: 'סגור',
-    open: 'פתח',
-    removeFromDay: 'הסר מהיום',
-    selected: 'נבחר',
-    noResultsFor: 'אין תוצאות עבור',
-    tryDifferentKeywords: 'נסה מילות מפתח אחרות (שם, כתובת, עיר, סוג)',
-    noLocationsYet: 'אין עדיין מיקומים',
-    openMenuAddCustomer: 'פתח את התפריט ולחץ על הוסף לקוח',
-    visited: 'ביקור',
-    pending: 'ממתין',
-    machine: 'מכונה',
-    lastVisit: 'ביקור אחרון',
-    lastCollection: 'איסוף אחרון',
-    backToHome: 'חזרה לדף הבית',
-    defaultOrder: 'ברירת מחדל',
-    visitedAtBottom: 'ביקור ↓',
-    appearance: 'מראה',
-    darkMode: 'מצב כהה',
-    lightMode: 'מצב יום',
-    nightMode: 'מצב לילה',
-    language: 'שפה',
-    hebrew: 'עברית',
-    english: 'English',
-    addNewCustomer: 'הוסף לקוח חדש',
-    backToLocations: 'חזרה למיקומים',
-    backToCustomers: 'חזרה ללקוחות',
-    addLog: 'הוסף לוג',
-    logHistory: 'היסטוריית לוג',
-    loading: 'טוען...',
-    customerNotFound: 'הלקוח לא נמצא',
-    locationRemovedOrInvalid: 'ייתכן שהמיקום הוסר או שהקישור לא תקף.',
-    businessDetails: 'פרטי העסק',
-    businessName: 'שם העסק',
-    customerName: 'שם לקוח',
-    fullAddress: 'כתובת מלאה',
-    locationType: 'סוג מיקום',
-    type: 'סוג',
-    commission: 'עמלה',
-    commissionRate: 'אחוז עמלה',
-    enterDecimal: 'הזן כמספר עשרוני (0.40 = 40%)',
-    hasChangeMachine: 'יש מכונת מטבעות',
-    visitDateOptional: 'תאריך ביקור (אופציונלי)',
-    initialNotes: 'הערות ראשוניות',
-    addressZone: 'כתובת ואזור',
-    address: 'כתובת',
-    city: 'עיר',
-    zone: 'אזור',
-    state: 'מדינה',
-    neighborhood: 'שכונה',
-    other: 'אחר',
-    yes: 'כן',
-    no: 'לא',
-    zipCode: 'מיקוד',
-    saveCustomer: 'שמור לקוח',
-    commissionRateHelp: 'אחוז העמלה שהלקוח משלם (למשל 0.40 = 40%)',
-    status: 'סטטוס',
-    collectionAmount: 'משקל הכל',
-    coinWeightConverter: 'ממיר משקל מטבעות',
-    coinType: 'סוג מטבע',
-    weight: 'משקל',
-    giveToCustomer: 'חלק לקוח',
-    iReceive: 'חצי משקל',
-    noMoney: 'אין כסף',
-    value: 'ערך',
-    applyToCollection: 'החל על האיסוף',
-    notes: 'הערות',
-    customerNotes: 'הערות לקוח',
-    logNotes: 'הערות לוג',
-    expand: 'הרחב',
-    showNotes: 'הראה הערות',
-    collapse: 'סגור',
-    notesPlaceholder: 'מילוי מכונה. מנגנון מטבעות תקוע. מילוי מוצרים...',
-    saveComplete: 'שמור וסיים',
-    locationLog: 'Location Log',
-    saveLog: 'שמור לוג',
-    logDate: 'תאריך הלוג',
-    logUser: 'משתמש',
-    saveWord: 'שמור',
-    logWord: 'לוג',
-    deleteThisCustomer: 'למחוק את הלקוח?',
-    saveChangesConfirm: 'לשמור שינויים?',
-    cancel: 'ביטול',
-    discardChanges: 'לא לשמור',
-    maps: 'מפות',
-    waze: 'ווייז',
-    optionalNotes: 'הערות אופציונליות...',
-    quartersLabel: 'רבעים (סטנדרט)',
-    dimesLabel: 'דיימס',
-    nickelsLabel: 'ניקלים',
-    appVersion: 'מנהל מסלול אוטומטים v1.0',
-    home: 'דף הבית',
-    sortBy: 'מיון לפי',
-    sortByCity: 'ערים',
-    sortByState: 'מדינות',
-    sortByZone: 'אזור',
-    sortByAll: 'הכל',
-    loadDemoData: 'טען נתוני דמו',
-    resetAndLoadDemo: 'איפוס וטעינת דמו',
-    bills: 'שטרות',
-    edit: 'ערוך',
-    bill50: '50',
-    bill20: '20',
-    bill10: '10',
-    bill5: '5',
-    bill1: '1',
-    lastVisitSummary: 'סיכום ביקור אחרון',
-    yearlySummary: 'סיכום שנתי',
-    visualTheme: 'ערכת נושא',
-    classic: 'קלאסי',
-    modern: 'מודרני',
-    // Login
-    welcomeBack: 'ברוך הבא',
-    loginSubtitle: 'התחבר כדי לנהל את המסלולים שלך',
-    login: 'התחבר',
-    loginError: 'שם משתמש או סיסמה שגויים',
-    username: 'שם משתמש',
-    password: 'סיסמה',
-    usernamePlaceholder: 'הכנס שם משתמש',
-    // Home
-    goodMorning: 'בוקר טוב',
-    goodAfternoon: 'צהריים טובים',
-    goodEvening: 'ערב טוב',
-    homeSubtitle: 'הנה הסקירה שלך',
-    total: 'סה"כ',
-    today: 'היום',
-    viewAccounts: 'צפה ונהל את כל החשבונות',
-    addSubtitle: 'רשום מיקום חדש',
-    // Menu
-    hi: 'היי',
-    search: 'חיפוש...',
-    logout: 'התנתק',
-    confirmLogout: 'האם אתה בטוח שברצונך להתנתק?',
-    // Manage Users
-    online: 'מחובר',
-    neverLoggedIn: 'אף פעם',
-    justNow: 'עכשיו',
-    minutesAgo: 'דק\' לפני',
-    hoursAgo: 'שעות לפני',
-    daysAgo: 'ימים לפני',
-    yesterday: 'אתמול',
-    delete: 'מחק',
-    save: 'שמור',
-    textSize: 'גודל טקסט',
-    textSizeSmall: 'קטן',
-    textSizeRegular: 'רגיל',
-    textSizeLarge: 'גדול',
-    reports: 'דוחות',
-    reportsTitle: 'לוח דוחות',
-    dateRange: 'טווח תאריכים',
-    daily: 'יומי',
-    weekly: 'שבועי',
-    monthly: 'חודשי',
-    from: 'מ-',
-    to: 'עד',
-    totalWeight: 'משקל כולל',
-    halfWeight: 'חצי משקל',
-    customerCut: 'חלק לקוח',
-    totalVisits: 'סה"כ ביקורים',
-    totalCustomers: 'סה"כ לקוחות',
-    incomeOverTime: 'הכנסות לאורך זמן',
-    topCustomers: 'טופ 10 לקוחות',
-    distributionByZone: 'פילוח לפי אזור',
-    periodComparison: 'השוואת תקופות',
-    currentPeriod: 'תקופה נוכחית',
-    previousPeriod: 'תקופה קודמת',
-    change: 'שינוי',
-    decliningCustomers: 'לקוחות בירידה',
-    noVisitsInPeriod: 'ללא ביקורים בתקופה הנבחרת',
-    exportPdf: 'ייצוא PDF',
-    noDataAvailable: 'אין נתונים זמינים',
-    addLogsToSeeReports: 'הוסף לוגים כדי לראות דוחות',
-    summaryReport: 'דוח סיכום',
-    generatedOn: 'נוצר בתאריך',
-    period: 'תקופה',
-    visits: 'ביקורים',
+    filterBy: 'Filter by',
+    byZone: 'Zone',
+    byLocation: 'Location',
+    distributionByLocation: 'Distribution by Location',
   },
 };
 
 // Weekday labels for calendar (Sun–Sat)
-const WEEKDAY_LABELS = {
-  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-  he: ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''],
-};
-const MONTH_NAMES = {
-  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-  he: ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'],
-};
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const LanguageContext = createContext();
 
-function loadLanguage() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'he' || saved === 'en') return saved;
-    return 'en';
-  } catch {
-    return 'en';
-  }
-}
-
-const FADE_DURATION_MS = 220;
-
 export function LanguageProvider({ children }) {
-  const [language, setLanguageState] = useState(loadLanguage);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, language);
-      document.documentElement.lang = language === 'he' ? 'he' : 'en';
-      document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr';
-    } catch (err) {
-      console.error('Failed to persist language:', err);
-    }
-  }, [language]);
+    document.documentElement.lang = 'en';
+    document.documentElement.dir = 'ltr';
+  }, []);
 
-  const setLanguage = (lang) => {
-    if (lang !== 'he' && lang !== 'en') return;
-    if (lang === language) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setLanguageState(lang);
-      setIsTransitioning(false);
-    }, FADE_DURATION_MS);
-  };
-
-  const t = (key) => {
-    const dict = translations[language] || translations.en;
-    return dict[key] ?? translations.en[key] ?? key;
-  };
-
-  const weekdayLabels = WEEKDAY_LABELS[language] || WEEKDAY_LABELS.en;
-  const monthNames = MONTH_NAMES[language] || MONTH_NAMES.en;
+  const t = (key) => translations.en[key] ?? key;
+  const weekdayLabels = WEEKDAY_LABELS;
+  const monthNames = MONTH_NAMES;
 
   return (
     <LanguageContext.Provider
       value={{
-        language,
-        setLanguage,
+        language: 'en',
+        setLanguage: () => {},
         t,
-        isRtl: language === 'he',
-        isTransitioning,
+        isRtl: false,
+        isTransitioning: false,
         weekdayLabels,
         monthNames,
       }}

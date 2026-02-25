@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
-import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Languages, Type } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Type } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
 import { useTextSize } from './TextSizeContext';
 
@@ -16,7 +16,7 @@ export default function SettingsView() {
   const location = useLocation();
   const { isDarkMode, toggleTheme, theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
-  const { t, isRtl, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { confirm } = useConfirmation();
   const { textSize, setTextSize } = useTextSize();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,7 +90,7 @@ export default function SettingsView() {
         {/* Visual Theme */}
         <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            {t('visualTheme') || (language === 'he' ? 'ערכת נושא' : 'Visual Theme')}
+            {t('visualTheme')}
           </h2>
           <div className="flex gap-2">
             {['classic', 'modern'].map((th) => {
@@ -104,7 +104,7 @@ export default function SettingsView() {
                     : 'bg-card border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                 >
-                  {th === 'classic' ? (language === 'he' ? 'קלאסי' : 'Classic') : (language === 'he' ? 'מודרני' : 'Modern')}
+                  {th === 'classic' ? 'Classic' : 'Modern'}
                 </button>
               );
             })}

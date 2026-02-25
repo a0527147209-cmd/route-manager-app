@@ -106,6 +106,7 @@ export default function ReportsView() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [granularity, setGranularity] = useState('monthly');
+  const [filterBy, setFilterBy] = useState('zone'); // 'zone' | 'location'
 
   const defaultRange = useMemo(() => getDateRange('monthly'), []);
   const [dateFrom, setDateFrom] = useState(defaultRange.from);
@@ -193,14 +194,14 @@ export default function ReportsView() {
   const pieData = useMemo(() => {
     const map = {};
     for (const log of currentLogs) {
-      const zone = log.zone || 'Other';
-      if (!map[zone]) map[zone] = 0;
-      map[zone] += parseFloat(log.collection) || 0;
+      const key = filterBy === 'zone' ? (log.zone || 'Other') : (log.locationName || 'Other');
+      if (!map[key]) map[key] = 0;
+      map[key] += parseFloat(log.collection) || 0;
     }
     return Object.entries(map)
       .map(([name, value]) => ({ name, value: +value.toFixed(2) }))
       .sort((a, b) => b.value - a.value);
-  }, [currentLogs]);
+  }, [currentLogs, filterBy]);
 
   const decliningCustomers = useMemo(() => {
     const currentVisited = new Set(currentLogs.map(l => l.locationId));
@@ -326,6 +327,21 @@ export default function ReportsView() {
               </button>
             ))}
           </div>
+          <div className="flex gap-1">
+            {['zone', 'location'].map(f => (
+              <button
+                key={f}
+                onClick={() => setFilterBy(f)}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                  filterBy === f
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                }`}
+              >
+                {f === 'zone' ? t('byZone') : t('byLocation')}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">{t('from')}</label>
@@ -418,9 +434,11 @@ export default function ReportsView() {
           )}
         </div>
 
-        {/* Pie Chart - Distribution by Zone */}
+        {/* Pie Chart - Distribution by Zone or Location */}
         <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">{t('distributionByZone')}</h3>
+          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">
+            {filterBy === 'zone' ? t('distributionByZone') : t('distributionByLocation')}
+          </h3>
           {pieData.length > 0 ? (
             <div className="flex items-center gap-2">
               <ResponsiveContainer width="55%" height={180}>

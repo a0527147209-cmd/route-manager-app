@@ -2,9 +2,9 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'myRouteTextSize';
 const SIZES = {
-  small: 14,
+  small: 11,
   regular: 16,
-  large: 18,
+  large: 23,
 };
 
 const TextSizeContext = createContext();

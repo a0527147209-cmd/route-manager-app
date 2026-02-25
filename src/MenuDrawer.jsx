@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, X, Search, UserPlus, Users, LogOut, LogIn, Shield } from 'lucide-react';
 import { useSearch } from './SearchContext';
@@ -12,6 +13,13 @@ export default function MenuDrawer({ isOpen, onClose }) {
   const { t, isRtl } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
   const { confirm } = useConfirmation();
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [isOpen]);
 
   const goTo = (path) => {
     onClose();

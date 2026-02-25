@@ -254,7 +254,7 @@ export default function LocationsView() {
     if (isInnerPage) {
       navigate('/locations', { replace: true });
     } else {
-      navigate('/', routeLocation.state?.fromMenu ? { state: { openMenu: true } } : {});
+      navigate(-1);
     }
   };
 

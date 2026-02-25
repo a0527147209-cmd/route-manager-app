@@ -23,13 +23,6 @@ export default function HomeView() {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (location.state?.openMenu) {
-      setMenuOpen(true);
-      navigate('/', { replace: true, state: {} });
-    }
-  }, [location.state?.openMenu, navigate]);
-
   const totalCustomers = locations.length;
   const visitedToday = locations.filter(l => l.lastVisited === new Date().toISOString().slice(0, 10)).length;
   const pendingCount = locations.filter(l => l.status === 'pending').length;

@@ -74,7 +74,7 @@ export default function AddLocationView() {
       <div className="shrink-0 bg-white dark:bg-slate-800 shadow-sm p-3 min-h-[50px] flex items-center z-10 w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="flex items-center justify-between w-full gap-2">
           <button
-            onClick={() => navigate('/', location.state?.fromMenu ? { state: { openMenu: true } } : {})}
+            onClick={() => navigate(-1)}
             className="p-2 -ms-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors active:scale-95 shrink-0"
             title={t('home')}
           >

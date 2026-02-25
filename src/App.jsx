@@ -18,6 +18,7 @@ import MapsView from './MapsView';
 import ManageUsersView from './ManageUsersView';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
+import { TextSizeProvider } from './TextSizeContext';
 
 import { useEffect } from 'react';
 
@@ -86,13 +87,15 @@ function App() {
         <SearchProvider>
           <AuthProvider>
             <LanguageProvider>
-              <ConfirmationProvider>
-                <ThemeProvider>
-                  <BrowserRouter>
-                    <AppWithAuth />
-                  </BrowserRouter>
-                </ThemeProvider>
-              </ConfirmationProvider>
+              <TextSizeProvider>
+                <ConfirmationProvider>
+                  <ThemeProvider>
+                    <BrowserRouter>
+                      <AppWithAuth />
+                    </BrowserRouter>
+                  </ThemeProvider>
+                </ConfirmationProvider>
+              </TextSizeProvider>
             </LanguageProvider>
           </AuthProvider>
         </SearchProvider>

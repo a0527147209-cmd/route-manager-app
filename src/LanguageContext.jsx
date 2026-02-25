@@ -166,6 +166,10 @@ const translations = {
     yesterday: 'Yesterday',
     delete: 'Delete',
     save: 'Save',
+    textSize: 'Text Size',
+    textSizeSmall: 'Small',
+    textSizeRegular: 'Regular',
+    textSizeLarge: 'Large',
   },
   he: {
     appTitle: 'המסלול שלי',
@@ -330,6 +334,10 @@ const translations = {
     yesterday: 'אתמול',
     delete: 'מחק',
     save: 'שמור',
+    textSize: 'גודל טקסט',
+    textSizeSmall: 'קטן',
+    textSizeRegular: 'רגיל',
+    textSizeLarge: 'גדול',
   },
 };
 

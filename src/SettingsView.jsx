@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
-import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Languages } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Github, Globe, Menu, Languages, Type } from 'lucide-react';
 import MenuDrawer from './MenuDrawer';
+import { useTextSize } from './TextSizeContext';
 
 import { useAuth } from './AuthContext';
 import { addDoc, collection } from 'firebase/firestore';
@@ -17,6 +18,7 @@ export default function SettingsView() {
   const { user, logout } = useAuth();
   const { t, isRtl, language, setLanguage } = useLanguage();
   const { confirm } = useConfirmation();
+  const { textSize, setTextSize } = useTextSize();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -110,6 +112,29 @@ export default function SettingsView() {
         </div>
 
 
+
+        {/* Text Size */}
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t('textSize')}</h2>
+          <div className="flex gap-2">
+            {['small', 'regular', 'large'].map((size) => {
+              const isActive = textSize === size;
+              return (
+                <button
+                  key={size}
+                  onClick={() => setTextSize(size)}
+                  className={`flex-1 py-2.5 px-2 rounded-lg font-semibold transition-all duration-200 border flex flex-col items-center gap-1 ${isActive
+                    ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary'
+                    : 'bg-card border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }`}
+                >
+                  <span className={size === 'small' ? 'text-xs' : size === 'large' ? 'text-base' : 'text-sm'}>A</span>
+                  <span className="text-[10px]">{t(`textSize${size.charAt(0).toUpperCase() + size.slice(1)}`)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Danger Zone */}
         <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-red-100 dark:border-red-900/30">

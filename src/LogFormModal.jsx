@@ -197,31 +197,33 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
             <label htmlFor="modal-collectionAmount" className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block">
               {t('collectionAmount')}
             </label>
-            <input
-              id="modal-collectionAmount"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              min="0"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                if (noMoney) setNoMoney(false);
-              }}
-              placeholder="0.00"
-              disabled={noMoney}
-              className={`w-full px-3 py-2 text-base font-semibold rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${noMoney ? 'opacity-40' : ''} ${isRtl ? 'text-right' : 'text-left'}`}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                setNoMoney(prev => !prev);
-                if (!noMoney) setAmount('');
-              }}
-              className={`w-full py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.98] ${noMoney ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
-            >
-              {t('noMoney')}{noMoney ? ' ✓' : ''}
-            </button>
+            <div className="flex items-stretch gap-1.5">
+              <input
+                id="modal-collectionAmount"
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  if (noMoney) setNoMoney(false);
+                }}
+                placeholder="0.00"
+                disabled={noMoney}
+                className={`flex-[85] min-w-0 px-3 py-2 text-base font-semibold rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${noMoney ? 'opacity-40' : ''} ${isRtl ? 'text-right' : 'text-left'}`}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setNoMoney(prev => !prev);
+                  if (!noMoney) setAmount('');
+                }}
+                className={`flex-[15] rounded-lg text-[10px] font-bold uppercase leading-tight text-center px-1 transition-all active:scale-[0.96] ${noMoney ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
+              >
+                {t('noMoney')}{noMoney ? ' ✓' : ''}
+              </button>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-slate-600 dark:text-slate-400 text-[10px] font-semibold uppercase tracking-wide block mb-0.5">

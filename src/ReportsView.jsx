@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -21,6 +21,8 @@ import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import MenuDrawer from './MenuDrawer';
+
+const ZONES = ['Staten Island', 'Brooklyn'];
 
 const COLORS = {
   totalWeight: '#2563eb',
@@ -63,7 +65,8 @@ function filterLogs(locations, from, to) {
       if (!log.date) continue;
       const d = log.date.slice(0, 10);
       if (d >= from && d <= to) {
-        logs.push({ ...log, locationId: loc.id, locationName: loc.name, zone: loc.state || loc.city || 'Other' });
+        const zone = loc.zone || loc.region || loc.city || loc.state || 'Other';
+        logs.push({ ...log, locationId: loc.id, locationName: loc.name, zone });
       }
     }
   }
@@ -108,6 +111,8 @@ export default function ReportsView() {
   const [granularity, setGranularity] = useState('monthly');
   const [filterBy, setFilterBy] = useState('zone'); // 'zone' | 'location'
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
   const [top10Scope, setTop10Scope] = useState('overall'); // 'overall' | 'byZone'
   const [top10Zone, setTop10Zone] = useState('');
   const [distScope, setDistScope] = useState('overall'); // 'overall' | 'byZone'
@@ -137,10 +142,47 @@ export default function ReportsView() {
     });
   }, [currentLogs, searchQuery, filterBy]);
 
-  const zonesList = useMemo(() => {
-    const set = new Set();
+  const searchSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const zoneCounts = {};
+    const locCounts = {};
     for (const log of currentLogs) {
-      set.add(log.zone || 'Other');
+      const z = log.zone || 'Other';
+      zoneCounts[z] = (zoneCounts[z] || 0) + 1;
+      const name = log.locationName || '';
+      if (name) locCounts[name] = (locCounts[name] || 0) + 1;
+    }
+    const items = [];
+    if (filterBy === 'zone') {
+      for (const [name, count] of Object.entries(zoneCounts)) {
+        if (!name || name === 'Other') continue;
+        const lower = name.toLowerCase();
+        if (lower.includes(q)) items.push({ type: 'zone', name, count });
+      }
+    } else {
+      for (const [name, count] of Object.entries(locCounts)) {
+        if (!name) continue;
+        const lower = name.toLowerCase();
+        if (lower.includes(q)) items.push({ type: 'location', name, count });
+      }
+    }
+    items.sort((a, b) => {
+      const aLower = a.name.toLowerCase();
+      const bLower = b.name.toLowerCase();
+      const aStart = aLower.startsWith(q) ? 1 : 0;
+      const bStart = bLower.startsWith(q) ? 1 : 0;
+      if (bStart !== aStart) return bStart - aStart;
+      return (b.count || 0) - (a.count || 0);
+    });
+    return items.slice(0, 8);
+  }, [currentLogs, searchQuery, filterBy]);
+
+  const zonesList = useMemo(() => {
+    const set = new Set(ZONES);
+    for (const log of currentLogs) {
+      const z = log.zone || 'Other';
+      if (z && z !== 'Other') set.add(z);
     }
     return Array.from(set).sort();
   }, [currentLogs]);
@@ -377,15 +419,32 @@ export default function ReportsView() {
                   </button>
                 ))}
               </div>
-              <div className="relative flex-1 min-w-0">
+              <div className="relative flex-1 min-w-0" ref={suggestionsRef}>
                 <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
+                  onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                   placeholder={filterBy === 'zone' ? t('searchZone') : t('searchLocation')}
                   className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder:text-slate-400"
                 />
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-0.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 shadow-lg z-50 max-h-[180px] overflow-y-auto">
+                    {searchSuggestions.map((s, i) => (
+                      <button
+                        key={`${s.type}-${s.name}-${i}`}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); setSearchQuery(s.name); setShowSuggestions(false); }}
+                        className="w-full px-3 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between gap-2 text-slate-700 dark:text-slate-200"
+                      >
+                        <span className="truncate">{s.name}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 shrink-0">{s.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

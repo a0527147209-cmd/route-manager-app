@@ -410,42 +410,43 @@ export default function CustomerDetailsView() {
             </div>
           </div>
         ) : (
-          <div className="bg-card p-3 rounded-xl shadow-sm border border-border">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-base font-bold text-foreground leading-tight">
-                  {location.name}
-                </h2>
-                {location.address && (
-                  <div className="flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400 mt-1">
-                    <MapPin size={14} className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
-                    <span className="break-words text-xs">{location.address}</span>
-                  </div>
-                )}
-                {(location.city || location.state) && (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5 ms-5">
-                    {[location.city, location.state].filter(Boolean).join(', ')}
-                  </p>
-                )}
+          <div className="flex items-stretch gap-2.5">
+            <div className="flex-1 min-w-0 bg-card p-3 rounded-xl shadow-sm border border-border">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base font-bold text-foreground leading-tight">
+                    {location.name}
+                  </h2>
+                  {location.address && (
+                    <div className="flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400 mt-1">
+                      <MapPin size={14} className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                      <span className="break-words text-xs">{location.address}</span>
+                    </div>
+                  )}
+                  {(location.city || location.state) && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5 ms-5">
+                      {[location.city, location.state].filter(Boolean).join(', ')}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={startEditingCustomer}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors active:scale-95 shrink-0"
+                  title={t('edit') || 'ערוך'}
+                >
+                  <Pencil size={16} />
+                </button>
               </div>
-              <button
-                onClick={startEditingCustomer}
-                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors active:scale-95 shrink-0"
-                title={t('edit') || 'ערוך'}
-              >
-                <Pencil size={16} />
-              </button>
-              <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 shrink-0" />
-              <button
-                onClick={() => setShowLogModal(true)}
-                className="px-3 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0"
-                title={t('addLog')}
-                aria-label={t('addLog')}
-              >
-                <Plus size={18} className="shrink-0" />
-                <span className="font-semibold text-xs whitespace-nowrap">{t('addLog')}</span>
-              </button>
             </div>
+            <button
+              onClick={() => setShowLogModal(true)}
+              className="shrink-0 px-4 rounded-xl bg-slate-800 dark:bg-slate-200 hover:bg-slate-700 dark:hover:bg-slate-300 text-white dark:text-slate-900 shadow-md flex flex-col items-center justify-center gap-1 active:scale-95 transition-all"
+              title={t('addLog')}
+              aria-label={t('addLog')}
+            >
+              <Plus size={22} className="shrink-0" />
+              <span className="font-bold text-[11px] whitespace-nowrap">{t('addLog')}</span>
+            </button>
           </div>
         )}
 

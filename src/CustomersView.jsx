@@ -94,7 +94,7 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {showIndex && (
-        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tabular-nums w-5 text-center shrink-0">
+        <span className="text-xs font-extrabold text-slate-600 dark:text-slate-300 tabular-nums w-5 text-center shrink-0">
           {index + 1}
         </span>
       )}
@@ -309,9 +309,9 @@ export default function CustomersView() {
               className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 shrink-0"
               title={isInnerPage ? t('backToCustomers') : t('backToHome')}
             >
-              <ArrowLeft size={20} className={isRtl ? 'rotate-180' : ''} />
+              <ArrowLeft size={24} className={isRtl ? 'rotate-180' : ''} />
             </button>
-            <h1 className="text-[15px] font-semibold text-slate-800 dark:text-white truncate flex-1 text-center min-w-0">
+            <h1 className="text-lg font-bold text-slate-800 dark:text-white truncate flex-1 text-center min-w-0">
               {isInnerPage ? areaDisplayLabel : t('customers')}
             </h1>
             <button
@@ -431,7 +431,7 @@ export default function CustomersView() {
             ) : (
               <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
                 {areaLocations.map((loc, index) => (
-                  <div key={loc?.id} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                    <div key={loc?.id} className="border-b border-slate-200 dark:border-slate-700 last:border-b-0">
                     <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex {...rowProps} />
                   </div>
                 ))}
@@ -446,7 +446,7 @@ export default function CustomersView() {
             ) : (
               <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
                 {filteredLocations.map((loc, index) => (
-                  <div key={loc?.id ?? index} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                  <div key={loc?.id ?? index} className="border-b border-slate-200 dark:border-slate-700 last:border-b-0">
                     <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex={false} {...rowProps} />
                   </div>
                 ))}
@@ -466,7 +466,7 @@ export default function CustomersView() {
                     key={area.key}
                     type="button"
                     onClick={() => openArea(openKey)}
-                    className="w-full flex items-center gap-3 py-3 px-4 border-b border-slate-100 dark:border-slate-800 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors text-left"
+                    className="w-full flex items-center gap-3 py-3 px-4 border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors text-left"
                   >
                     <ChevronRight size={16} className={`text-slate-400 dark:text-slate-500 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
                     <span className="text-[14px] font-medium text-slate-800 dark:text-white flex-1 truncate">{label(area.label, t)}</span>

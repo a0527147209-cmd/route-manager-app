@@ -145,26 +145,28 @@ export default function ReportsView() {
   const searchSuggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    const zoneCounts = {};
-    const locCounts = {};
+    const zoneLocations = {}; // zone -> Set of locationIds (count of unique locations)
+    const locVisits = {};     // locationId -> { name, visitCount }
     for (const log of currentLogs) {
       const z = log.zone || 'Other';
-      zoneCounts[z] = (zoneCounts[z] || 0) + 1;
-      const name = log.locationName || '';
-      if (name) locCounts[name] = (locCounts[name] || 0) + 1;
+      if (!zoneLocations[z]) zoneLocations[z] = new Set();
+      zoneLocations[z].add(log.locationId);
+      const id = log.locationId;
+      if (!locVisits[id]) locVisits[id] = { name: log.locationName || '', visits: 0 };
+      locVisits[id].visits += 1;
     }
     const items = [];
     if (filterBy === 'zone') {
-      for (const [name, count] of Object.entries(zoneCounts)) {
+      for (const [name, locSet] of Object.entries(zoneLocations)) {
         if (!name || name === 'Other') continue;
         const lower = name.toLowerCase();
-        if (lower.includes(q)) items.push({ type: 'zone', name, count });
+        if (lower.includes(q)) items.push({ type: 'zone', name, count: locSet.size });
       }
     } else {
-      for (const [name, count] of Object.entries(locCounts)) {
+      for (const { name, visits } of Object.values(locVisits)) {
         if (!name) continue;
         const lower = name.toLowerCase();
-        if (lower.includes(q)) items.push({ type: 'location', name, count });
+        if (lower.includes(q)) items.push({ type: 'location', name, count: visits });
       }
     }
     items.sort((a, b) => {

@@ -201,6 +201,10 @@ const translations = {
     byZone: 'Zone',
     byLocation: 'Location',
     distributionByLocation: 'Distribution by Location',
+    searchZone: 'Search by zone...',
+    searchLocation: 'Search by location...',
+    overall: 'Overall',
+    byZoneFilter: 'By Zone',
   },
 };
 

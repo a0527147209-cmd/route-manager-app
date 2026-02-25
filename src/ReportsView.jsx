@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Menu,
-  Calendar,
   FileDown,
   TrendingUp,
   TrendingDown,
   Users,
   Weight,
   Eye,
+  Search,
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -107,6 +107,11 @@ export default function ReportsView() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [granularity, setGranularity] = useState('monthly');
   const [filterBy, setFilterBy] = useState('zone'); // 'zone' | 'location'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [top10Scope, setTop10Scope] = useState('overall'); // 'overall' | 'byZone'
+  const [top10Zone, setTop10Zone] = useState('');
+  const [distScope, setDistScope] = useState('overall'); // 'overall' | 'byZone'
+  const [distZone, setDistZone] = useState('');
 
   const defaultRange = useMemo(() => getDateRange('monthly'), []);
   const [dateFrom, setDateFrom] = useState(defaultRange.from);
@@ -123,10 +128,27 @@ export default function ReportsView() {
   const prevPeriod = useMemo(() => getPreviousPeriod(dateFrom, dateTo), [dateFrom, dateTo]);
   const previousLogs = useMemo(() => filterLogs(locations, prevPeriod.from, prevPeriod.to), [locations, prevPeriod]);
 
-  const summaryData = useMemo(() => {
-    let totalW = 0, halfW = 0, custCut = 0, visitCount = currentLogs.length;
-    const customerSet = new Set();
+  const filteredLogs = useMemo(() => {
+    if (!searchQuery.trim()) return currentLogs;
+    const q = searchQuery.trim().toLowerCase();
+    return currentLogs.filter(log => {
+      const val = filterBy === 'zone' ? (log.zone || '').toLowerCase() : (log.locationName || '').toLowerCase();
+      return val.includes(q);
+    });
+  }, [currentLogs, searchQuery, filterBy]);
+
+  const zonesList = useMemo(() => {
+    const set = new Set();
     for (const log of currentLogs) {
+      set.add(log.zone || 'Other');
+    }
+    return Array.from(set).sort();
+  }, [currentLogs]);
+
+  const summaryData = useMemo(() => {
+    let totalW = 0, halfW = 0, custCut = 0, visitCount = filteredLogs.length;
+    const customerSet = new Set();
+    for (const log of filteredLogs) {
       const coll = parseFloat(log.collection) || 0;
       const rate = parseFloat(log.commissionRate) || 0;
       totalW += coll;
@@ -140,10 +162,10 @@ export default function ReportsView() {
     }
     const changePct = prevTotalW > 0 ? ((totalW - prevTotalW) / prevTotalW * 100) : 0;
     return { totalW, halfW, custCut, visitCount, customerCount: customerSet.size, changePct, prevTotalW };
-  }, [currentLogs, previousLogs]);
+  }, [filteredLogs, previousLogs]);
 
   const lineChartData = useMemo(() => {
-    const currentGroups = groupByTime(currentLogs, granularity);
+    const currentGroups = groupByTime(filteredLogs, granularity);
     const prevGroups = groupByTime(previousLogs, granularity);
     const allKeys = [...new Set([...Object.keys(currentGroups), ...Object.keys(prevGroups)])].sort();
     
@@ -177,11 +199,15 @@ export default function ReportsView() {
       });
     }
     return data;
-  }, [currentLogs, previousLogs, granularity]);
+  }, [filteredLogs, previousLogs, granularity]);
 
   const topCustomersData = useMemo(() => {
+    let logs = filteredLogs;
+    if (top10Scope === 'byZone' && top10Zone) {
+      logs = filteredLogs.filter(log => (log.zone || 'Other') === top10Zone);
+    }
     const map = {};
-    for (const log of currentLogs) {
+    for (const log of logs) {
       if (!map[log.locationId]) map[log.locationId] = { name: log.locationName, totalWeight: 0 };
       map[log.locationId].totalWeight += parseFloat(log.collection) || 0;
     }
@@ -189,11 +215,15 @@ export default function ReportsView() {
       .sort((a, b) => b.totalWeight - a.totalWeight)
       .slice(0, 10)
       .map(c => ({ ...c, totalWeight: +c.totalWeight.toFixed(2) }));
-  }, [currentLogs]);
+  }, [filteredLogs, top10Scope, top10Zone]);
 
   const pieData = useMemo(() => {
+    let logs = filteredLogs;
+    if (distScope === 'byZone' && distZone) {
+      logs = filteredLogs.filter(log => (log.zone || 'Other') === distZone);
+    }
     const map = {};
-    for (const log of currentLogs) {
+    for (const log of logs) {
       const key = filterBy === 'zone' ? (log.zone || 'Other') : (log.locationName || 'Other');
       if (!map[key]) map[key] = 0;
       map[key] += parseFloat(log.collection) || 0;
@@ -201,7 +231,7 @@ export default function ReportsView() {
     return Object.entries(map)
       .map(([name, value]) => ({ name, value: +value.toFixed(2) }))
       .sort((a, b) => b.value - a.value);
-  }, [currentLogs, filterBy]);
+  }, [filteredLogs, filterBy, distScope, distZone]);
 
   const decliningCustomers = useMemo(() => {
     const currentVisited = new Set(currentLogs.map(l => l.locationId));
@@ -327,20 +357,37 @@ export default function ReportsView() {
               </button>
             ))}
           </div>
-          <div className="flex gap-1">
-            {['zone', 'location'].map(f => (
-              <button
-                key={f}
-                onClick={() => setFilterBy(f)}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                  filterBy === f
-                    ? 'bg-emerald-600 text-white shadow-md'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                {f === 'zone' ? t('byZone') : t('byLocation')}
-              </button>
-            ))}
+          <div>
+            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">
+              {filterBy === 'zone' ? t('byZone') : t('byLocation')}
+            </label>
+            <div className="flex gap-1 items-center">
+              <div className="flex gap-1 shrink-0">
+                {['zone', 'location'].map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setFilterBy(f)}
+                    className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
+                      filterBy === f
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {f === 'zone' ? t('byZone') : t('byLocation')}
+                  </button>
+                ))}
+              </div>
+              <div className="relative flex-1 min-w-0">
+                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder={filterBy === 'zone' ? t('searchZone') : t('searchLocation')}
+                  className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder:text-slate-400"
+                />
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex-1">
@@ -418,7 +465,31 @@ export default function ReportsView() {
 
         {/* Bar Chart - Top 10 Customers */}
         <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">{t('topCustomers')}</h3>
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">{t('topCustomers')}</h3>
+            <div className="flex gap-2 items-center">
+              <select
+                value={top10Scope}
+                onChange={e => setTop10Scope(e.target.value)}
+                className="text-[10px] py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="overall">{t('overall')}</option>
+                <option value="byZone">{t('byZoneFilter')}</option>
+              </select>
+              {top10Scope === 'byZone' && zonesList.length > 0 && (
+                <select
+                  value={top10Zone}
+                  onChange={e => setTop10Zone(e.target.value)}
+                  className="text-[10px] py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 min-w-[80px]"
+                >
+                  <option value="">{t('zone')}</option>
+                  {zonesList.map(z => (
+                    <option key={z} value={z}>{z}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
           {topCustomersData.length > 0 ? (
             <ResponsiveContainer width="100%" height={Math.max(180, topCustomersData.length * 28)}>
               <BarChart data={topCustomersData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -436,9 +507,33 @@ export default function ReportsView() {
 
         {/* Pie Chart - Distribution by Zone or Location */}
         <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600">
-          <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">
-            {filterBy === 'zone' ? t('distributionByZone') : t('distributionByLocation')}
-          </h3>
+          <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+            <h3 className="text-xs font-bold text-slate-700 dark:text-slate-200">
+              {filterBy === 'zone' ? t('distributionByZone') : t('distributionByLocation')}
+            </h3>
+            <div className="flex gap-2 items-center">
+              <select
+                value={distScope}
+                onChange={e => setDistScope(e.target.value)}
+                className="text-[10px] py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="overall">{t('overall')}</option>
+                <option value="byZone">{t('byZoneFilter')}</option>
+              </select>
+              {distScope === 'byZone' && zonesList.length > 0 && (
+                <select
+                  value={distZone}
+                  onChange={e => setDistZone(e.target.value)}
+                  className="text-[10px] py-1 px-2 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 min-w-[80px]"
+                >
+                  <option value="">{t('zone')}</option>
+                  {zonesList.map(z => (
+                    <option key={z} value={z}>{z}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </div>
           {pieData.length > 0 ? (
             <div className="flex items-center gap-2">
               <ResponsiveContainer width="55%" height={180}>

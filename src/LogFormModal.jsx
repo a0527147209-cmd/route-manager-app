@@ -14,21 +14,22 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
   const [notes, setNotes] = useState('');
   const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
   const [animatingBill, setAnimatingBill] = useState(null);
+  const [noMoney, setNoMoney] = useState(false);
 
   // Initialize form
   useEffect(() => {
     if (!location) return;
 
     if (initialLog) {
-      // Editing existing log
       setBills(initialLog.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
       setAmount(initialLog.collection || '');
       setNotes(initialLog.notes || '');
+      setNoMoney(!!initialLog.noMoney);
     } else {
-      // New log
       setBills({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
       setAmount('');
       setNotes('');
+      setNoMoney(false);
     }
   }, [location, initialLog]);
 
@@ -60,8 +61,8 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
     const hasBills = Object.values(bills).some(v => v > 0);
     // If editing, check if different from initial
     const hasChanges = initialLog
-      ? (amount !== initialLog.collection || notes !== (initialLog.notes || '') || JSON.stringify(bills) !== JSON.stringify(initialLog.bills))
-      : ((amount !== '' && amount !== '0') || notes !== '' || hasBills);
+      ? (amount !== initialLog.collection || notes !== (initialLog.notes || '') || JSON.stringify(bills) !== JSON.stringify(initialLog.bills) || noMoney !== !!initialLog.noMoney)
+      : ((amount !== '' && amount !== '0') || notes !== '' || hasBills || noMoney);
 
     if (hasChanges) {
       if (await confirm({
@@ -87,7 +88,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
         collection: amount,
         bills,
         notes,
-        // We generally keep the original date/id when editing history
+        noMoney,
       };
 
       updateLog(location.id, logIndex, updatedLogEntry);
@@ -110,6 +111,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
         collection: amount,
         bills,
         notes,
+        noMoney,
         id: Date.now().toString(),
         user: user?.name || 'Unknown'
       };
@@ -191,8 +193,8 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
             </div>
           )}
 
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3.5">
-            <label htmlFor="modal-collectionAmount" className="text-amber-700 dark:text-amber-300 text-xs font-semibold uppercase tracking-wide block">
+          <div className="space-y-2.5">
+            <label htmlFor="modal-collectionAmount" className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block">
               {t('collectionAmount')}
             </label>
             <input
@@ -204,25 +206,37 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
               value={amount}
               onChange={(e) => {
                 setAmount(e.target.value);
+                if (noMoney) setNoMoney(false);
               }}
-              placeholder={isRtl ? '0.00' : '0.00'}
-              className={`w-full px-3 py-2.5 text-lg font-semibold rounded-lg border-2 border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isRtl ? 'text-right' : 'text-left'}`}
+              placeholder="0.00"
+              disabled={noMoney}
+              className={`w-full px-3 py-2 text-base font-semibold rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${noMoney ? 'opacity-40' : ''} ${isRtl ? 'text-right' : 'text-left'}`}
             />
-            <div className="grid grid-cols-2 gap-2 pt-1.5">
-              <div>
-                <label className="text-slate-600 dark:text-slate-400 text-[10px] font-semibold uppercase tracking-wide block mb-0.5">
-                  {t('giveToCustomer')} ({Math.round(rate * 100)}%)
-                </label>
-                <div className="px-2.5 py-2 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 font-semibold text-sm text-center">
-                  {totalAmount > 0 ? giveToCustomerAmount.toFixed(2) : '—'}
-                </div>
-              </div>
+            <button
+              type="button"
+              onClick={() => {
+                setNoMoney(prev => !prev);
+                if (!noMoney) setAmount('');
+              }}
+              className={`w-full py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide transition-all active:scale-[0.98] ${noMoney ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
+            >
+              {t('noMoney')}{noMoney ? ' ✓' : ''}
+            </button>
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-slate-600 dark:text-slate-400 text-[10px] font-semibold uppercase tracking-wide block mb-0.5">
                   {t('iReceive')} ({Math.round((1 - rate) * 100)}%)
                 </label>
-                <div className="px-2.5 py-2 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 font-semibold text-sm text-center">
+                <div className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 font-semibold text-sm text-center">
                   {totalAmount > 0 ? iReceiveAmount.toFixed(2) : '—'}
+                </div>
+              </div>
+              <div>
+                <label className="text-slate-600 dark:text-slate-400 text-[10px] font-semibold uppercase tracking-wide block mb-0.5">
+                  {t('giveToCustomer')} ({Math.round(rate * 100)}%)
+                </label>
+                <div className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 font-semibold text-sm text-center">
+                  {totalAmount > 0 ? giveToCustomerAmount.toFixed(2) : '—'}
                 </div>
               </div>
             </div>

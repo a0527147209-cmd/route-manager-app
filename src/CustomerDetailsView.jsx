@@ -645,8 +645,8 @@ export default function CustomerDetailsView() {
                       {/* Financials - Admin Only */}
                       {isAdmin && (
                         <>
-                          <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-bold ${isRtl ? 'text-right' : 'text-left'}`}>
-                            {log.collection != null && String(log.collection).trim() !== '' ? Number(log.collection).toFixed(2) : ''}
+                          <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 font-bold ${isRtl ? 'text-right' : 'text-left'} ${log.noMoney ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'}`}>
+                            {log.noMoney ? t('noMoney') : (log.collection != null && String(log.collection).trim() !== '' ? Number(log.collection).toFixed(2) : '')}
                           </td>
                           <td className={`px-2 py-1 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-medium ${isRtl ? 'text-right' : 'text-left'}`}>
                             {calculateIReceive(log)}

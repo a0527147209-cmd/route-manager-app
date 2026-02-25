@@ -5,7 +5,6 @@ import { useLanguage } from './LanguageContext';
 import {
   ArrowLeft,
   Menu,
-  Building,
   MapPin,
   Check,
   Pencil,
@@ -238,7 +237,7 @@ export default function CustomerDetailsView() {
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 pt-4 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}>
         <button
           onClick={handleBackClick}
           className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0 ${isRtl ? '-me-1' : '-ms-1'}`}
@@ -246,29 +245,18 @@ export default function CustomerDetailsView() {
         >
           <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
         </button>
-        <div className="flex-1 min-w-0 flex items-center justify-center gap-3 text-center px-2">
-          <h1 className="font-bold text-base text-slate-800 dark:text-white break-words leading-tight">
+        <div className="flex-1 min-w-0 flex items-center justify-center text-center px-2">
+          <h1 className="font-bold text-base text-slate-800 dark:text-white break-words leading-tight text-center w-full">
             {location.name}
           </h1>
         </div>
-        <div className={`flex items-center gap-1.5 shrink-0 ${isRtl ? 'flex-row-reverse' : ''}`}>
-          <button
-            onClick={() => setShowLogModal(true)}
-            className="p-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all"
-            title={t('addLog')}
-            aria-label={t('addLog')}
-          >
-            <Plus size={20} className="shrink-0" />
-            <span className="font-semibold text-xs whitespace-nowrap">{t('addLog')}</span>
-          </button>
-          <button
-            onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95"
-            title={t('menu')}
-          >
-            <Menu size={22} />
-          </button>
-        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 shrink-0"
+          title={t('menu')}
+        >
+          <Menu size={22} />
+        </button>
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
@@ -422,33 +410,40 @@ export default function CustomerDetailsView() {
             </div>
           </div>
         ) : (
-          <div className="bg-card p-4 rounded-xl shadow-sm border border-border space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                <Building size={20} className="text-primary" />
-              </div>
+          <div className="bg-card p-3 rounded-xl shadow-sm border border-border">
+            <div className="flex items-center gap-2">
               <div className="flex-1 min-w-0">
-                <h2 className="text-base font-bold text-foreground mb-1">
+                <h2 className="text-base font-bold text-foreground leading-tight">
                   {location.name}
                 </h2>
                 {location.address && (
-                  <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <MapPin size={16} className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
-                    <span className="break-words">{location.address}</span>
+                  <div className="flex items-start gap-1.5 text-sm text-slate-600 dark:text-slate-400 mt-1">
+                    <MapPin size={14} className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
+                    <span className="break-words text-xs">{location.address}</span>
                   </div>
                 )}
                 {(location.city || location.state) && (
-                  <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-0.5 ms-5">
                     {[location.city, location.state].filter(Boolean).join(', ')}
                   </p>
                 )}
               </div>
               <button
                 onClick={startEditingCustomer}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors active:scale-95 shrink-0"
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-primary transition-colors active:scale-95 shrink-0"
                 title={t('edit') || 'ערוך'}
               >
-                <Pencil size={18} />
+                <Pencil size={16} />
+              </button>
+              <div className="w-px h-8 bg-slate-200 dark:bg-slate-600 shrink-0" />
+              <button
+                onClick={() => setShowLogModal(true)}
+                className="px-3 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all shrink-0"
+                title={t('addLog')}
+                aria-label={t('addLog')}
+              >
+                <Plus size={18} className="shrink-0" />
+                <span className="font-semibold text-xs whitespace-nowrap">{t('addLog')}</span>
               </button>
             </div>
           </div>

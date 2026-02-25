@@ -35,7 +35,7 @@ export default function DraggableCard({ loc, index, visited, children }) {
             value={loc}
             dragListener={false}
             dragControls={controls}
-            className={`border-b-2 border-slate-200 dark:border-slate-700 last:border-b-0 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}`}
+            className={`border-b-2 border-slate-100 dark:border-slate-800 last:border-b-0 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}`}
             whileDrag={{ scale: 1.02, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', cursor: 'grabbing', zIndex: 50 }}
         >
             <div className="flex items-center gap-2 px-3 py-2.5">

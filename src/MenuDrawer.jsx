@@ -15,10 +15,10 @@ export default function MenuDrawer({ isOpen, onClose }) {
   const { confirm } = useConfirmation();
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      return () => { document.body.style.overflow = ''; };
-    }
+    if (!isOpen) return;
+    const root = document.getElementById('root');
+    if (root) root.style.overflow = 'hidden';
+    return () => { if (root) root.style.overflow = ''; };
   }, [isOpen]);
 
   const goTo = (path) => {
@@ -54,7 +54,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-black/50 z-40"
             onClick={onClose}
           />
 
@@ -64,7 +64,8 @@ export default function MenuDrawer({ isOpen, onClose }) {
             animate={{ x: 0 }}
             exit={{ x: isRtl ? '-100%' : '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className={`fixed top-0 h-full w-64 bg-card/95 backdrop-blur-xl shadow-2xl z-50 flex flex-col border-slate-200/20 dark:border-slate-700/30 ${isRtl ? 'left-0 border-r' : 'right-0 border-l'}`}
+            className={`fixed top-0 h-full w-64 bg-white dark:bg-slate-800 shadow-2xl z-50 flex flex-col border-slate-200 dark:border-slate-700 ${isRtl ? 'left-0 border-r' : 'right-0 border-l'}`}
+            style={{ willChange: 'transform' }}
           >
             {/* Header */}
             <div className="p-4 flex items-center justify-between border-b border-border/50">

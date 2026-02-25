@@ -16,6 +16,7 @@ import SettingsView from './SettingsView';
 import LoginView from './LoginView';
 import MapsView from './MapsView';
 import ManageUsersView from './ManageUsersView';
+import ReportsView from './ReportsView';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 import { TextSizeProvider } from './TextSizeContext';
@@ -72,6 +73,7 @@ function AppContent() {
             <Route path="/settings" element={<SettingsView />} />
             <Route path="/maps" element={<MapsView />} />
             <Route path="/manage-users" element={<ManageUsersView />} />
+            <Route path="/reports" element={<ReportsView />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

@@ -35,7 +35,7 @@ export default function DraggableCard({ loc, index, visited, children }) {
             value={loc}
             dragListener={false}
             dragControls={controls}
-            className={`border-b border-slate-100 dark:border-slate-800 last:border-b-0 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}`}
+            className={`border-b-2 border-slate-300 dark:border-slate-600 last:border-b-0 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : 'bg-white dark:bg-slate-900'}`}
             whileDrag={{ scale: 1.02, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', cursor: 'grabbing', zIndex: 50 }}
         >
             <div className="flex items-center gap-2 px-3 py-2.5">
@@ -47,7 +47,7 @@ export default function DraggableCard({ loc, index, visited, children }) {
                     onContextMenu={(e) => e.preventDefault()}
                     style={{ touchAction: 'none' }}
                 >
-                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 tabular-nums w-4 text-center">
+                    <span className="text-xs font-extrabold text-slate-600 dark:text-slate-300 tabular-nums w-5 text-center">
                         {index + 1}
                     </span>
                     <GripVertical size={12} className="text-slate-300 dark:text-slate-600" />

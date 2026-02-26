@@ -1,8 +1,9 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
 import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, ArrowLeft, MoreVertical } from 'lucide-react';
+import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
@@ -87,6 +88,8 @@ export default function LocationsView() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
+  const scrollRef = useRef(null);
+  useScrollRestore(scrollRef);
 
   const isInnerPage = Boolean(urlAreaKey);
   const areaKeyDecoded = urlAreaKey ? decodeURIComponent(urlAreaKey) : null;
@@ -337,7 +340,7 @@ export default function LocationsView() {
       </header>
 
       {/* Adjust 80px to match the header's height so content isn't hidden beneath it */}
-      <main className="flex-1 overflow-y-auto p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] max-w-[380px] mx-auto w-full">
+      <main ref={scrollRef} className="flex-1 overflow-y-auto p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] max-w-[380px] mx-auto w-full">
         {validLocations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <MapPin className="w-16 h-16 text-muted-foreground/50 mb-4" />

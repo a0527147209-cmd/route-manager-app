@@ -42,11 +42,7 @@ function AppContent() {
   const { isTransitioning } = useLanguage();
   const location = useLocation();
 
-  // Scroll #root to top on every route change
-  useEffect(() => {
-    const root = document.getElementById('root');
-    if (root) root.scrollTop = 0;
-  }, [location.pathname]);
+  // Scroll restoration is handled per-view by useScrollRestore hook
 
   return (
     <div

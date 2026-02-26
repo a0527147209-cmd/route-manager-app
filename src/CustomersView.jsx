@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
 import { Users, Menu, ArrowLeft, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
+import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
@@ -159,6 +160,8 @@ export default function CustomersView() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
+  const scrollRef = useRef(null);
+  useScrollRestore(scrollRef);
 
   const isInnerPage = Boolean(urlAreaKey);
   const areaKeyDecoded = urlAreaKey ? decodeURIComponent(urlAreaKey) : null;
@@ -362,7 +365,7 @@ export default function CustomersView() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+      <main ref={scrollRef} className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-[420px] mx-auto w-full">
           {validLocations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-4">

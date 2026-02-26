@@ -32,16 +32,37 @@ const COLORS = {
   previousPeriod: '#94a3b8',
 };
 
-function getDateRange(granularity) {
+function getAllLogs(locations) {
+  const logs = [];
+  for (const loc of locations) {
+    for (const log of (loc.logs || [])) {
+      if (!log.date) continue;
+      const zone = loc.zone || loc.region || loc.city || loc.state || 'Other';
+      logs.push({ ...log, locationId: loc.id, locationName: loc.name, zone });
+    }
+  }
+  logs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  return logs;
+}
+
+function getDateRangeForPreset(preset) {
   const now = new Date();
   const to = now.toISOString().slice(0, 10);
   let from;
-  if (granularity === 'daily') {
+  if (preset === 'month') {
     from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  } else if (granularity === 'weekly') {
-    from = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString().slice(0, 10);
-  } else {
+  } else if (preset === '3mo') {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - 3);
+    from = d.toISOString().slice(0, 10);
+  } else if (preset === '6mo') {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - 6);
+    from = d.toISOString().slice(0, 10);
+  } else if (preset === 'year') {
     from = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
+  } else {
+    from = '1970-01-01';
   }
   return { from, to };
 }
@@ -56,21 +77,6 @@ function getPreviousPeriod(from, to) {
     from: prevFrom.toISOString().slice(0, 10),
     to: prevTo.toISOString().slice(0, 10),
   };
-}
-
-function filterLogs(locations, from, to) {
-  const logs = [];
-  for (const loc of locations) {
-    for (const log of (loc.logs || [])) {
-      if (!log.date) continue;
-      const d = log.date.slice(0, 10);
-      if (d >= from && d <= to) {
-        const zone = loc.zone || loc.region || loc.city || loc.state || 'Other';
-        logs.push({ ...log, locationId: loc.id, locationName: loc.name, zone });
-      }
-    }
-  }
-  return logs;
 }
 
 function groupByTime(logs, granularity) {
@@ -102,36 +108,74 @@ function formatDateLabel(key, granularity) {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+function getGranularityFromLogs(logs) {
+  if (!logs.length) return 'monthly';
+  const dates = logs.map(l => l.date).filter(Boolean);
+  if (!dates.length) return 'monthly';
+  const min = Math.min(...dates.map(d => new Date(d).getTime()));
+  const max = Math.max(...dates.map(d => new Date(d).getTime()));
+  const days = (max - min) / (24 * 60 * 60 * 1000);
+  if (days <= 14) return 'daily';
+  if (days <= 90) return 'weekly';
+  return 'monthly';
+}
+
 export default function ReportsView() {
   const navigate = useNavigate();
   const { locations } = useLocations();
   const { t, isRtl } = useLanguage();
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [granularity, setGranularity] = useState('monthly');
+  const [filterMode, setFilterMode] = useState('visits'); // 'visits' | 'date'
+  const [visitsPreset, setVisitsPreset] = useState(5); // 2 | 5 | 8 | 'custom'
+  const [visitsCustom, setVisitsCustom] = useState(10);
+  const [datePreset, setDatePreset] = useState('month'); // 'month'|'3mo'|'6mo'|'year'|'all'|'custom'
+  const [dateFrom, setDateFrom] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  });
+  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [filterBy, setFilterBy] = useState('zone'); // 'zone' | 'location'
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef(null);
-  const [top10Scope, setTop10Scope] = useState('overall'); // 'overall' | 'byZone'
+  const [top10Scope, setTop10Scope] = useState('overall');
   const [top10Zone, setTop10Zone] = useState('');
-  const [distScope, setDistScope] = useState('overall'); // 'overall' | 'byZone'
+  const [distScope, setDistScope] = useState('overall');
   const [distZone, setDistZone] = useState('');
 
-  const defaultRange = useMemo(() => getDateRange('monthly'), []);
-  const [dateFrom, setDateFrom] = useState(defaultRange.from);
-  const [dateTo, setDateTo] = useState(defaultRange.to);
+  const allLogs = useMemo(() => getAllLogs(locations), [locations]);
 
-  const handleGranularityChange = (g) => {
-    setGranularity(g);
-    const range = getDateRange(g);
-    setDateFrom(range.from);
-    setDateTo(range.to);
-  };
+  const currentLogs = useMemo(() => {
+    if (filterMode === 'visits') {
+      const n = visitsPreset === 'custom' ? Math.max(1, parseInt(visitsCustom, 10) || 1) : visitsPreset;
+      return allLogs.slice(0, n);
+    }
+    const range = datePreset === 'custom' ? { from: dateFrom, to: dateTo } : getDateRangeForPreset(datePreset);
+    return allLogs.filter(log => {
+      const d = (log.date || '').slice(0, 10);
+      return d >= range.from && d <= range.to;
+    });
+  }, [filterMode, visitsPreset, visitsCustom, datePreset, dateFrom, dateTo, allLogs]);
 
-  const currentLogs = useMemo(() => filterLogs(locations, dateFrom, dateTo), [locations, dateFrom, dateTo]);
-  const prevPeriod = useMemo(() => getPreviousPeriod(dateFrom, dateTo), [dateFrom, dateTo]);
-  const previousLogs = useMemo(() => filterLogs(locations, prevPeriod.from, prevPeriod.to), [locations, prevPeriod]);
+  const { from: effFrom, to: effTo } = useMemo(() => {
+    if (filterMode === 'date' && datePreset !== 'custom') return getDateRangeForPreset(datePreset);
+    return { from: dateFrom, to: dateTo };
+  }, [filterMode, datePreset, dateFrom, dateTo]);
+
+  const prevPeriod = useMemo(() => getPreviousPeriod(effFrom, effTo), [effFrom, effTo]);
+  const previousLogs = useMemo(() => {
+    if (filterMode === 'visits') {
+      const n = visitsPreset === 'custom' ? Math.max(1, parseInt(visitsCustom, 10) || 1) : visitsPreset;
+      return allLogs.slice(n, n + n);
+    }
+    return allLogs.filter(log => {
+      const d = (log.date || '').slice(0, 10);
+      return d >= prevPeriod.from && d <= prevPeriod.to;
+    });
+  }, [filterMode, visitsPreset, visitsCustom, allLogs, prevPeriod.from, prevPeriod.to]);
+
+  const granularity = useMemo(() => getGranularityFromLogs(currentLogs), [currentLogs]);
 
   const filteredLogs = useMemo(() => {
     if (!searchQuery.trim()) return currentLogs;
@@ -302,7 +346,10 @@ export default function ReportsView() {
     pdf.setFontSize(10);
     pdf.text(`${t('generatedOn')}: ${new Date().toLocaleDateString()}`, pageWidth / 2, y, { align: 'center' });
     y += 6;
-    pdf.text(`${t('period')}: ${dateFrom} - ${dateTo}`, pageWidth / 2, y, { align: 'center' });
+    const periodLabel = filterMode === 'visits'
+      ? `Last ${visitsPreset === 'custom' ? visitsCustom : visitsPreset} visits`
+      : `${datePreset === 'custom' ? `${dateFrom} - ${dateTo}` : datePreset}`;
+    pdf.text(`${t('period')}: ${periodLabel}`, pageWidth / 2, y, { align: 'center' });
     y += 14;
 
     pdf.setFontSize(12);
@@ -344,7 +391,8 @@ export default function ReportsView() {
       });
     }
 
-    pdf.save(`report_${dateFrom}_${dateTo}.pdf`);
+    const fileLabel = filterMode === 'visits' ? `last${visitsPreset === 'custom' ? visitsCustom : visitsPreset}visits` : `${dateFrom}_${dateTo}`;
+    pdf.save(`report_${fileLabel}.pdf`);
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -384,23 +432,111 @@ export default function ReportsView() {
 
       <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[420px] mx-auto w-full">
 
-        {/* Granularity + Date Range */}
+        {/* Filter by: Visits / Date */}
         <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3">
-          <div className="flex gap-1">
-            {['daily', 'weekly', 'monthly'].map(g => (
-              <button
-                key={g}
-                onClick={() => handleGranularityChange(g)}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                  granularity === g
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                {t(g)}
-              </button>
-            ))}
+          <div>
+            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 block">{t('filterByLabel')}</label>
+            <select
+              value={filterMode}
+              onChange={e => setFilterMode(e.target.value)}
+              className="w-full py-2 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="visits">{t('byVisits')}</option>
+              <option value="date">{t('byDate')}</option>
+            </select>
           </div>
+          {filterMode === 'visits' && (
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 block">{t('lastVisits')}</label>
+              <div className="flex flex-wrap gap-1">
+                {[2, 5, 8].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setVisitsPreset(n)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      visitsPreset === n
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setVisitsPreset('custom')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    visitsPreset === 'custom'
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
+                >
+                  {t('custom')}
+                </button>
+              </div>
+              {visitsPreset === 'custom' && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={500}
+                    value={visitsCustom}
+                    onChange={e => setVisitsCustom(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="w-20 py-1.5 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200"
+                  />
+                  <span className="text-xs text-slate-600 dark:text-slate-400">{t('visitsCount')}</span>
+                </div>
+              )}
+            </div>
+          )}
+          {filterMode === 'date' && (
+            <div>
+              <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 block">{t('dateRange')}</label>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { v: 'month', l: t('presetMonth') },
+                  { v: '3mo', l: t('threeMonths') },
+                  { v: '6mo', l: t('sixMonths') },
+                  { v: 'year', l: t('year') },
+                  { v: 'all', l: t('allTime') },
+                  { v: 'custom', l: t('custom') },
+                ].map(({ v, l }) => (
+                  <button
+                    key={v}
+                    onClick={() => setDatePreset(v)}
+                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                      datePreset === v
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+              {datePreset === 'custom' && (
+                <div className="mt-2 flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-[9px] font-semibold text-slate-500 uppercase block mb-0.5">{t('from')}</label>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={e => setDateFrom(e.target.value)}
+                      className="w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-[9px] font-semibold text-slate-500 uppercase block mb-0.5">{t('to')}</label>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={e => setDateTo(e.target.value)}
+                      className="w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">
               {filterBy === 'zone' ? t('byZone') : t('byLocation')}
@@ -429,7 +565,7 @@ export default function ReportsView() {
                   onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
                   onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
                   onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  placeholder={filterBy === 'zone' ? t('searchZone') : t('searchLocation')}
+                  placeholder={filterBy === 'zone' ? t('reportSearchZone') : t('reportSearchLocation')}
                   className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder:text-slate-400"
                 />
                 {showSuggestions && searchSuggestions.length > 0 && (

@@ -149,7 +149,12 @@ export default function ReportsView() {
   const currentLogs = useMemo(() => {
     if (filterMode === 'visits') {
       const n = visitsPreset === 'custom' ? Math.max(1, parseInt(visitsCustom, 10) || 1) : visitsPreset;
-      return allLogs.slice(0, n);
+      const countByLoc = {};
+      return allLogs.filter(log => {
+        const id = log.locationId;
+        countByLoc[id] = (countByLoc[id] || 0) + 1;
+        return countByLoc[id] <= n;
+      });
     }
     const range = datePreset === 'custom' ? { from: dateFrom, to: dateTo } : getDateRangeForPreset(datePreset);
     return allLogs.filter(log => {
@@ -167,7 +172,12 @@ export default function ReportsView() {
   const previousLogs = useMemo(() => {
     if (filterMode === 'visits') {
       const n = visitsPreset === 'custom' ? Math.max(1, parseInt(visitsCustom, 10) || 1) : visitsPreset;
-      return allLogs.slice(n, n + n);
+      const countByLoc = {};
+      return allLogs.filter(log => {
+        const id = log.locationId;
+        countByLoc[id] = (countByLoc[id] || 0) + 1;
+        return countByLoc[id] > n && countByLoc[id] <= n * 2;
+      });
     }
     return allLogs.filter(log => {
       const d = (log.date || '').slice(0, 10);

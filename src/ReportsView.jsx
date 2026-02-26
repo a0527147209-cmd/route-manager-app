@@ -587,9 +587,6 @@ export default function ReportsView() {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
                 <Line type="monotone" dataKey="totalWeight" name={t('totalWeight')} stroke={COLORS.totalWeight} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="halfWeight" name={t('halfWeight')} stroke={COLORS.halfWeight} strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="customerCut" name={t('customerCut')} stroke={COLORS.customerCut} strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="prevTotalWeight" name={t('previousPeriod')} stroke={COLORS.previousPeriod} strokeWidth={1.5} strokeDasharray="5 5" dot={false} />
                 {lineChartData.every(d => d.totalWeight === 0) && <ReferenceLine y={0} stroke="#94a3b8" />}
               </LineChart>
             </ResponsiveContainer>

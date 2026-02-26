@@ -432,24 +432,51 @@ export default function ReportsView() {
 
       <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[420px] mx-auto w-full">
 
-        {/* Filter by: Visits / Date */}
-        <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-3">
+        {/* Zone/Location first, then Filter */}
+        <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-2.5">
+          {/* 1. Zone/Location */}
           <div>
-            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 block">{t('filterByLabel')}</label>
-            <select
-              value={filterMode}
-              onChange={e => setFilterMode(e.target.value)}
-              className="w-full py-2 px-3 text-sm rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="visits">{t('byVisits')}</option>
-              <option value="date">{t('byDate')}</option>
-            </select>
+            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">{filterBy === 'zone' ? t('byZone') : t('byLocation')}</label>
+            <div className="flex gap-1 items-center">
+              {['zone', 'location'].map(f => (
+                <button key={f} onClick={() => setFilterBy(f)}
+                  className={`px-2 py-1 rounded text-[10px] font-bold ${filterBy === f ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
+                >{f === 'zone' ? t('byZone') : t('byLocation')}</button>
+              ))}
+              <div className="relative flex-1 min-w-0" ref={suggestionsRef}>
+                <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
+                  onFocus={() => searchQuery.trim() && setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  placeholder={filterBy === 'zone' ? t('reportSearchZone') : t('reportSearchLocation')}
+                  className="w-full pl-7 pr-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder:text-slate-400"
+                />
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-0.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 shadow-lg z-50 max-h-[160px] overflow-y-auto">
+                    {searchSuggestions.map((s, i) => (
+                      <button key={`${s.type}-${s.name}-${i}`} type="button" onMouseDown={(e) => { e.preventDefault(); setSearchQuery(s.name); setShowSuggestions(false); }}
+                        className="w-full px-2.5 py-1.5 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-700 flex justify-between gap-2 text-slate-700 dark:text-slate-200">
+                        <span className="truncate">{s.name}</span>
+                        <span className="text-[10px] text-slate-500 shrink-0">{s.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+          {/* 2. Filter - compact row */}
+          <div>
+            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">{t('filterByLabel')}</label>
+            <div className="flex gap-1 items-center flex-wrap">
+              <select value={filterMode} onChange={e => setFilterMode(e.target.value)}
+                className="py-1 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-1 focus:ring-blue-500 shrink-0"
+              >
+                <option value="visits">{t('byVisits')}</option>
+                <option value="date">{t('byDate')}</option>
+              </select>
           {filterMode === 'visits' && (
-            <div>
-              <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 block">{t('lastVisits')}</label>
-              <div className="flex flex-wrap gap-1">
-                {[2, 5, 8].map(n => (
+            <>
+              {[2, 5, 8].map(n => (
                   <button
                     key={n}
                     onClick={() => setVisitsPreset(n)}
@@ -458,152 +485,53 @@ export default function ReportsView() {
                         ? 'bg-blue-600 text-white shadow-md'
                         : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                     }`}
-                  >
-                    {n}
-                  </button>
+                  >{n}</button>
                 ))}
-                <button
+              <button
                   onClick={() => setVisitsPreset('custom')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     visitsPreset === 'custom'
                       ? 'bg-blue-600 text-white shadow-md'
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                   }`}
-                >
-                  {t('custom')}
-                </button>
-              </div>
+                >{t('custom')}</button>
               {visitsPreset === 'custom' && (
-                <div className="mt-2 flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    max={500}
-                    value={visitsCustom}
+                <span className="flex items-center gap-0.5">
+                  <input type="number" min={1} max={500} value={visitsCustom}
                     onChange={e => setVisitsCustom(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                    className="w-20 py-1.5 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200"
+                    className="w-11 py-0.5 px-1 text-[10px] rounded border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
                   />
-                  <span className="text-xs text-slate-600 dark:text-slate-400">{t('visitsCount')}</span>
-                </div>
+                  <span className="text-[10px] text-slate-500">{t('visitsCount')}</span>
+                </span>
               )}
-            </div>
+            </>
           )}
           {filterMode === 'date' && (
-            <div>
-              <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1 block">{t('dateRange')}</label>
-              <div className="flex flex-wrap gap-1">
-                {[
-                  { v: 'month', l: t('presetMonth') },
-                  { v: '3mo', l: t('threeMonths') },
-                  { v: '6mo', l: t('sixMonths') },
-                  { v: 'year', l: t('year') },
-                  { v: 'all', l: t('allTime') },
-                  { v: 'custom', l: t('custom') },
-                ].map(({ v, l }) => (
-                  <button
-                    key={v}
-                    onClick={() => setDatePreset(v)}
-                    className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
-                      datePreset === v
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
-              </div>
+            <>
+              {[
+                { v: 'month', l: t('presetMonth') },
+                { v: '3mo', l: '3mo' },
+                { v: '6mo', l: '6mo' },
+                { v: 'year', l: t('year') },
+                { v: 'all', l: t('allTime') },
+                { v: 'custom', l: t('custom') },
+              ].map(({ v, l }) => (
+                <button key={v} onClick={() => setDatePreset(v)}
+                  className={`py-1 px-1.5 rounded text-[10px] font-bold ${datePreset === v ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
+                >{l}</button>
+              ))}
               {datePreset === 'custom' && (
-                <div className="mt-2 flex gap-2">
-                  <div className="flex-1">
-                    <label className="text-[9px] font-semibold text-slate-500 uppercase block mb-0.5">{t('from')}</label>
-                    <input
-                      type="date"
-                      value={dateFrom}
-                      onChange={e => setDateFrom(e.target.value)}
-                      className="w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-[9px] font-semibold text-slate-500 uppercase block mb-0.5">{t('to')}</label>
-                    <input
-                      type="date"
-                      value={dateTo}
-                      onChange={e => setDateTo(e.target.value)}
-                      className="w-full py-1.5 px-2 text-xs rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
-                    />
-                  </div>
-                </div>
+                <span className="flex gap-1">
+                  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                    className="py-0.5 px-1 text-[10px] rounded border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
+                  />
+                  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                    className="py-0.5 px-1 text-[10px] rounded border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-900 dark:text-white"
+                  />
+                </span>
               )}
-            </div>
+            </>
           )}
-          <div>
-            <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">
-              {filterBy === 'zone' ? t('byZone') : t('byLocation')}
-            </label>
-            <div className="flex gap-1 items-center">
-              <div className="flex gap-1 shrink-0">
-                {['zone', 'location'].map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFilterBy(f)}
-                    className={`px-2 py-1 rounded text-[10px] font-bold transition-all ${
-                      filterBy === f
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
-                    }`}
-                  >
-                    {f === 'zone' ? t('byZone') : t('byLocation')}
-                  </button>
-                ))}
-              </div>
-              <div className="relative flex-1 min-w-0" ref={suggestionsRef}>
-                <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => { setSearchQuery(e.target.value); setShowSuggestions(true); }}
-                  onFocus={() => searchQuery.trim() && setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                  placeholder={filterBy === 'zone' ? t('reportSearchZone') : t('reportSearchLocation')}
-                  className="w-full pl-8 pr-2 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder:text-slate-400"
-                />
-                {showSuggestions && searchSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-0.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 shadow-lg z-50 max-h-[180px] overflow-y-auto">
-                    {searchSuggestions.map((s, i) => (
-                      <button
-                        key={`${s.type}-${s.name}-${i}`}
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); setSearchQuery(s.name); setShowSuggestions(false); }}
-                        className="w-full px-3 py-2 text-left text-xs hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between gap-2 text-slate-700 dark:text-slate-200"
-                      >
-                        <span className="truncate">{s.name}</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 shrink-0">{s.count}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">{t('from')}</label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                className="w-full p-2 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase mb-0.5 block">{t('to')}</label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                className="w-full p-2 text-xs bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
-              />
             </div>
           </div>
         </div>

@@ -548,8 +548,8 @@ export default function ReportsView() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-2.5">
-          <SummaryCard icon={Weight} label={t('totalWeight')} value={summaryData.totalW.toFixed(2)} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/40" />
-          <SummaryCard icon={TrendingUp} label={t('halfWeight')} value={summaryData.halfW.toFixed(2)} color="text-green-600 dark:text-green-400" bg="bg-green-50 dark:bg-green-950/40" />
+          <SummaryCard icon={Weight} label={t('totalWeight')} value={summaryData.totalW.toFixed(2)} subValue={`$${(summaryData.totalW * 20).toFixed(0)}`} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/40" />
+          <SummaryCard icon={TrendingUp} label={t('halfWeight')} value={summaryData.halfW.toFixed(2)} subValue={`$${(summaryData.halfW * 20).toFixed(0)}`} color="text-green-600 dark:text-green-400" bg="bg-green-50 dark:bg-green-950/40" />
           <SummaryCard icon={Eye} label={t('totalVisits')} value={summaryData.visitCount} color="text-orange-600 dark:text-orange-400" bg="bg-orange-50 dark:bg-orange-950/40" />
           <SummaryCard icon={Users} label={t('totalCustomers')} value={summaryData.customerCount} color="text-violet-600 dark:text-violet-400" bg="bg-violet-50 dark:bg-violet-950/40" />
         </div>
@@ -754,7 +754,7 @@ export default function ReportsView() {
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, color, bg }) {
+function SummaryCard({ icon: Icon, label, value, subValue, color, bg }) {
   return (
     <div className={`${bg} p-3 rounded-xl border border-slate-200/60 dark:border-slate-700/60`}>
       <div className="flex items-center gap-2 mb-1">
@@ -762,6 +762,7 @@ function SummaryCard({ icon: Icon, label, value, color, bg }) {
         <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{label}</span>
       </div>
       <p className={`text-lg font-bold ${color}`}>{value}</p>
+      {subValue && <p className="text-sm font-bold text-green-600 dark:text-green-400 mt-0.5">{subValue}</p>}
     </div>
   );
 }

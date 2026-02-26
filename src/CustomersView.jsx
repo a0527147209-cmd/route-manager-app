@@ -137,7 +137,7 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
           </div>
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST COLLECTION</span>
-            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastCollection || '—'}</span>
+            <span className={`text-[11px] font-bold whitespace-nowrap ${(!loc?.lastCollection || loc.lastCollection === '0') ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{(!loc?.lastCollection || loc.lastCollection === '0') ? 'No Money' : loc.lastCollection}</span>
           </div>
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">USER</span>
@@ -418,7 +418,7 @@ export default function CustomersView() {
                             </div>
                             <div className="flex items-baseline justify-between gap-3">
                               <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST COLLECTION</span>
-                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastCollection || '—'}</span>
+                              <span className={`text-[11px] font-bold whitespace-nowrap ${(!loc?.lastCollection || loc.lastCollection === '0') ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{(!loc?.lastCollection || loc.lastCollection === '0') ? 'No Money' : loc.lastCollection}</span>
                             </div>
                             <div className="flex items-baseline justify-between gap-3">
                               <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">USER</span>

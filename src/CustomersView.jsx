@@ -404,6 +404,7 @@ export default function CustomersView() {
                             )}
                           </div>
                           {loc?.address && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{loc.address}</p>}
+                          {loc?.city && <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{loc.city}</p>}
                           {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
                         </div>
                         <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>

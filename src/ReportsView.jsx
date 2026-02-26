@@ -22,7 +22,7 @@ import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import MenuDrawer from './MenuDrawer';
 
-const ZONES = ['Staten Island', 'Brooklyn'];
+const ZONES = ['Staten Island', 'Brooklyn', 'Bronx'];
 
 const COLORS = {
   totalWeight: '#2563eb',

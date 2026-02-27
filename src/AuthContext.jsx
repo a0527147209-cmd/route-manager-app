@@ -182,7 +182,19 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Check if current user has admin privileges
+    const updateProfile = async (updates) => {
+        if (!user?.uid) return { success: false, error: 'Not logged in' };
+        try {
+            const userDocRef = doc(db, 'users', user.uid);
+            await updateDoc(userDocRef, updates);
+            setUser((prev) => ({ ...prev, ...updates }));
+            return { success: true };
+        } catch (error) {
+            console.error('Update profile error:', error);
+            return { success: false, error: error.message };
+        }
+    };
+
     const isAdmin = user?.role === 'admin';
 
     return (
@@ -193,6 +205,7 @@ export function AuthProvider({ children }) {
             logout,
             addUser,
             removeUser,
+            updateProfile,
             isAdmin,
             isLoading
         }}>

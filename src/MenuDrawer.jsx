@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, LogOut, LogIn, Shield, BarChart3, Bell } from 'lucide-react';
+import { Settings, X, LogOut, LogIn, Shield, BarChart3, Bell, ChevronRight } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import { useConfirmation } from './ConfirmationContext';
@@ -56,10 +56,19 @@ export default function MenuDrawer({ isOpen, onClose }) {
 
         <div className="p-3 flex flex-col gap-1 flex-1">
           {user && (
-            <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-200/60 dark:border-indigo-800/40">
-              <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200">{t('hi') || 'Hi'}, {user.name} 👋</p>
-              <p className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80 capitalize mt-0.5">{user.role}</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => goTo('/account')}
+              className="w-full text-start px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-200/60 dark:border-indigo-800/40 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all active:scale-[0.98] group"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200">{t('hi') || 'Hi'}, {user.name} 👋</p>
+                  <p className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80 capitalize mt-0.5">{user.role}</p>
+                </div>
+                <ChevronRight size={16} className="text-indigo-400 dark:text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </button>
           )}
 
           <div className="space-y-0.5">

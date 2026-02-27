@@ -21,6 +21,7 @@ import RecentActivityView from './RecentActivityView';
 import TasksRemindersView from './TasksRemindersView';
 import MapOverviewView from './MapOverviewView';
 import NotificationsView from './NotificationsView';
+import AccountView from './AccountView';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 import { TextSizeProvider } from './TextSizeContext';
@@ -78,6 +79,7 @@ function AppContent() {
             <Route path="/tasks" element={<TasksRemindersView />} />
             <Route path="/map-overview" element={<MapOverviewView />} />
             <Route path="/notifications" element={<NotificationsView />} />
+            <Route path="/account" element={<AccountView />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

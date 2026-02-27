@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
@@ -8,12 +8,9 @@ import MenuDrawer from './MenuDrawer';
 import { useTextSize } from './TextSizeContext';
 
 import { useAuth } from './AuthContext';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from './firebase';
 
 export default function SettingsView() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { isDarkMode, toggleTheme, theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
   const { t } = useLanguage();
@@ -134,27 +131,6 @@ export default function SettingsView() {
               );
             })}
           </div>
-        </div>
-
-        {/* Danger Zone */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-red-100 dark:border-red-900/30">
-          <h2 className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-3">{t('dangerZone') || 'Danger Zone'}</h2>
-          <button
-            onClick={async () => {
-              if (confirm("Reset ALL data? This cannot be undone.")) {
-                const { getDocs, writeBatch, collection } = await import('firebase/firestore');
-                const col = collection(db, 'customers');
-                const snap = await getDocs(col);
-                const batch = writeBatch(db);
-                snap.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                window.location.reload();
-              }
-            }}
-            className="w-full py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-bold border border-red-200 hover:bg-red-100 active:scale-[0.98] transition-all"
-          >
-            {t('resetData') || 'Reset All Data'}
-          </button>
         </div>
 
         {/* App Info */}

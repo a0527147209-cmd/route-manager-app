@@ -2,8 +2,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu, Users, BarChart3, Plus, Settings,
-  UserCog, Clock, Wallet,
+  Menu, Users, BarChart3, Plus,
+  Clock, Wallet, ListTodo, Map,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
@@ -76,13 +76,6 @@ export default function HomeView() {
       route: '/add',
     },
     {
-      label: t('settings'),
-      sub: t('settingsSub'),
-      icon: Settings,
-      gradient: 'from-slate-500 to-slate-600',
-      route: '/settings',
-    },
-    {
       label: t('todaysEarnings') || "Today's $",
       sub: `$${todayEarnings.toLocaleString()}`,
       icon: Wallet,
@@ -91,18 +84,25 @@ export default function HomeView() {
       adminOnly: true,
     },
     {
-      label: t('manageUsers'),
-      sub: t('manageUsersSub'),
-      icon: UserCog,
-      gradient: 'from-rose-500 to-pink-500',
-      route: '/manage-users',
-    },
-    {
       label: t('recentActivity'),
       sub: t('recentActivitySub'),
       icon: Clock,
       gradient: 'from-cyan-500 to-blue-500',
       route: '/recent-activity',
+    },
+    {
+      label: t('tasksReminders'),
+      sub: t('tasksRemindersSub'),
+      icon: ListTodo,
+      gradient: 'from-fuchsia-500 to-pink-500',
+      route: '/tasks',
+    },
+    {
+      label: t('mapOverview'),
+      sub: t('mapOverviewSub'),
+      icon: Map,
+      gradient: 'from-sky-500 to-indigo-500',
+      route: '/map-overview',
     },
   ];
 

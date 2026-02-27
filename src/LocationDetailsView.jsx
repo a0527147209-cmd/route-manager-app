@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
+import BackButton from './BackButton';
 import {
-  ArrowLeft,
   Navigation,
   Map as MapLucideIcon,
   Save,
@@ -182,13 +182,7 @@ export default function LocationDetailsView() {
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
       <header className="shrink-0 bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <button
-          onClick={handleBackClick}
-          className={`p-2 ${isRtl ? '-me-1' : '-ms-1'} rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95 shrink-0`}
-          title={t('backToLocations')}
-        >
-          <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
-        </button>
+        <BackButton onClick={handleBackClick} title={t('backToLocations')} />
         <div className="flex-1 min-w-0 flex items-center justify-center gap-3 text-center px-2">
           <h1 className="font-bold text-base text-slate-800 dark:text-white truncate">
             {t('locationLog')}

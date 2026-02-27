@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Menu, Plus, CheckCircle2, Circle, Clock3, Trash2 } from 'lucide-react';
+import { Menu, Plus, CheckCircle2, Circle, Clock3, Trash2 } from 'lucide-react';
+import BackButton from './BackButton';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import MenuDrawer from './MenuDrawer';
@@ -217,9 +218,7 @@ export default function TasksRemindersView() {
     <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
       <header className="shrink-0 sticky top-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between gap-2">
-          <button onClick={() => navigate(-1)} className={`w-9 h-9 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 ${isRtl ? '-me-1' : '-ms-1'}`}>
-            <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
-          </button>
+          <BackButton onClick={() => navigate(-1)} />
           <h1 className="text-base font-bold text-slate-800 dark:text-white">{t('tasksReminders')}</h1>
           <button onClick={() => setMenuOpen(true)} className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             <Menu size={20} />

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, ChevronRight, Menu } from 'lucide-react';
+import { Clock, ChevronRight, Menu } from 'lucide-react';
+import BackButton from './BackButton';
 import { useLanguage } from './LanguageContext';
 import { useLocations } from './LocationsContext';
 
@@ -30,12 +31,7 @@ export default function RecentActivityView() {
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="max-w-[520px] mx-auto w-full px-4 py-3 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95"
-          >
-            <ArrowLeft size={20} />
-          </button>
+          <BackButton onClick={() => navigate(-1)} />
           <h1 className="text-[17px] font-semibold text-slate-800 dark:text-white tracking-tight flex-1 text-center">
             {t('recentActivity')}
           </h1>

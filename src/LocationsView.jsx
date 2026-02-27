@@ -2,7 +2,8 @@
 import { useState, useMemo, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, ArrowLeft, MoreVertical } from 'lucide-react';
+import { Search, Filter, X, ArrowUpDown, GripVertical, Check, MapPin, Calendar, Clock, ChevronRight, ChevronLeft, MoreVertical } from 'lucide-react';
+import BackButton from './BackButton';
 import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
@@ -277,13 +278,7 @@ export default function LocationsView() {
       <header className="shrink-0 bg-card p-2 min-h-[50px] flex flex-col justify-center shadow-sm border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[380px] mx-auto w-full">
           <div className="flex justify-between items-center gap-1.5 w-full">
-            <button
-              onClick={handleBack}
-              className="p-2 -ms-1 rounded-full text-muted-foreground hover:bg-muted/50 transition-colors shrink-0 active:scale-95"
-              title={isInnerPage ? t('backToLocations') : t('backToHome')}
-            >
-              <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
-            </button>
+            <BackButton onClick={handleBack} title={isInnerPage ? t('backToLocations') : t('backToHome')} />
             <h1 className="text-base font-bold text-foreground truncate flex-1 text-center min-w-0">
               {isInnerPage ? areaDisplayLabel : t('locations')}
             </h1>

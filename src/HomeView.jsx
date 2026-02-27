@@ -1,7 +1,10 @@
 
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Users, Clock, MapPin, ChevronRight, Plus } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Menu, Users, BarChart3, Plus, Settings,
+  CalendarCheck, UserCog, Clock, DollarSign, ChevronRight,
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
@@ -17,38 +20,140 @@ function getGreeting(t) {
 
 export default function HomeView() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t, isRtl } = useLanguage();
   const { locations } = useLocations();
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const todayStr = new Date().toISOString().slice(0, 10);
   const totalCustomers = locations.length;
-  const visitedToday = locations.filter(l => l.lastVisited === new Date().toISOString().slice(0, 10)).length;
-  const pendingCount = locations.filter(l => l.status === 'pending').length;
+  const visitedToday = locations.filter(l => l.lastVisited === todayStr).length;
+
+  const totalEarnings = useMemo(() => {
+    let sum = 0;
+    locations.forEach(loc => {
+      (loc.logs || []).forEach(log => {
+        const val = parseFloat(log.collection);
+        if (!isNaN(val)) sum += val;
+      });
+    });
+    return Math.round(sum * 20);
+  }, [locations]);
+
+  const recentVisits = useMemo(() => {
+    const all = [];
+    locations.forEach(loc => {
+      (loc.logs || []).forEach(log => {
+        if (log.date) {
+          all.push({
+            id: loc.id,
+            name: loc.name || loc.address || 'Unknown',
+            date: log.date,
+            collection: log.collection,
+          });
+        }
+      });
+    });
+    all.sort((a, b) => b.date.localeCompare(a.date));
+    return all.slice(0, 5);
+  }, [locations]);
 
   const stagger = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.06 } }
+    show: { transition: { staggerChildren: 0.05 } },
   };
 
   const fadeUp = {
-    hidden: { opacity: 0, y: 12 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } }
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
   };
 
-  const stats = [
-    { label: t('total') || 'Total', value: totalCustomers, icon: Users, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/30' },
-    { label: t('today') || 'Today', value: visitedToday, icon: Clock, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/30' },
-    { label: t('pending') || 'Pending', value: pendingCount, icon: MapPin, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30' },
+  const tiles = [
+    {
+      label: t('customers'),
+      sub: t('customersSub'),
+      icon: Users,
+      gradient: 'from-indigo-500 to-violet-500',
+      shadow: 'shadow-indigo-500/20',
+      badge: totalCustomers,
+      route: '/customers',
+    },
+    {
+      label: t('reports'),
+      sub: t('reportsSub'),
+      icon: BarChart3,
+      gradient: 'from-violet-500 to-purple-500',
+      shadow: 'shadow-violet-500/20',
+      route: '/reports',
+    },
+    {
+      label: t('addCustomer'),
+      sub: t('addCustomerSub'),
+      icon: Plus,
+      gradient: 'from-emerald-500 to-teal-500',
+      shadow: 'shadow-emerald-500/20',
+      route: '/add',
+    },
+    {
+      label: t('settings'),
+      sub: t('settingsSub'),
+      icon: Settings,
+      gradient: 'from-slate-500 to-slate-600',
+      shadow: 'shadow-slate-500/20',
+      route: '/settings',
+    },
+    {
+      label: t('todaysRoute'),
+      sub: t('todaysRouteSub'),
+      icon: CalendarCheck,
+      gradient: 'from-amber-500 to-orange-500',
+      shadow: 'shadow-amber-500/20',
+      badge: visitedToday,
+      route: '/customers',
+    },
+    {
+      label: t('manageUsers'),
+      sub: t('manageUsersSub'),
+      icon: UserCog,
+      gradient: 'from-rose-500 to-pink-500',
+      shadow: 'shadow-rose-500/20',
+      route: '/manage-users',
+    },
+    {
+      label: t('recentActivity'),
+      sub: t('recentActivitySub'),
+      icon: Clock,
+      gradient: 'from-cyan-500 to-blue-500',
+      shadow: 'shadow-cyan-500/20',
+      action: 'scroll-recent',
+    },
+    {
+      label: t('totalEarnings'),
+      sub: t('totalEarningsSub'),
+      icon: DollarSign,
+      gradient: 'from-green-500 to-emerald-600',
+      shadow: 'shadow-green-500/20',
+      badge: `$${totalEarnings.toLocaleString()}`,
+      route: '/reports',
+    },
   ];
+
+  const handleTileClick = (tile) => {
+    if (tile.route) {
+      navigate(tile.route);
+    } else if (tile.action === 'scroll-recent') {
+      document.getElementById('recent-activity')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
 
-      {/* Clean header */}
-      <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-[420px] mx-auto w-full px-5 py-3 flex justify-between items-center">
+      <header
+        className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        <div className="max-w-[520px] mx-auto w-full px-5 py-3 flex justify-between items-center">
           <div className="w-9 shrink-0" aria-hidden="true" />
           <h1 className="text-[17px] font-semibold text-slate-800 dark:text-white tracking-tight">
             {t('appTitle')}
@@ -64,108 +169,89 @@ export default function HomeView() {
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      {/* Scrollable content */}
       <motion.main
         className="flex-1 overflow-y-auto"
         variants={stagger}
         initial="hidden"
         animate="show"
       >
-        <div className="max-w-[420px] mx-auto w-full px-5 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-[520px] mx-auto w-full px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))]">
 
-          {/* Greeting */}
-          <motion.div variants={fadeUp} className="mb-6">
-            <h2 className="text-[22px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+          <motion.div variants={fadeUp} className="mb-5 px-1">
+            <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
               {getGreeting(t)}, {user?.name || 'Guest'}
             </h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
-              {t('homeSubtitle') || "Here's your overview"}
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {t('homeSubtitle')}
             </p>
           </motion.div>
 
-          {/* Stats - slim horizontal cards */}
-          <motion.div variants={fadeUp} className="space-y-2.5 mb-6">
-            {stats.map((stat, i) => (
-              <div
+          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-6">
+            {tiles.map((tile, i) => (
+              <motion.button
                 key={i}
-                className="flex items-center gap-3.5 bg-white dark:bg-slate-900 rounded-xl px-4 py-3 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800"
+                variants={fadeUp}
+                type="button"
+                onClick={() => handleTileClick(tile)}
+                className="relative flex flex-col items-center text-center bg-white dark:bg-slate-900 rounded-2xl p-4 pt-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.97] group"
               >
-                <div className={`w-9 h-9 rounded-lg ${stat.bg} flex items-center justify-center shrink-0`}>
-                  <stat.icon size={17} className={stat.color} />
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tile.gradient} flex items-center justify-center mb-3 shadow-md ${tile.shadow} group-hover:scale-105 transition-transform`}>
+                  <tile.icon size={22} className="text-white" strokeWidth={2} />
                 </div>
-                <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium flex-1">
-                  {stat.label}
+                <span className="text-[13px] font-semibold text-slate-800 dark:text-white leading-tight">
+                  {tile.label}
                 </span>
-                <span className="text-xl font-bold text-slate-900 dark:text-white tabular-nums">
-                  {stat.value}
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 leading-tight">
+                  {tile.sub}
                 </span>
-              </div>
+                {tile.badge !== undefined && (
+                  <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1.5 flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-[11px] font-bold text-white dark:text-slate-900 tabular-nums">
+                    {tile.badge}
+                  </span>
+                )}
+              </motion.button>
             ))}
           </motion.div>
 
-          {/* Customers - slim elegant banner */}
-          <motion.div variants={fadeUp} className="mb-4">
-            <button
-              type="button"
-              onClick={() => navigate('/customers')}
-              className="w-full flex items-center gap-4 bg-white dark:bg-slate-900 rounded-xl px-4 py-4 shadow-[0_2px_8px_rgba(99,102,241,0.08)] dark:shadow-none border border-indigo-100 dark:border-indigo-900/40 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all active:scale-[0.99] group"
-            >
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shrink-0 shadow-sm">
-                <Users size={20} className="text-white" />
+          <motion.section variants={fadeUp} id="recent-activity" className="px-1">
+            <h3 className="text-[15px] font-semibold text-slate-800 dark:text-white mb-3">
+              {t('recentActivity')}
+            </h3>
+            {recentVisits.length === 0 ? (
+              <p className="text-[13px] text-slate-400 dark:text-slate-500 py-4 text-center">
+                {t('noRecentActivity')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {recentVisits.map((visit, i) => (
+                  <motion.button
+                    key={`${visit.id}-${visit.date}-${i}`}
+                    variants={fadeUp}
+                    type="button"
+                    onClick={() => navigate(`/customer/${visit.id}`)}
+                    className="w-full flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.99] group text-left"
+                  >
+                    <div className="w-9 h-9 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
+                      <Clock size={16} className="text-cyan-600 dark:text-cyan-400" />
+                    </div>
+                    <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : ''}`}>
+                      <p className="text-[13px] font-medium text-slate-800 dark:text-white truncate">
+                        {visit.name}
+                      </p>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        {visit.date}
+                        {visit.collection && ` · ${visit.collection} lbs`}
+                      </p>
+                    </div>
+                    <ChevronRight size={16} className={`text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-cyan-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
+                  </motion.button>
+                ))}
               </div>
-              <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : 'text-left'}`}>
-                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white leading-tight">
-                  {t('customers')}
-                </h3>
-                <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t('viewAccounts') || 'View & manage all accounts'}
-                </p>
-              </div>
-              <ChevronRight size={18} className={`text-slate-400 dark:text-slate-500 shrink-0 group-hover:text-indigo-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
-            </button>
-          </motion.div>
-
-          {/* Locations - matching slim card */}
-          <motion.div variants={fadeUp}>
-            <button
-              type="button"
-              onClick={() => navigate('/locations')}
-              className="w-full flex items-center gap-4 bg-white dark:bg-slate-900 rounded-xl px-4 py-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-none border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.99] group"
-            >
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm">
-                <MapPin size={20} className="text-white" />
-              </div>
-              <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : 'text-left'}`}>
-                <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white leading-tight">
-                  {t('locations') || 'Locations'}
-                </h3>
-                <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  {t('viewLocations') || 'Browse all locations'}
-                </p>
-              </div>
-              <ChevronRight size={18} className={`text-slate-400 dark:text-slate-500 shrink-0 group-hover:text-emerald-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
-            </button>
-          </motion.div>
+            )}
+          </motion.section>
 
         </div>
       </motion.main>
-
-      {/* FAB - Add Customer */}
-      <motion.button
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.3, type: 'spring', stiffness: 260, damping: 20 }}
-        onClick={() => navigate('/add')}
-        className="fixed z-40 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25 flex items-center justify-center active:scale-90 transition-transform hover:shadow-xl"
-        style={{
-          bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
-          right: isRtl ? 'auto' : '1.5rem',
-          left: isRtl ? '1.5rem' : 'auto',
-        }}
-        title={t('addNewCustomer')}
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </motion.button>
     </div>
   );
 }

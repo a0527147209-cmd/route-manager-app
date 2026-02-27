@@ -1,14 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, Search, LogOut, LogIn, Shield, BarChart3 } from 'lucide-react';
-import { useSearch } from './SearchContext';
+import { Settings, X, LogOut, LogIn, Shield, BarChart3 } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import { useConfirmation } from './ConfirmationContext';
 
 export default function MenuDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
-  const { searchTerm, setSearchTerm } = useSearch();
   const { t, isRtl } = useLanguage();
   const { user, logout, isAdmin } = useAuth();
   const { confirm } = useConfirmation();
@@ -62,40 +60,6 @@ export default function MenuDrawer({ isOpen, onClose }) {
               <p className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80 capitalize mt-0.5">{user.role}</p>
             </div>
           )}
-
-          <div className="px-1 pb-3 border-b border-border/40 mb-2">
-            <div className="relative">
-              <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={16} />
-              <input
-                type="text"
-                placeholder={t('search')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    onClose();
-                    const currentPath = window.location.pathname;
-                    if (currentPath.includes('/locations')) {
-                      navigate('/locations', { state: { fromMenu: true } });
-                    } else {
-                      navigate('/customers', { state: { fromMenu: true } });
-                    }
-                  }
-                }}
-                className="w-full bg-muted/50 text-foreground rounded-xl py-2.5 ps-9 pe-8 text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                onClick={(e) => e.stopPropagation()}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  type="button"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          </div>
 
           <div className="space-y-0.5">
             {menuItems.map((item) => (

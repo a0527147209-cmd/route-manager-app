@@ -118,50 +118,52 @@ export default function SettingsView() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-background text-foreground overflow-hidden transition-colors duration-300">
+    <div className="h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden">
 
-      {/* Header – compact for mobile */}
-      <div className="shrink-0 bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="flex items-center justify-between w-full gap-2">
+      <header
+        className="shrink-0 sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 -ms-1 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 shrink-0"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
             title={t('home')}
           >
-            <ArrowLeft size={22} />
+            <ArrowLeft size={20} strokeWidth={1.8} />
           </button>
-          <h1 className="text-lg font-bold text-slate-800 dark:text-white flex-1 text-center min-w-0 truncate">{t('settings')}</h1>
+          <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 flex-1 text-center min-w-0 truncate tracking-tight">{t('settings')}</h1>
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 shrink-0"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
             title="Menu"
           >
-            <Menu size={22} />
+            <Menu size={20} strokeWidth={1.8} />
           </button>
         </div>
-      </div>
+      </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[520px] mx-auto w-full">
 
         {/* Display Preferences */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200/50 dark:border-slate-800/60 overflow-hidden ring-1 ring-black/[0.02] dark:ring-white/[0.04]">
           <button
             type="button"
             onClick={() => setDisplayOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors active:scale-[0.99]"
+            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors active:scale-[0.99]"
           >
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
                 <Palette size={16} className="text-sky-600 dark:text-sky-400" />
               </div>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">{t('displayPreferences')}</h2>
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t('displayPreferences')}</h2>
             </div>
-            {displayOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+            {displayOpen ? <ChevronUp size={18} className="text-slate-400 dark:text-slate-500" /> : <ChevronDown size={18} className="text-slate-400 dark:text-slate-500" />}
           </button>
 
           {displayOpen && (
-            <div className="px-3 pb-3 space-y-4 border-t border-slate-100 dark:border-slate-700 pt-3">
+            <div className="px-3 pb-3 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-3">
 
               {/* Dark / Light mode */}
               <div>
@@ -169,12 +171,12 @@ export default function SettingsView() {
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="w-full flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-500 active:scale-[0.98]"
+                  className="w-full flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-500 active:scale-[0.98]"
                 >
-                  <span className="text-slate-800 dark:text-white font-medium text-sm">
+                  <span className="text-slate-800 dark:text-slate-100 font-medium text-sm">
                     {isDarkMode ? t('lightMode') : t('nightMode')}
                   </span>
-                  <div className="relative w-9 h-9 flex items-center justify-center rounded-full bg-slate-200/80 dark:bg-slate-600/80 transition-colors duration-500">
+                  <div className="relative w-9 h-9 flex items-center justify-center rounded-full bg-slate-200/80 dark:bg-slate-700/80 transition-colors duration-500">
                     <Moon size={18} className={`absolute text-indigo-400 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`} />
                     <Sun size={18} className={`absolute text-amber-500 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`} />
                   </div>
@@ -230,23 +232,23 @@ export default function SettingsView() {
         </div>
 
         {/* Privacy */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200/50 dark:border-slate-800/60 overflow-hidden ring-1 ring-black/[0.02] dark:ring-white/[0.04]">
           <button
             type="button"
             onClick={() => setPrivacyOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors active:scale-[0.99]"
+            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors active:scale-[0.99]"
           >
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                 <Shield size={16} className="text-violet-600 dark:text-violet-400" />
               </div>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">{t('privacyTitle')}</h2>
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t('privacyTitle')}</h2>
             </div>
-            {privacyOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+            {privacyOpen ? <ChevronUp size={18} className="text-slate-400 dark:text-slate-500" /> : <ChevronDown size={18} className="text-slate-400 dark:text-slate-500" />}
           </button>
 
           {privacyOpen && (
-            <div className="px-3 pb-3 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+            <div className="px-3 pb-3 space-y-3 border-t border-slate-100 dark:border-slate-800 pt-3">
               {/* Profile Visibility */}
               <div>
                 <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('privacyProfileVisibility')}</label>
@@ -343,23 +345,23 @@ export default function SettingsView() {
         </div>
 
         {/* Security & Passwords */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200/50 dark:border-slate-800/60 overflow-hidden ring-1 ring-black/[0.02] dark:ring-white/[0.04]">
           <button
             type="button"
             onClick={() => setSecurityOpen((v) => !v)}
-            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors active:scale-[0.99]"
+            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors active:scale-[0.99]"
           >
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                 <Lock size={16} className="text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">{t('securityTitle')}</h2>
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t('securityTitle')}</h2>
             </div>
-            {securityOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+            {securityOpen ? <ChevronUp size={18} className="text-slate-400 dark:text-slate-500" /> : <ChevronDown size={18} className="text-slate-400 dark:text-slate-500" />}
           </button>
 
           {securityOpen && (
-            <div className="px-3 pb-3 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-3">
+            <div className="px-3 pb-3 space-y-3 border-t border-slate-100 dark:border-slate-800 pt-3">
 
               {/* Change Password */}
               <div>
@@ -466,7 +468,7 @@ export default function SettingsView() {
               </div>
 
               {/* Active Sessions Info */}
-              <div className="bg-slate-50 dark:bg-slate-700/30 rounded-lg p-3 border border-slate-200 dark:border-slate-600">
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Eye size={14} className="text-slate-500 dark:text-slate-400" />
                   <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">{t('secActiveSessions')}</span>

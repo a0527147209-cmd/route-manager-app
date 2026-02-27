@@ -4,7 +4,7 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
 import {
-  ArrowLeft, Moon, Sun, Github, Globe, Menu, Type,
+  ArrowLeft, Moon, Sun, Github, Globe, Menu, Type, Palette,
   Shield, Lock, Eye, EyeOff, Download, ChevronDown, ChevronUp,
   Key, Smartphone, UserCheck, Users,
 } from 'lucide-react';
@@ -32,6 +32,7 @@ export default function SettingsView() {
   const { textSize, setTextSize } = useTextSize();
   const { locations } = useLocations();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [displayOpen, setDisplayOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
 
@@ -142,81 +143,90 @@ export default function SettingsView() {
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
-        {/* Appearance – smaller box for mobile */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t('appearance')}</h2>
+
+        {/* Display Preferences */}
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
           <button
             type="button"
-            onClick={toggleTheme}
-            className="w-full flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-500 active:scale-[0.98]"
-            title={isDarkMode ? t('nightMode') : t('lightMode')}
+            onClick={() => setDisplayOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-3 p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors active:scale-[0.99]"
           >
-            <span className="text-slate-800 dark:text-white font-medium text-sm">
-              {isDarkMode ? t('lightMode') : t('nightMode')}
-            </span>
-            <div className="relative w-10 h-10 flex items-center justify-center rounded-full bg-slate-200/80 dark:bg-slate-600/80 transition-colors duration-500">
-              <Moon
-                size={22}
-                className={`absolute text-indigo-400 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
-                  }`}
-              />
-              <Sun
-                size={22}
-                className={`absolute text-amber-500 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                  }`}
-              />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center">
+                <Palette size={16} className="text-sky-600 dark:text-sky-400" />
+              </div>
+              <h2 className="text-sm font-semibold text-slate-800 dark:text-white">{t('displayPreferences')}</h2>
             </div>
+            {displayOpen ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
           </button>
-        </div>
 
+          {displayOpen && (
+            <div className="px-3 pb-3 space-y-4 border-t border-slate-100 dark:border-slate-700 pt-3">
 
-        {/* Visual Theme */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            {t('visualTheme')}
-          </h2>
-          <div className="flex gap-2">
-            {['classic', 'modern'].map((th) => {
-              const isActive = theme === th;
-              return (
+              {/* Dark / Light mode */}
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('appearance')}</label>
                 <button
-                  key={th}
-                  onClick={() => setTheme(th)}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border ${isActive
-                    ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary' // Active state
-                    : 'bg-card border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }`}
+                  type="button"
+                  onClick={toggleTheme}
+                  className="w-full flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors duration-500 active:scale-[0.98]"
                 >
-                  {th === 'classic' ? 'Classic' : 'Modern'}
+                  <span className="text-slate-800 dark:text-white font-medium text-sm">
+                    {isDarkMode ? t('lightMode') : t('nightMode')}
+                  </span>
+                  <div className="relative w-9 h-9 flex items-center justify-center rounded-full bg-slate-200/80 dark:bg-slate-600/80 transition-colors duration-500">
+                    <Moon size={18} className={`absolute text-indigo-400 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`} />
+                    <Sun size={18} className={`absolute text-amber-500 transition-all duration-500 ease-in-out ${isDarkMode ? 'scale-100 opacity-100' : 'scale-0 opacity-0'}`} />
+                  </div>
                 </button>
-              );
-            })}
-          </div>
-        </div>
+              </div>
 
+              {/* Visual Theme */}
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('visualTheme')}</label>
+                <div className="flex gap-2">
+                  {['classic', 'modern'].map((th) => {
+                    const isActive = theme === th;
+                    return (
+                      <button
+                        key={th}
+                        onClick={() => setTheme(th)}
+                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200 border ${isActive
+                          ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-400 dark:border-sky-600 text-sky-700 dark:text-sky-300 ring-1 ring-sky-400'
+                          : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {th === 'classic' ? 'Classic' : 'Modern'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-
-        {/* Text Size */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg p-3 shadow-sm border border-slate-100 dark:border-slate-700">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t('textSize')}</h2>
-          <div className="flex gap-2">
-            {['small', 'regular', 'large'].map((size) => {
-              const isActive = textSize === size;
-              return (
-                <button
-                  key={size}
-                  onClick={() => setTextSize(size)}
-                  className={`flex-1 py-2.5 px-2 rounded-lg font-semibold transition-all duration-200 border flex flex-col items-center gap-1 ${isActive
-                    ? 'bg-primary/10 border-primary text-primary shadow-sm ring-1 ring-primary'
-                    : 'bg-card border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }`}
-                >
-                  <span className={size === 'small' ? 'text-xs' : size === 'large' ? 'text-base' : 'text-sm'}>A</span>
-                  <span className="text-[10px]">{t(`textSize${size.charAt(0).toUpperCase() + size.slice(1)}`)}</span>
-                </button>
-              );
-            })}
-          </div>
+              {/* Text Size */}
+              <div>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">{t('textSize')}</label>
+                <div className="flex gap-2">
+                  {['small', 'regular', 'large'].map((size) => {
+                    const isActive = textSize === size;
+                    return (
+                      <button
+                        key={size}
+                        onClick={() => setTextSize(size)}
+                        className={`flex-1 py-2.5 px-2 rounded-lg font-semibold transition-all duration-200 border flex flex-col items-center gap-1 ${isActive
+                          ? 'bg-sky-50 dark:bg-sky-900/20 border-sky-400 dark:border-sky-600 text-sky-700 dark:text-sky-300 ring-1 ring-sky-400'
+                          : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        <span className={size === 'small' ? 'text-xs' : size === 'large' ? 'text-base' : 'text-sm'}>A</span>
+                        <span className="text-[10px]">{t(`textSize${size.charAt(0).toUpperCase() + size.slice(1)}`)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Privacy */}

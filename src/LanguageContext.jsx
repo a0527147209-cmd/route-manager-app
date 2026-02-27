@@ -345,6 +345,7 @@ const translations = {
     accRole: 'Role',
     accUsername: 'Username',
     accMemberSince: 'Member Since',
+    displayPreferences: 'Display Preferences',
   },
 };
 

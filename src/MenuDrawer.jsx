@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, LogOut, LogIn, Shield, BarChart3, Bell, ChevronRight } from 'lucide-react';
+import { Settings, X, LogOut, LogIn, Shield, BarChart3, Bell, ChevronRight, UserCircle } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import { useConfirmation } from './ConfirmationContext';
@@ -59,14 +59,17 @@ export default function MenuDrawer({ isOpen, onClose }) {
             <button
               type="button"
               onClick={() => goTo('/account')}
-              className="w-full text-start px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40 border border-indigo-200/60 dark:border-indigo-800/40 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all active:scale-[0.98] group"
+              className="w-full text-start px-3 py-3 mb-2 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700/50 dark:to-slate-700/30 border border-slate-200 dark:border-slate-600 hover:border-slate-300 dark:hover:border-slate-500 transition-all active:scale-[0.98] group"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold text-indigo-800 dark:text-indigo-200">{t('hi') || 'Hi'}, {user.name} 👋</p>
-                  <p className="text-[10px] text-indigo-600/80 dark:text-indigo-400/80 capitalize mt-0.5">{user.role}</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shrink-0 shadow-sm">
+                  <UserCircle size={22} className="text-white" />
                 </div>
-                <ChevronRight size={16} className="text-indigo-400 dark:text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{user.name}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 capitalize mt-0.5">{user.role}</p>
+                </div>
+                <ChevronRight size={16} className="text-slate-400 dark:text-slate-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </div>
             </button>
           )}

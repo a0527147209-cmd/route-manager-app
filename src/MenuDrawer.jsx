@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, LogOut, LogIn, Shield, BarChart3 } from 'lucide-react';
+import { Settings, X, LogOut, LogIn, Shield, BarChart3, Bell } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import { useConfirmation } from './ConfirmationContext';
@@ -24,6 +24,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
   };
 
   const menuItems = [
+    { icon: Bell, label: t('notifications'), path: '/notifications' },
     { icon: Settings, label: t('settings'), path: '/settings' },
     ...(isAdmin ? [
       { icon: BarChart3, label: t('reports'), path: '/reports' },

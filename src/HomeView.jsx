@@ -43,12 +43,12 @@ export default function HomeView() {
 
   const stagger = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.05 } },
+    show: { transition: { staggerChildren: 0.06 } },
   };
 
   const fadeUp = {
-    hidden: { opacity: 0, y: 12 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } },
   };
 
   const allTiles = [
@@ -56,7 +56,8 @@ export default function HomeView() {
       label: t('customers'),
       sub: t('customersSub'),
       icon: Users,
-      gradient: 'from-indigo-500 to-violet-500',
+      iconBg: 'bg-indigo-50 dark:bg-indigo-950/40',
+      iconColor: 'text-indigo-600 dark:text-indigo-400',
       badge: totalCustomers,
       route: '/customers',
     },
@@ -64,7 +65,8 @@ export default function HomeView() {
       label: t('reports'),
       sub: t('reportsSub'),
       icon: BarChart3,
-      gradient: 'from-violet-500 to-purple-500',
+      iconBg: 'bg-violet-50 dark:bg-violet-950/40',
+      iconColor: 'text-violet-600 dark:text-violet-400',
       route: '/reports',
       adminOnly: true,
     },
@@ -72,14 +74,16 @@ export default function HomeView() {
       label: t('addCustomer'),
       sub: t('addCustomerSub'),
       icon: Plus,
-      gradient: 'from-emerald-500 to-teal-500',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
       route: '/add',
     },
     {
       label: t('todaysEarnings') || "Today's $",
       sub: `$${todayEarnings.toLocaleString()}`,
       icon: Wallet,
-      gradient: 'from-amber-500 to-orange-500',
+      iconBg: 'bg-amber-50 dark:bg-amber-950/40',
+      iconColor: 'text-amber-600 dark:text-amber-400',
       isValue: true,
       adminOnly: true,
     },
@@ -87,21 +91,24 @@ export default function HomeView() {
       label: t('recentActivity'),
       sub: t('recentActivitySub'),
       icon: Clock,
-      gradient: 'from-cyan-500 to-blue-500',
+      iconBg: 'bg-sky-50 dark:bg-sky-950/40',
+      iconColor: 'text-sky-600 dark:text-sky-400',
       route: '/recent-activity',
     },
     {
       label: t('tasksReminders'),
       sub: t('tasksRemindersSub'),
       icon: ListTodo,
-      gradient: 'from-fuchsia-500 to-pink-500',
+      iconBg: 'bg-rose-50 dark:bg-rose-950/40',
+      iconColor: 'text-rose-600 dark:text-rose-400',
       route: '/tasks',
     },
     {
       label: t('mapOverview'),
       sub: t('mapOverviewSub'),
       icon: Map,
-      gradient: 'from-sky-500 to-indigo-500',
+      iconBg: 'bg-teal-50 dark:bg-teal-950/40',
+      iconColor: 'text-teal-600 dark:text-teal-400',
       route: '/map-overview',
     },
   ];
@@ -109,23 +116,23 @@ export default function HomeView() {
   const tiles = allTiles.filter(tile => !tile.adminOnly || isAdmin);
 
   return (
-    <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden">
 
       <header
-        className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800"
+        className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="max-w-[520px] mx-auto w-full px-5 py-3 flex justify-between items-center">
+        <div className="max-w-[520px] mx-auto w-full px-5 py-3.5 flex justify-between items-center">
           <div className="w-9 shrink-0" aria-hidden="true" />
-          <h1 className="text-[17px] font-semibold text-slate-800 dark:text-white tracking-tight">
+          <h1 className="text-[17px] font-semibold text-slate-800 dark:text-slate-100 tracking-tight">
             {t('appTitle')}
           </h1>
           <button
             onClick={() => setMenuOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95"
             title={t('menu')}
           >
-            <Menu size={20} />
+            <Menu size={20} strokeWidth={1.8} />
           </button>
         </div>
       </header>
@@ -137,37 +144,37 @@ export default function HomeView() {
         initial="hidden"
         animate="show"
       >
-        <div className="max-w-[520px] mx-auto w-full px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-[520px] mx-auto w-full px-5 pt-6 pb-[calc(3rem+env(safe-area-inset-bottom))]">
 
-          <motion.div variants={fadeUp} className="mb-5 px-1">
-            <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+          <motion.div variants={fadeUp} className="mb-6">
+            <h2 className="text-[22px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
               {getGreeting(t)}, {user?.name || 'Guest'}
             </h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
               {t('homeSubtitle')}
             </p>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3">
+          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3.5">
             {tiles.map((tile, i) => (
               <motion.button
                 key={i}
                 variants={fadeUp}
                 type="button"
                 onClick={() => tile.route && navigate(tile.route)}
-                className="relative flex flex-col items-center text-center bg-white dark:bg-slate-900 rounded-2xl p-4 pt-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.97] group"
+                className="relative flex flex-col items-start text-start bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border border-slate-200/50 dark:border-slate-800/80 hover:shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-200 active:scale-[0.97] group"
               >
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${tile.gradient} flex items-center justify-center mb-2.5 shadow-md group-hover:scale-105 transition-transform`}>
-                  <tile.icon size={20} className="text-white" strokeWidth={2} />
+                <div className={`w-10 h-10 rounded-xl ${tile.iconBg} flex items-center justify-center mb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] group-hover:scale-[1.04] transition-transform duration-200`}>
+                  <tile.icon size={19} className={tile.iconColor} strokeWidth={1.8} />
                 </div>
-                <span className="text-[13px] font-semibold text-slate-800 dark:text-white leading-tight">
+                <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-snug">
                   {tile.label}
                 </span>
-                <span className={`text-[11px] mt-0.5 leading-tight ${tile.isValue ? 'font-bold text-green-600 dark:text-green-400 tabular-nums' : 'text-slate-400 dark:text-slate-500'}`}>
+                <span className={`text-[11px] mt-0.5 leading-snug ${tile.isValue ? 'font-bold text-emerald-600 dark:text-emerald-400 tabular-nums' : 'text-slate-400 dark:text-slate-500'}`}>
                   {tile.sub}
                 </span>
                 {tile.badge !== undefined && (
-                  <span className="absolute top-2.5 right-2.5 min-w-[20px] h-[20px] px-1 flex items-center justify-center rounded-full bg-slate-800 dark:bg-white text-[10px] font-bold text-white dark:text-slate-900 tabular-nums shadow-sm">
+                  <span className="absolute top-3 end-3 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-slate-900 dark:bg-slate-100 text-[10px] font-bold text-white dark:text-slate-900 tabular-nums ring-2 ring-white dark:ring-slate-900">
                     {tile.badge}
                   </span>
                 )}

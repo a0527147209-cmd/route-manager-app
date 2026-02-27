@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, X, Search, UserPlus, Users, LogOut, LogIn, Shield, BarChart3 } from 'lucide-react';
+import { Settings, X, Search, LogOut, LogIn, Shield, BarChart3 } from 'lucide-react';
 import { useSearch } from './SearchContext';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
@@ -26,8 +26,6 @@ export default function MenuDrawer({ isOpen, onClose }) {
   };
 
   const menuItems = [
-    { icon: UserPlus, label: t('addCustomer'), path: '/add', accent: true },
-    { icon: Users, label: t('customers'), path: '/customers' },
     { icon: Settings, label: t('settings'), path: '/settings' },
     ...(isAdmin ? [
       { icon: BarChart3, label: t('reports'), path: '/reports' },

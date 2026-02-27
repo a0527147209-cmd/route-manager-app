@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { useLanguage } from './LanguageContext';
@@ -41,18 +41,15 @@ export default function ManageUsersView() {
     const [newRole, setNewRole] = useState('employee');
     const [addStatus, setAddStatus] = useState('');
 
-    // Auto-refresh every 30 seconds to update online status
+    const [codePrompt, setCodePrompt] = useState(null);
+    const [codeInput, setCodeInput] = useState('');
+    const [codeError, setCodeError] = useState(false);
+
     const [, setTick] = useState(0);
     useEffect(() => {
         const id = setInterval(() => setTick(t => t + 1), 30_000);
         return () => clearInterval(id);
     }, []);
-
-    // Only admin can access
-    if (!isAdmin) {
-        navigate('/');
-        return null;
-    }
 
     const handleAddUser = async () => {
         if (!newUsername.trim() || !newPassword.trim()) return;
@@ -77,15 +74,29 @@ export default function ManageUsersView() {
     };
 
     const handleDeleteUser = async (userId, username) => {
-        if (userId === currentUser?.id) return;
-        if (await confirm({
+        if (!isAdmin || userId === currentUser?.id) return;
+        const confirmed = await confirm({
             title: t('deleteUser') || 'Delete User',
             message: `${t('confirmDeleteUser') || 'Are you sure you want to delete'} "${username}"?`,
             confirmText: t('delete') || 'Delete',
             cancelText: t('cancel') || 'Cancel',
-            isDelete: true
-        })) {
-            removeUser(userId);
+            isDelete: true,
+        });
+        if (confirmed) {
+            setCodePrompt({ userId, username });
+            setCodeInput('');
+            setCodeError(false);
+        }
+    };
+
+    const handleCodeSubmit = () => {
+        if (codeInput === '123456') {
+            removeUser(codePrompt.userId);
+            setCodePrompt(null);
+            setCodeInput('');
+            setCodeError(false);
+        } else {
+            setCodeError(true);
         }
     };
 
@@ -150,7 +161,7 @@ export default function ManageUsersView() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    {u.id !== currentUser?.id && (
+                                    {isAdmin && u.id !== currentUser?.id && (
                                         <button
                                             onClick={() => handleDeleteUser(u.id, u.username)}
                                             className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors active:scale-95"
@@ -164,63 +175,108 @@ export default function ManageUsersView() {
                         );
                     })}
 
-                    {/* Add User Button / Form */}
-                    {!showAddForm ? (
-                        <button
-                            onClick={() => setShowAddForm(true)}
-                            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-primary/30 text-primary hover:bg-primary/5 transition-colors font-semibold text-sm active:scale-[0.98]"
-                        >
-                            <Plus size={18} />
-                            <span>{t('addUser') || 'Add User'}</span>
-                        </button>
-                    ) : (
-                        <div className="p-4 rounded-xl bg-card border border-border shadow-sm space-y-3">
-                            <h3 className="text-sm font-bold text-foreground">{t('addUser') || 'Add User'}</h3>
-                            <input
-                                type="text"
-                                placeholder={t('username') || 'Username'}
-                                value={newUsername}
-                                onChange={(e) => setNewUsername(e.target.value)}
-                                className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                            />
-                            <input
-                                type="text"
-                                placeholder={t('password') || 'Password'}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                            />
-                            <select
-                                value={newRole}
-                                onChange={(e) => setNewRole(e.target.value)}
-                                className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                            >
-                                <option value="employee">{t('employee') || 'Employee'}</option>
-                                <option value="admin">{t('admin') || 'Admin'}</option>
-                            </select>
-                            <div className="flex gap-2">
+                    {isAdmin && (
+                        <>
+                            {!showAddForm ? (
                                 <button
-                                    onClick={handleAddUser}
-                                    disabled={!newUsername.trim() || !newPassword.trim() || addStatus === 'Creating...'}
-                                    className="flex-1 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+                                    onClick={() => setShowAddForm(true)}
+                                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-primary/30 text-primary hover:bg-primary/5 transition-colors font-semibold text-sm active:scale-[0.98]"
                                 >
-                                    {addStatus === 'Creating...' ? 'Creating...' : (t('save') || 'Save')}
+                                    <Plus size={18} />
+                                    <span>{t('addUser') || 'Add User'}</span>
                                 </button>
-                                <button
-                                    onClick={() => { setShowAddForm(false); setNewUsername(''); setNewPassword(''); setAddStatus(''); }}
-                                    className="flex-1 py-2.5 rounded-lg bg-muted text-foreground font-semibold text-sm hover:bg-muted/80 active:scale-[0.98] transition-all"
-                                >
-                                    {t('cancel') || 'Cancel'}
-                                </button>
-                            </div>
-                            {addStatus && addStatus !== 'Creating...' && (
-                                <p className="text-xs text-center font-medium mt-1">{addStatus}</p>
+                            ) : (
+                                <div className="p-4 rounded-xl bg-card border border-border shadow-sm space-y-3">
+                                    <h3 className="text-sm font-bold text-foreground">{t('addUser') || 'Add User'}</h3>
+                                    <input
+                                        type="text"
+                                        placeholder={t('username') || 'Username'}
+                                        value={newUsername}
+                                        onChange={(e) => setNewUsername(e.target.value)}
+                                        className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder={t('password') || 'Password'}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                                    />
+                                    <select
+                                        value={newRole}
+                                        onChange={(e) => setNewRole(e.target.value)}
+                                        className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
+                                    >
+                                        <option value="employee">{t('employee') || 'Employee'}</option>
+                                        <option value="admin">{t('admin') || 'Admin'}</option>
+                                    </select>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleAddUser}
+                                            disabled={!newUsername.trim() || !newPassword.trim() || addStatus === 'Creating...'}
+                                            className="flex-1 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+                                        >
+                                            {addStatus === 'Creating...' ? 'Creating...' : (t('save') || 'Save')}
+                                        </button>
+                                        <button
+                                            onClick={() => { setShowAddForm(false); setNewUsername(''); setNewPassword(''); setAddStatus(''); }}
+                                            className="flex-1 py-2.5 rounded-lg bg-muted text-foreground font-semibold text-sm hover:bg-muted/80 active:scale-[0.98] transition-all"
+                                        >
+                                            {t('cancel') || 'Cancel'}
+                                        </button>
+                                    </div>
+                                    {addStatus && addStatus !== 'Creating...' && (
+                                        <p className="text-xs text-center font-medium mt-1">{addStatus}</p>
+                                    )}
+                                </div>
                             )}
-                        </div>
+                        </>
                     )}
                 </div>
             </div>
             <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+
+            {codePrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-sm p-5 space-y-4">
+                        <h3 className="text-base font-bold text-foreground text-center">
+                            Enter Security Code
+                        </h3>
+                        <p className="text-sm text-muted-foreground text-center">
+                            Enter the admin code to delete "{codePrompt.username}"
+                        </p>
+                        <input
+                            type="password"
+                            inputMode="numeric"
+                            maxLength={6}
+                            value={codeInput}
+                            onChange={(e) => { setCodeInput(e.target.value); setCodeError(false); }}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCodeSubmit()}
+                            placeholder="000000"
+                            autoFocus
+                            className={`w-full p-3 text-center text-lg font-mono tracking-[0.3em] bg-muted/50 rounded-xl border ${codeError ? 'border-red-400 ring-2 ring-red-400/30' : 'border-border'} outline-none focus:ring-2 focus:ring-primary/50 text-foreground`}
+                        />
+                        {codeError && (
+                            <p className="text-xs text-red-500 text-center font-medium">Wrong code</p>
+                        )}
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleCodeSubmit}
+                                disabled={codeInput.length < 6}
+                                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-semibold text-sm hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+                            >
+                                {t('delete') || 'Delete'}
+                            </button>
+                            <button
+                                onClick={() => { setCodePrompt(null); setCodeInput(''); setCodeError(false); }}
+                                className="flex-1 py-2.5 rounded-xl bg-muted text-foreground font-semibold text-sm hover:bg-muted/80 active:scale-[0.98] transition-all"
+                            >
+                                {t('cancel') || 'Cancel'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

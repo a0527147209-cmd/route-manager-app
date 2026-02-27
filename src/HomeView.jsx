@@ -22,7 +22,7 @@ export default function HomeView() {
   const navigate = useNavigate();
   const { t, isRtl } = useLanguage();
   const { locations } = useLocations();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const totalCustomers = locations.length;
@@ -51,7 +51,7 @@ export default function HomeView() {
     show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
   };
 
-  const tiles = [
+  const allTiles = [
     {
       label: t('customers'),
       sub: t('customersSub'),
@@ -66,6 +66,7 @@ export default function HomeView() {
       icon: BarChart3,
       gradient: 'from-violet-500 to-purple-500',
       route: '/reports',
+      adminOnly: true,
     },
     {
       label: t('addCustomer'),
@@ -87,6 +88,7 @@ export default function HomeView() {
       icon: Wallet,
       gradient: 'from-amber-500 to-orange-500',
       isValue: true,
+      adminOnly: true,
     },
     {
       label: t('manageUsers'),
@@ -103,6 +105,8 @@ export default function HomeView() {
       route: '/recent-activity',
     },
   ];
+
+  const tiles = allTiles.filter(tile => !tile.adminOnly || isAdmin);
 
   return (
     <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">

@@ -53,13 +53,13 @@ function AppContent() {
     <div
       className="h-full w-full max-w-full bg-background text-foreground transition-colors duration-300 flex flex-col overflow-hidden"
     >
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 0.4 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
+          exit={{ opacity: 1 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
           className="w-full h-full flex flex-col overflow-hidden"
         >
           <Routes location={location}>

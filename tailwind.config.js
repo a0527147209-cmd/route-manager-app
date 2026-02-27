@@ -15,6 +15,9 @@ export default {
         foreground: 'hsl(var(--color-foreground) / <alpha-value>)',
         card: 'hsl(var(--color-card) / <alpha-value>)',
         'card-foreground': 'hsl(var(--color-card-foreground) / <alpha-value>)',
+        muted: 'hsl(var(--color-muted) / <alpha-value>)',
+        'muted-foreground': 'hsl(var(--color-muted-foreground) / <alpha-value>)',
+        border: 'hsl(var(--color-border) / <alpha-value>)',
         slate: {
           850: '#151e2e',
           950: '#020617',

@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Menu, Camera, User, Mail, Phone, Save, CheckCircle,
+  Menu, Camera, User, Mail, Phone, Save, CheckCircle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
+import BackButton from './BackButton';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 
@@ -17,7 +18,7 @@ function getInitials(name) {
 
 export default function AccountView() {
   const navigate = useNavigate();
-  const { t, isRtl } = useLanguage();
+  const { t } = useLanguage();
   const { user, updateProfile } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,12 +80,7 @@ export default function AccountView() {
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className={`w-9 h-9 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 ${isRtl ? '-me-1' : '-ms-1'}`}
-          >
-            <ArrowLeft size={22} className={isRtl ? 'rotate-180' : ''} />
-          </button>
+          <BackButton onClick={() => navigate(-1)} />
           <h1 className="text-base font-bold text-slate-800 dark:text-white">{t('accTitle')}</h1>
           <button
             onClick={() => setMenuOpen(true)}

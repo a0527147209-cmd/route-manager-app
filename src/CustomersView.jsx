@@ -52,34 +52,34 @@ function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
     <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-90 transition-all"
+        className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 ring-1 ring-black/[0.04] dark:ring-white/[0.06] active:scale-90 transition-all"
       >
-        <MoreVertical size={16} className="text-slate-500 dark:text-slate-400" />
+        <MoreVertical size={14} className="text-slate-400 dark:text-slate-500" strokeWidth={2} />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-[50]" onClick={() => setOpen(false)} />
-          <div className={`absolute top-full mt-1 z-[51] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 overflow-hidden min-w-[130px] ${isRtl ? 'left-0' : 'right-0'}`}>
+          <div className={`absolute top-full mt-1.5 z-[51] bg-white dark:bg-slate-800 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-slate-700 overflow-hidden min-w-[130px] ${isRtl ? 'left-0' : 'right-0'}`}>
             <a
               href={wazeUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
-              <WazeLogo size={18} />
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('waze')}</span>
+              <WazeLogo size={16} />
+              <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{t('waze')}</span>
             </a>
-            <div className="border-t border-slate-100 dark:border-slate-700" />
+            <div className="border-t border-slate-100 dark:border-slate-700/50" />
             <a
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
             >
-              <GoogleMapsLogo size={18} />
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">{t('maps')}</span>
+              <GoogleMapsLogo size={16} />
+              <span className="text-xs font-medium text-slate-700 dark:text-slate-200">{t('maps')}</span>
             </a>
           </div>
         </>
@@ -88,37 +88,53 @@ function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   );
 }
 
+function StatBox({ loc, t }) {
+  return (
+    <div className="flex flex-col gap-0.5 px-2.5 py-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 min-w-[135px] ring-1 ring-black/[0.02] dark:ring-white/[0.04]">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">LAST VISIT</span>
+        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
+      </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">COLLECTION</span>
+        <span className={`text-[11px] font-semibold whitespace-nowrap ${(!loc?.lastCollection || loc.lastCollection === '0') ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{(!loc?.lastCollection || loc.lastCollection === '0') ? 'No Money' : loc.lastCollection}</span>
+      </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">USER</span>
+        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
+      </div>
+    </div>
+  );
+}
+
 function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visited, showIndex, isFocused }) {
   return (
     <div
       data-customer-id={loc?.id}
-      className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer active:bg-slate-50 dark:active:bg-slate-800/60 transition-colors ${visited ? 'bg-slate-50 dark:bg-slate-800/40' : ''} ${isFocused ? 'ring-2 ring-indigo-400/70 dark:ring-indigo-500 rounded-lg bg-indigo-50/70 dark:bg-indigo-900/20' : ''}`}
+      className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${visited ? 'bg-slate-50/60 dark:bg-slate-800/30' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {showIndex && (
-        <span className="text-xs font-extrabold text-slate-600 dark:text-slate-300 tabular-nums w-5 text-center shrink-0">
+        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tabular-nums w-5 text-center shrink-0">
           {index + 1}
         </span>
       )}
 
-      {/* Main content */}
       <div className="flex-1 min-w-0">
-        {/* Row 1: Name + badges */}
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">
+          <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
             {loc?.name ?? '—'}
           </span>
-          <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
+          <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
             {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
           </span>
           {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-            <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shrink-0">
+            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
               x{loc.changeMachineCount || 1}
             </span>
           )}
         </div>
 
-        {/* Row 2: Address */}
         {loc?.address && (
           <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
             {loc.address}
@@ -130,21 +146,8 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
         )}
       </div>
 
-      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 min-w-[135px]">
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST VISIT</span>
-            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST COLLECTION</span>
-            <span className={`text-[11px] font-bold whitespace-nowrap ${(!loc?.lastCollection || loc.lastCollection === '0') ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{(!loc?.lastCollection || loc.lastCollection === '0') ? 'No Money' : loc.lastCollection}</span>
-          </div>
-          <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">USER</span>
-            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
-          </div>
-        </div>
+      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        <StatBox loc={loc} t={t} />
         <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
       </div>
     </div>
@@ -319,47 +322,48 @@ export default function CustomersView() {
   const rowProps = { navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl };
 
   return (
-    <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
+    <div className="h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden">
 
-      {/* Clean header */}
-      <header className="shrink-0 sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 supports-[backdrop-filter]:dark:bg-slate-900/85 border-b border-slate-200/70 dark:border-slate-800 shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-[420px] mx-auto w-full px-3 pt-2 pb-2">
-          <div className="flex justify-between items-center gap-1.5 w-full">
+      <header
+        className="shrink-0 sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        <div className="max-w-[520px] mx-auto w-full px-4 pt-2.5 pb-2.5">
+          <div className="flex justify-between items-center gap-2 w-full">
             <button
               onClick={handleBack}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 shrink-0"
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
               title={isInnerPage ? t('backToCustomers') : t('backToHome')}
             >
-              <ArrowLeft size={24} className={isRtl ? 'rotate-180' : ''} />
+              <ArrowLeft size={20} className={isRtl ? 'rotate-180' : ''} strokeWidth={1.8} />
             </button>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-white truncate flex-1 text-center min-w-0">
+            <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 truncate flex-1 text-center min-w-0 tracking-tight">
               {isInnerPage ? areaDisplayLabel : t('customers')}
             </h1>
             <button
               onClick={() => setMenuOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 shrink-0"
+              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
               title={t('menu')}
             >
-              <Menu size={20} />
+              <Menu size={20} strokeWidth={1.8} />
             </button>
           </div>
           <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-          {/* Search + Sort */}
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2.5 flex items-center gap-2.5">
             <div className="relative flex-1">
-              <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none ${isRtl ? 'right-2.5' : 'left-2.5'}`} />
+              <Search size={15} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`} strokeWidth={1.8} />
               <input
                 type="text"
                 placeholder={t('searchCustomer')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full py-1.5 text-[13px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-indigo-500 focus:border-transparent outline-none ${isRtl ? 'pr-8 pl-7 text-right' : 'pl-8 pr-7 text-left'}`}
+                className={`w-full py-2 text-[13px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-300 dark:focus:border-indigo-600 outline-none transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06] ${isRtl ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8 text-left'}`}
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors ${isRtl ? 'left-2' : 'right-2'}`}
+                  className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors ${isRtl ? 'left-2.5' : 'right-2.5'}`}
                   type="button"
                 >
                   <X size={14} />
@@ -370,7 +374,7 @@ export default function CustomersView() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className={`py-1.5 text-[12px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer shrink-0 ${isRtl ? 'pr-2 pl-6 text-right' : 'pl-2 pr-6 text-left'}`}
+                className={`py-2 text-[12px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/30 outline-none cursor-pointer shrink-0 ring-1 ring-black/[0.04] dark:ring-white/[0.06] transition-all ${isRtl ? 'pr-2.5 pl-7 text-right' : 'pl-2.5 pr-7 text-left'}`}
                 title={t('sortBy')}
               >
                 {SORT_OPTIONS.map((opt) => (
@@ -382,26 +386,27 @@ export default function CustomersView() {
         </div>
       </header>
 
-      {/* Content */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-[420px] mx-auto w-full">
+        <div className="max-w-[520px] mx-auto w-full">
           {validLocations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-              <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
-              <h2 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-1">{t('noLocationsYet')}</h2>
+            <div className="flex flex-col items-center justify-center py-24 text-center px-6">
+              <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+                <Users className="w-7 h-7 text-slate-400 dark:text-slate-500" strokeWidth={1.5} />
+              </div>
+              <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-1">{t('noLocationsYet')}</h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm">{t('openMenuAddCustomer')}</p>
             </div>
           ) : isInnerPage ? (
             areaLocations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+              <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
-                <button onClick={handleBack} className="mt-4 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium">
+                <button onClick={handleBack} className="mt-4 px-5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium ring-1 ring-black/[0.04] dark:ring-white/[0.06] hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                   {t('back')}
                 </button>
               </div>
             ) : isAdmin ? (
-              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
                 <Reorder.Group
                   axis="y"
                   values={areaLocations}
@@ -411,17 +416,17 @@ export default function CustomersView() {
                     <DraggableCard key={loc?.id} loc={loc} index={index} visited={isRecentlyVisited(loc)}>
                       <div
                         data-customer-id={loc?.id}
-                        className={`flex-1 min-w-0 flex items-center gap-2 ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/70 dark:ring-indigo-500 rounded-lg bg-indigo-50/70 dark:bg-indigo-900/20' : ''}`}
+                        className={`flex-1 min-w-0 flex items-center gap-2.5 ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
                         onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
                       >
                         <div className="flex-1 min-w-0 cursor-pointer">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] font-semibold text-slate-900 dark:text-white truncate">{loc?.name ?? '—'}</span>
-                            <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shrink-0">
+                            <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">{loc?.name ?? '—'}</span>
+                            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
                               {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
                             </span>
                             {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                              <span className="px-1.5 py-px rounded-full text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 shrink-0">
+                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
                                 x{loc.changeMachineCount || 1}
                               </span>
                             )}
@@ -430,21 +435,8 @@ export default function CustomersView() {
                           {loc?.city && <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate mt-1">{loc.city}</p>}
                           {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
                         </div>
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex flex-col gap-0.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 min-w-[135px]">
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST VISIT</span>
-                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
-                            </div>
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">LAST COLLECTION</span>
-                              <span className={`text-[11px] font-bold whitespace-nowrap ${(!loc?.lastCollection || loc.lastCollection === '0') ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{(!loc?.lastCollection || loc.lastCollection === '0') ? 'No Money' : loc.lastCollection}</span>
-                            </div>
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">USER</span>
-                              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
-                            </div>
-                          </div>
+                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <StatBox loc={loc} t={t} />
                           <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
                         </div>
                       </div>
@@ -453,9 +445,9 @@ export default function CustomersView() {
                 </Reorder.Group>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
                 {areaLocations.map((loc, index) => (
-                    <div key={loc?.id} className="border-b-2 border-slate-100 dark:border-slate-800 last:border-b-0">
+                    <div key={loc?.id} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
                     <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                   </div>
                 ))}
@@ -463,26 +455,26 @@ export default function CustomersView() {
             )
           ) : searchTerm && searchTerm.trim() ? (
             filteredLocations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+              <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
                 {filteredLocations.map((loc, index) => (
-                  <div key={loc?.id ?? index} className="border-b-2 border-slate-100 dark:border-slate-800 last:border-b-0">
+                  <div key={loc?.id ?? index} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
                     <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                   </div>
                 ))}
               </div>
             )
           ) : displayGroups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+            <div className="flex flex-col items-center justify-center py-24 text-center px-6">
               <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
               <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
             </div>
           ) : (
-            <div className="px-2 py-2 space-y-2">
+            <div className="px-4 py-3 space-y-2">
               {displayGroups.map((area) => {
                 const openKey = sortBy === 'all' ? area.key : `${sortBy}${COMPOSITE_SEP}${area.key}`;
                 return (
@@ -490,11 +482,11 @@ export default function CustomersView() {
                     key={area.key}
                     type="button"
                     onClick={() => openArea(openKey)}
-                    className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 hover:bg-slate-50 dark:hover:bg-slate-800/70 hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.99] transition-all text-left shadow-[0_1px_2px_rgba(15,23,42,0.05)]"
+                    className="w-full flex items-center gap-3 py-3.5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 hover:border-slate-200 dark:hover:border-slate-700 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] active:scale-[0.99] transition-all duration-200 text-left ring-1 ring-black/[0.02] dark:ring-white/[0.04]"
                   >
-                    <ChevronRight size={17} className={`text-slate-400 dark:text-slate-500 shrink-0 ${isRtl ? 'rotate-180' : ''}`} />
-                    <span className="text-[15px] font-semibold text-slate-800 dark:text-white flex-1 truncate">{label(area.label, t)}</span>
-                    <span className="inline-flex items-center justify-center min-w-[30px] h-7 px-2 rounded-full text-[12px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 tabular-nums shrink-0">
+                    <ChevronRight size={16} className={`text-slate-400 dark:text-slate-500 shrink-0 ${isRtl ? 'rotate-180' : ''}`} strokeWidth={1.8} />
+                    <span className="text-[14px] font-semibold text-slate-800 dark:text-slate-100 flex-1 truncate">{label(area.label, t)}</span>
+                    <span className="inline-flex items-center justify-center min-w-[32px] h-7 px-2.5 rounded-lg text-[12px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 tabular-nums shrink-0 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
                       {getAreaCount(area)}
                     </span>
                   </button>

@@ -4,10 +4,11 @@ import { useTheme } from './ThemeContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
 import {
-  ArrowLeft, Moon, Sun, Github, Globe, Menu, Type, Palette,
+  Moon, Sun, Github, Globe, Menu, Type, Palette,
   Shield, Lock, Eye, EyeOff, Download, ChevronDown, ChevronUp,
   Key, Smartphone, UserCheck, Users,
 } from 'lucide-react';
+import BackButton from './BackButton';
 import MenuDrawer from './MenuDrawer';
 import { useTextSize } from './TextSizeContext';
 import { useAuth } from './AuthContext';
@@ -125,13 +126,7 @@ export default function SettingsView() {
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
-            title={t('home')}
-          >
-            <ArrowLeft size={20} strokeWidth={1.8} />
-          </button>
+          <BackButton onClick={() => navigate(-1)} title={t('home')} />
           <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 flex-1 text-center min-w-0 truncate tracking-tight">{t('settings')}</h1>
           <button
             onClick={() => setMenuOpen(true)}

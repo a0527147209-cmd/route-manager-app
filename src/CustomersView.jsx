@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, ArrowLeft, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
+import { Users, Menu, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
 import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
@@ -11,6 +11,7 @@ import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
 import { useSearch } from './SearchContext';
 import { Reorder } from 'framer-motion';
+import BackButton from './BackButton';
 
 const EMPTY = '__empty__';
 
@@ -330,13 +331,7 @@ export default function CustomersView() {
       >
         <div className="max-w-[520px] mx-auto w-full px-4 pt-2.5 pb-2.5">
           <div className="flex justify-between items-center gap-2 w-full">
-            <button
-              onClick={handleBack}
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
-              title={isInnerPage ? t('backToCustomers') : t('backToHome')}
-            >
-              <ArrowLeft size={20} className={isRtl ? 'rotate-180' : ''} strokeWidth={1.8} />
-            </button>
+            <BackButton onClick={handleBack} title={isInnerPage ? t('backToCustomers') : t('backToHome')} />
             <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 truncate flex-1 text-center min-w-0 tracking-tight">
               {isInnerPage ? areaDisplayLabel : t('customers')}
             </h1>

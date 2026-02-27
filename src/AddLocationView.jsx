@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLocations } from "./LocationsContext";
 import { useLanguage } from './LanguageContext';
-import { ArrowLeft, Save, MapPin, Building, Menu, Percent } from 'lucide-react';
+import { Save, MapPin, Building, Menu, Percent } from 'lucide-react';
+import BackButton from './BackButton';
 import MenuDrawer from './MenuDrawer';
 import AddressAutocomplete from './AddressAutocomplete';
 
@@ -74,13 +75,7 @@ export default function AddLocationView() {
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="max-w-[520px] mx-auto w-full px-4 py-3 flex items-center justify-between gap-2">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
-            title={t('home')}
-          >
-            <ArrowLeft size={20} strokeWidth={1.8} />
-          </button>
+          <BackButton onClick={() => navigate(-1)} title={t('home')} />
           <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 flex-1 text-center min-w-0 truncate tracking-tight">{t('addNewCustomer')}</h1>
           <button
             onClick={() => setMenuOpen(true)}

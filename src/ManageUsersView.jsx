@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { useLanguage } from './LanguageContext';
 import { useConfirmation } from './ConfirmationContext';
-import { ArrowLeft, Plus, Trash2, Key, Shield, User, Menu, Clock } from 'lucide-react';
+import { Plus, Trash2, Key, Shield, User, Menu, Clock } from 'lucide-react';
+import BackButton from './BackButton';
 import MenuDrawer from './MenuDrawer';
 
 function formatLastLogin(isoStr, t) {
@@ -109,12 +110,7 @@ export default function ManageUsersView() {
                 >
                     <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => navigate(-1)}
-                                className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
-                            >
-                                <ArrowLeft size={20} className={isRtl ? 'rotate-180' : ''} strokeWidth={1.8} />
-                            </button>
+                            <BackButton onClick={() => navigate(-1)} />
                             <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 tracking-tight">{t('manageUsers') || 'Manage Users'}</h1>
                         </div>
                         <button

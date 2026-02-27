@@ -26,7 +26,7 @@ function formatLastLogin(isoStr, t) {
 function isOnline(lastSeen) {
     if (!lastSeen) return false;
     const diff = Date.now() - new Date(lastSeen).getTime();
-    return diff < 2 * 60 * 1000; // Online if seen in last 2 minutes
+    return diff < 2 * 60 * 1000;
 }
 
 export default function ManageUsersView() {
@@ -102,148 +102,149 @@ export default function ManageUsersView() {
 
     return (
         <>
-            <div className={`h-full flex flex-col bg-background overflow-hidden ${isRtl ? 'text-right' : 'text-left'}`}>
-                {/* Header */}
-                <div className="shrink-0 z-30 bg-card/95 backdrop-blur-md border-b border-border shadow-sm" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-                    <div className="flex items-center justify-between px-3 py-2.5">
+            <div className={`h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden ${isRtl ? 'text-right' : 'text-left'}`}>
+                <header
+                    className="shrink-0 sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
+                    style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+                >
+                    <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => navigate(-1)}
-                                className="p-2 rounded-lg hover:bg-muted text-muted-foreground active:scale-95"
+                                className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
                             >
-                                <ArrowLeft size={20} />
+                                <ArrowLeft size={20} className={isRtl ? 'rotate-180' : ''} strokeWidth={1.8} />
                             </button>
-                            <h1 className="text-lg font-bold text-foreground">{t('manageUsers') || 'Manage Users'}</h1>
+                            <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 tracking-tight">{t('manageUsers') || 'Manage Users'}</h1>
                         </div>
                         <button
                             onClick={() => setMenuOpen(true)}
-                            className="p-2 rounded-lg hover:bg-muted text-muted-foreground active:scale-95"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
                         >
-                            <Menu size={22} />
+                            <Menu size={20} strokeWidth={1.8} />
                         </button>
                     </div>
-                </div>
+                </header>
+                <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-                <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3 max-w-lg mx-auto">
-                    {/* Users List */}
-                    {users.map((u) => {
-                        const online = isOnline(u.lastSeen);
-                        return (
-                            <div
-                                key={u.id}
-                                className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-sm"
-                            >
-                                <div className="flex items-center gap-3">
-                                    {/* Avatar with presence dot */}
-                                    <div className="relative">
-                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center ${u.role === 'admin' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
-                                            {u.role === 'admin' ? <Shield size={18} /> : <User size={18} />}
-                                        </div>
-                                        {/* Glowing presence indicator */}
-                                        <span
-                                            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-card ${online
-                                                ? 'bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]'
-                                                : 'bg-slate-300 dark:bg-slate-600'
-                                                }`}
-                                            style={online ? { animation: 'pulse-soft 2s ease-in-out infinite' } : {}}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-1.5">
-                                            <p className="text-sm font-bold text-foreground">{u.name || u.username}</p>
-                                            {online && <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full">{t('online') || 'Online'}</span>}
-                                        </div>
-                                        <p className="text-xs text-muted-foreground capitalize">{u.role}</p>
-                                        <div className="flex items-center gap-1 mt-0.5">
-                                            <Clock size={10} className="text-muted-foreground/60" />
-                                            <p className="text-[10px] text-muted-foreground/80">{formatLastLogin(u.lastLogin, t)}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    {isAdmin && u.id !== currentUser?.id && (
-                                        <button
-                                            onClick={() => handleDeleteUser(u.id, u.username)}
-                                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors active:scale-95"
-                                            title={t('deleteUser') || 'Delete User'}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {isAdmin && (
-                        <>
-                            {!showAddForm ? (
-                                <button
-                                    onClick={() => setShowAddForm(true)}
-                                    className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-dashed border-primary/30 text-primary hover:bg-primary/5 transition-colors font-semibold text-sm active:scale-[0.98]"
+                <main className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3">
+                    <div className="max-w-[520px] mx-auto w-full space-y-3">
+                        {users.map((u) => {
+                            const online = isOnline(u.lastSeen);
+                            return (
+                                <div
+                                    key={u.id}
+                                    className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.02] dark:ring-white/[0.04]"
                                 >
-                                    <Plus size={18} />
-                                    <span>{t('addUser') || 'Add User'}</span>
-                                </button>
-                            ) : (
-                                <div className="p-4 rounded-xl bg-card border border-border shadow-sm space-y-3">
-                                    <h3 className="text-sm font-bold text-foreground">{t('addUser') || 'Add User'}</h3>
-                                    <input
-                                        type="text"
-                                        placeholder={t('username') || 'Username'}
-                                        value={newUsername}
-                                        onChange={(e) => setNewUsername(e.target.value)}
-                                        className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder={t('password') || 'Password'}
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                                    />
-                                    <select
-                                        value={newRole}
-                                        onChange={(e) => setNewRole(e.target.value)}
-                                        className="w-full p-2.5 text-sm bg-muted/50 rounded-lg border border-border outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                                    >
-                                        <option value="employee">{t('employee') || 'Employee'}</option>
-                                        <option value="admin">{t('admin') || 'Admin'}</option>
-                                    </select>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={handleAddUser}
-                                            disabled={!newUsername.trim() || !newPassword.trim() || addStatus === 'Creating...'}
-                                            className="flex-1 py-2.5 rounded-lg bg-primary text-white font-semibold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
-                                        >
-                                            {addStatus === 'Creating...' ? 'Creating...' : (t('save') || 'Save')}
-                                        </button>
-                                        <button
-                                            onClick={() => { setShowAddForm(false); setNewUsername(''); setNewPassword(''); setAddStatus(''); }}
-                                            className="flex-1 py-2.5 rounded-lg bg-muted text-foreground font-semibold text-sm hover:bg-muted/80 active:scale-[0.98] transition-all"
-                                        >
-                                            {t('cancel') || 'Cancel'}
-                                        </button>
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative">
+                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${u.role === 'admin' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
+                                                {u.role === 'admin' ? <Shield size={18} /> : <User size={18} />}
+                                            </div>
+                                            <span
+                                                className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900 ${online
+                                                    ? 'bg-emerald-500 shadow-[0_0_6px_2px_rgba(16,185,129,0.6)]'
+                                                    : 'bg-slate-300 dark:bg-slate-600'
+                                                    }`}
+                                                style={online ? { animation: 'pulse-soft 2s ease-in-out infinite' } : {}}
+                                            />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">{u.name || u.username}</p>
+                                                {online && <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full">{t('online') || 'Online'}</span>}
+                                            </div>
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">{u.role}</p>
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                                <Clock size={10} className="text-slate-400 dark:text-slate-500" />
+                                                <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatLastLogin(u.lastLogin, t)}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    {addStatus && addStatus !== 'Creating...' && (
-                                        <p className="text-xs text-center font-medium mt-1">{addStatus}</p>
-                                    )}
+                                    <div className="flex items-center gap-1">
+                                        {isAdmin && u.id !== currentUser?.id && (
+                                            <button
+                                                onClick={() => handleDeleteUser(u.id, u.username)}
+                                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors active:scale-95"
+                                                title={t('deleteUser') || 'Delete User'}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
-                        </>
-                    )}
-                </div>
+                            );
+                        })}
+
+                        {isAdmin && (
+                            <>
+                                {!showAddForm ? (
+                                    <button
+                                        onClick={() => setShowAddForm(true)}
+                                        className="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl border-2 border-dashed border-indigo-300/40 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors font-semibold text-sm active:scale-[0.98]"
+                                    >
+                                        <Plus size={18} />
+                                        <span>{t('addUser') || 'Add User'}</span>
+                                    </button>
+                                ) : (
+                                    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] ring-1 ring-black/[0.02] dark:ring-white/[0.04] space-y-3">
+                                        <h3 className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">{t('addUser') || 'Add User'}</h3>
+                                        <input
+                                            type="text"
+                                            placeholder={t('username') || 'Username'}
+                                            value={newUsername}
+                                            onChange={(e) => setNewUsername(e.target.value)}
+                                            className="w-full p-2.5 text-[13px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-300 dark:focus:border-indigo-600 transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder={t('password') || 'Password'}
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="w-full p-2.5 text-[13px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-300 dark:focus:border-indigo-600 transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+                                        />
+                                        <select
+                                            value={newRole}
+                                            onChange={(e) => setNewRole(e.target.value)}
+                                            className="w-full p-2.5 text-[13px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 cursor-pointer transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+                                        >
+                                            <option value="employee">{t('employee') || 'Employee'}</option>
+                                            <option value="admin">{t('admin') || 'Admin'}</option>
+                                        </select>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleAddUser}
+                                                disabled={!newUsername.trim() || !newPassword.trim() || addStatus === 'Creating...'}
+                                                className="flex-1 py-2.5 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white font-semibold text-[13px] hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all"
+                                            >
+                                                {addStatus === 'Creating...' ? 'Creating...' : (t('save') || 'Save')}
+                                            </button>
+                                            <button
+                                                onClick={() => { setShowAddForm(false); setNewUsername(''); setNewPassword(''); setAddStatus(''); }}
+                                                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[13px] hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-[0.98] transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+                                            >
+                                                {t('cancel') || 'Cancel'}
+                                            </button>
+                                        </div>
+                                        {addStatus && addStatus !== 'Creating...' && (
+                                            <p className="text-[11px] text-center font-medium text-slate-600 dark:text-slate-300 mt-1">{addStatus}</p>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </main>
             </div>
-            <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
             {codePrompt && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-card rounded-2xl shadow-xl border border-border w-full max-w-sm p-5 space-y-4">
-                        <h3 className="text-base font-bold text-foreground text-center">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-800/60 w-full max-w-sm p-5 space-y-4">
+                        <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 text-center">
                             Enter Security Code
                         </h3>
-                        <p className="text-sm text-muted-foreground text-center">
-                            Enter the admin code to delete "{codePrompt.username}"
+                        <p className="text-[13px] text-slate-500 dark:text-slate-400 text-center">
+                            Enter the admin code to delete &ldquo;{codePrompt.username}&rdquo;
                         </p>
                         <input
                             type="password"
@@ -254,7 +255,7 @@ export default function ManageUsersView() {
                             onKeyDown={(e) => e.key === 'Enter' && handleCodeSubmit()}
                             placeholder="000000"
                             autoFocus
-                            className={`w-full p-3 text-center text-lg font-mono tracking-[0.3em] bg-muted/50 rounded-xl border ${codeError ? 'border-red-400 ring-2 ring-red-400/30' : 'border-border'} outline-none focus:ring-2 focus:ring-primary/50 text-foreground`}
+                            className={`w-full p-3 text-center text-lg font-mono tracking-[0.3em] bg-slate-50/80 dark:bg-slate-800/50 rounded-xl border ${codeError ? 'border-red-400 ring-2 ring-red-400/30' : 'border-slate-200/80 dark:border-slate-700/60'} outline-none focus:ring-2 focus:ring-indigo-500/30 text-slate-800 dark:text-slate-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06]`}
                         />
                         {codeError && (
                             <p className="text-xs text-red-500 text-center font-medium">Wrong code</p>
@@ -269,7 +270,7 @@ export default function ManageUsersView() {
                             </button>
                             <button
                                 onClick={() => { setCodePrompt(null); setCodeInput(''); setCodeError(false); }}
-                                className="flex-1 py-2.5 rounded-xl bg-muted text-foreground font-semibold text-sm hover:bg-muted/80 active:scale-[0.98] transition-all"
+                                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-[0.98] transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
                             >
                                 {t('cancel') || 'Cancel'}
                             </button>

@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LocationsProvider } from './LocationsContext';
 import { SearchProvider } from './SearchContext';
@@ -53,37 +52,26 @@ function AppContent() {
     <div
       className="h-full w-full max-w-full bg-background text-foreground transition-colors duration-300 flex flex-col overflow-hidden"
     >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0.4 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 1 }}
-          transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="w-full h-full flex flex-col overflow-hidden"
-        >
-          <Routes location={location}>
-            <Route path="/" element={<HomeView />} />
-            <Route path="/locations/area/:areaKey" element={<LocationsView />} />
-            <Route path="/locations" element={<LocationsView />} />
-            <Route path="/customers/area/:areaKey" element={<CustomersView />} />
-            <Route path="/customers" element={<CustomersView />} />
-            <Route path="/add" element={<AddLocationView />} />
-            <Route path="/location/:id" element={<LocationDetailsView />} />
-            <Route path="/customer/:id" element={<CustomerDetailsView />} />
-            <Route path="/settings" element={<SettingsView />} />
-            <Route path="/maps" element={<MapsView />} />
-            <Route path="/manage-users" element={<ManageUsersView />} />
-            <Route path="/reports" element={<ReportsView />} />
-            <Route path="/recent-activity" element={<RecentActivityView />} />
-            <Route path="/tasks" element={<TasksRemindersView />} />
-            <Route path="/map-overview" element={<MapOverviewView />} />
-            <Route path="/notifications" element={<NotificationsView />} />
-            <Route path="/account" element={<AccountView />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
+      <Routes location={location}>
+        <Route path="/" element={<HomeView />} />
+        <Route path="/locations/area/:areaKey" element={<LocationsView />} />
+        <Route path="/locations" element={<LocationsView />} />
+        <Route path="/customers/area/:areaKey" element={<CustomersView />} />
+        <Route path="/customers" element={<CustomersView />} />
+        <Route path="/add" element={<AddLocationView />} />
+        <Route path="/location/:id" element={<LocationDetailsView />} />
+        <Route path="/customer/:id" element={<CustomerDetailsView />} />
+        <Route path="/settings" element={<SettingsView />} />
+        <Route path="/maps" element={<MapsView />} />
+        <Route path="/manage-users" element={<ManageUsersView />} />
+        <Route path="/reports" element={<ReportsView />} />
+        <Route path="/recent-activity" element={<RecentActivityView />} />
+        <Route path="/tasks" element={<TasksRemindersView />} />
+        <Route path="/map-overview" element={<MapOverviewView />} />
+        <Route path="/notifications" element={<NotificationsView />} />
+        <Route path="/account" element={<AccountView />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }

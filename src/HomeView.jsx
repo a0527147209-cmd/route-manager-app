@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Menu, Users, BarChart3, Plus, Settings,
-  CalendarCheck, UserCog, Clock, DollarSign, ChevronRight,
+  Map, UserCog, Clock, DollarSign, ChevronRight,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
@@ -25,9 +25,7 @@ export default function HomeView() {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
   const totalCustomers = locations.length;
-  const visitedToday = locations.filter(l => l.lastVisited === todayStr).length;
 
   const totalEarnings = useMemo(() => {
     let sum = 0;
@@ -41,100 +39,78 @@ export default function HomeView() {
   }, [locations]);
 
   const recentVisits = useMemo(() => {
-    const all = [];
-    locations.forEach(loc => {
-      (loc.logs || []).forEach(log => {
-        if (log.date) {
-          all.push({
-            id: loc.id,
-            name: loc.name || loc.address || 'Unknown',
-            date: log.date,
-            collection: log.collection,
-          });
-        }
-      });
-    });
-    all.sort((a, b) => b.date.localeCompare(a.date));
-    return all.slice(0, 5);
+    return locations
+      .filter(loc => loc.lastVisited)
+      .map(loc => ({
+        id: loc.id,
+        name: loc.name || loc.address || 'Unknown',
+        city: loc.city || loc.zone || '',
+        date: loc.lastVisited,
+        collection: loc.lastCollection,
+      }))
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 5);
   }, [locations]);
 
   const stagger = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.05 } },
+    show: { transition: { staggerChildren: 0.04 } },
   };
 
   const fadeUp = {
-    hidden: { opacity: 0, y: 14 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] } },
   };
 
   const tiles = [
     {
       label: t('customers'),
-      sub: t('customersSub'),
       icon: Users,
       gradient: 'from-indigo-500 to-violet-500',
-      shadow: 'shadow-indigo-500/20',
       badge: totalCustomers,
       route: '/customers',
     },
     {
       label: t('reports'),
-      sub: t('reportsSub'),
       icon: BarChart3,
       gradient: 'from-violet-500 to-purple-500',
-      shadow: 'shadow-violet-500/20',
       route: '/reports',
     },
     {
       label: t('addCustomer'),
-      sub: t('addCustomerSub'),
       icon: Plus,
       gradient: 'from-emerald-500 to-teal-500',
-      shadow: 'shadow-emerald-500/20',
       route: '/add',
     },
     {
       label: t('settings'),
-      sub: t('settingsSub'),
       icon: Settings,
       gradient: 'from-slate-500 to-slate-600',
-      shadow: 'shadow-slate-500/20',
       route: '/settings',
     },
     {
-      label: t('todaysRoute'),
-      sub: t('todaysRouteSub'),
-      icon: CalendarCheck,
+      label: t('maps'),
+      icon: Map,
       gradient: 'from-amber-500 to-orange-500',
-      shadow: 'shadow-amber-500/20',
-      badge: visitedToday,
-      route: '/customers',
+      route: '/maps',
     },
     {
       label: t('manageUsers'),
-      sub: t('manageUsersSub'),
       icon: UserCog,
       gradient: 'from-rose-500 to-pink-500',
-      shadow: 'shadow-rose-500/20',
       route: '/manage-users',
     },
     {
       label: t('recentActivity'),
-      sub: t('recentActivitySub'),
       icon: Clock,
       gradient: 'from-cyan-500 to-blue-500',
-      shadow: 'shadow-cyan-500/20',
       action: 'scroll-recent',
     },
     {
       label: t('totalEarnings'),
-      sub: t('totalEarningsSub'),
       icon: DollarSign,
       gradient: 'from-green-500 to-emerald-600',
-      shadow: 'shadow-green-500/20',
-      badge: `$${totalEarnings.toLocaleString()}`,
-      route: '/reports',
+      displayValue: `$${totalEarnings.toLocaleString()}`,
     },
   ];
 
@@ -177,7 +153,7 @@ export default function HomeView() {
       >
         <div className="max-w-[520px] mx-auto w-full px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))]">
 
-          <motion.div variants={fadeUp} className="mb-5 px-1">
+          <motion.div variants={fadeUp} className="mb-4 px-1">
             <h2 className="text-[20px] font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
               {getGreeting(t)}, {user?.name || 'Guest'}
             </h2>
@@ -186,26 +162,28 @@ export default function HomeView() {
             </p>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-3 mb-6">
+          <motion.div variants={fadeUp} className="grid grid-cols-4 gap-2.5 mb-6">
             {tiles.map((tile, i) => (
               <motion.button
                 key={i}
                 variants={fadeUp}
                 type="button"
                 onClick={() => handleTileClick(tile)}
-                className="relative flex flex-col items-center text-center bg-white dark:bg-slate-900 rounded-2xl p-4 pt-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] dark:shadow-none border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.97] group"
+                className="relative flex flex-col items-center text-center bg-white dark:bg-slate-900 rounded-xl p-2.5 pt-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-none border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.96] group"
               >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tile.gradient} flex items-center justify-center mb-3 shadow-md ${tile.shadow} group-hover:scale-105 transition-transform`}>
-                  <tile.icon size={22} className="text-white" strokeWidth={2} />
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${tile.gradient} flex items-center justify-center mb-1.5 shadow-sm group-hover:scale-105 transition-transform`}>
+                  <tile.icon size={18} className="text-white" strokeWidth={2} />
                 </div>
-                <span className="text-[13px] font-semibold text-slate-800 dark:text-white leading-tight">
+                <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-200 leading-tight">
                   {tile.label}
                 </span>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 leading-tight">
-                  {tile.sub}
-                </span>
+                {tile.displayValue && (
+                  <span className="text-[10px] font-bold text-green-600 dark:text-green-400 mt-0.5 tabular-nums">
+                    {tile.displayValue}
+                  </span>
+                )}
                 {tile.badge !== undefined && (
-                  <span className="absolute top-2.5 right-2.5 min-w-[22px] h-[22px] px-1.5 flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-[11px] font-bold text-white dark:text-slate-900 tabular-nums">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-slate-800 dark:bg-white text-[9px] font-bold text-white dark:text-slate-900 tabular-nums shadow-sm">
                     {tile.badge}
                   </span>
                 )}
@@ -214,36 +192,37 @@ export default function HomeView() {
           </motion.div>
 
           <motion.section variants={fadeUp} id="recent-activity" className="px-1">
-            <h3 className="text-[15px] font-semibold text-slate-800 dark:text-white mb-3">
+            <h3 className="text-[14px] font-semibold text-slate-800 dark:text-white mb-2.5">
               {t('recentActivity')}
             </h3>
             {recentVisits.length === 0 ? (
-              <p className="text-[13px] text-slate-400 dark:text-slate-500 py-4 text-center">
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 py-4 text-center">
                 {t('noRecentActivity')}
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {recentVisits.map((visit, i) => (
                   <motion.button
-                    key={`${visit.id}-${visit.date}-${i}`}
+                    key={`${visit.id}-${i}`}
                     variants={fadeUp}
                     type="button"
                     onClick={() => navigate(`/customer/${visit.id}`)}
-                    className="w-full flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.99] group text-left"
+                    className="w-full flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl px-3.5 py-2.5 border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all active:scale-[0.99] group text-left"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
-                      <Clock size={16} className="text-cyan-600 dark:text-cyan-400" />
+                    <div className="w-8 h-8 rounded-lg bg-cyan-50 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
+                      <Clock size={14} className="text-cyan-600 dark:text-cyan-400" />
                     </div>
                     <div className={`flex-1 min-w-0 ${isRtl ? 'text-right' : ''}`}>
-                      <p className="text-[13px] font-medium text-slate-800 dark:text-white truncate">
+                      <p className="text-[12px] font-medium text-slate-800 dark:text-white truncate">
                         {visit.name}
                       </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
                         {visit.date}
-                        {visit.collection && ` · ${visit.collection} lbs`}
+                        {visit.city && ` · ${visit.city}`}
+                        {visit.collection && visit.collection !== '0' && ` · ${visit.collection} lbs`}
                       </p>
                     </div>
-                    <ChevronRight size={16} className={`text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-cyan-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
+                    <ChevronRight size={14} className={`text-slate-300 dark:text-slate-600 shrink-0 group-hover:text-cyan-500 transition-colors ${isRtl ? 'rotate-180' : ''}`} />
                   </motion.button>
                 ))}
               </div>

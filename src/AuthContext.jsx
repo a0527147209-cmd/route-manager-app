@@ -195,6 +195,21 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const updateUser = async (userId, updates) => {
+        if (user?.role !== 'admin') return { success: false, error: 'Not authorized' };
+        try {
+            const userDocRef = doc(db, 'users', userId);
+            await updateDoc(userDocRef, updates);
+            if (userId === user?.uid) {
+                setUser((prev) => ({ ...prev, ...updates }));
+            }
+            return { success: true };
+        } catch (error) {
+            console.error('Update user error:', error);
+            return { success: false, error: error.message };
+        }
+    };
+
     const isAdmin = user?.role === 'admin';
 
     return (
@@ -206,6 +221,7 @@ export function AuthProvider({ children }) {
             addUser,
             removeUser,
             updateProfile,
+            updateUser,
             isAdmin,
             isLoading
         }}>

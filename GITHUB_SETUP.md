@@ -44,7 +44,7 @@ git push -u origin main
 3. בחר את ה-repository שיצרת (`route-manager-app`)
 4. Vercel יזהה את Vite אוטומטית
 5. לחץ על "Deploy"
-6. אחרי כמה שניות תקבל קישור כמו: `route-manager-app.vercel.app`
+6. אחרי כמה שניות תקבל קישור כמו: `route-manager-app2.vercel.app`
 
 ## עדכונים עתידיים
 

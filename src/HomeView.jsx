@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Menu, Users, BarChart3, Plus, Settings,
-  Map, UserCog, Clock, DollarSign, ChevronRight,
+  UserCog, Clock, DollarSign, ChevronRight, Wallet,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
@@ -26,6 +26,21 @@ export default function HomeView() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const totalCustomers = locations.length;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const todayEarnings = useMemo(() => {
+    let sum = 0;
+    locations.forEach(loc => {
+      (loc.logs || []).forEach(log => {
+        if (log.date === todayStr) {
+          const val = parseFloat(log.collection);
+          if (!isNaN(val)) sum += val;
+        }
+      });
+    });
+    return Math.round(sum * 20);
+  }, [locations, todayStr]);
 
   const totalEarnings = useMemo(() => {
     let sum = 0;
@@ -89,10 +104,10 @@ export default function HomeView() {
       route: '/settings',
     },
     {
-      label: t('maps'),
-      icon: Map,
+      label: "Today's $",
+      icon: Wallet,
       gradient: 'from-amber-500 to-orange-500',
-      route: '/maps',
+      displayValue: `$${todayEarnings.toLocaleString()}`,
     },
     {
       label: t('manageUsers'),

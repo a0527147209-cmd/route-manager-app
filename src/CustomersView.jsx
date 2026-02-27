@@ -304,7 +304,7 @@ export default function CustomersView() {
     <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
 
       {/* Clean header */}
-      <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <header className="shrink-0 sticky top-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[420px] mx-auto w-full px-3 pt-2 pb-2">
           <div className="flex justify-between items-center gap-1.5 w-full">
             <button

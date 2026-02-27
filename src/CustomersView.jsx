@@ -348,7 +348,6 @@ export default function CustomersView() {
               <Menu size={20} strokeWidth={1.8} />
             </button>
           </div>
-          <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
           <div className="mt-2.5 flex items-center gap-2.5">
             <div className="relative flex-1">
@@ -385,6 +384,7 @@ export default function CustomersView() {
           </div>
         </div>
       </header>
+      <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <main ref={scrollRef} className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
         <div className="max-w-[520px] mx-auto w-full">

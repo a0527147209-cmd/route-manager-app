@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Menu, Users, BarChart3, Plus,
   Clock, Wallet, ListTodo, Map,
@@ -20,10 +20,12 @@ function getGreeting(t) {
 
 export default function HomeView() {
   const navigate = useNavigate();
+  const routeLocation = useLocation();
   const { t, isRtl } = useLanguage();
   const { locations } = useLocations();
   const { user, isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isReturning = routeLocation.state?.fromMenu || routeLocation.key !== 'default';
 
   const totalCustomers = locations.length;
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -141,7 +143,7 @@ export default function HomeView() {
       <motion.main
         className="flex-1 overflow-y-auto"
         variants={stagger}
-        initial="hidden"
+        initial={isReturning ? false : 'hidden'}
         animate="show"
       >
         <div className="max-w-[520px] mx-auto w-full px-5 pt-6 pb-[calc(3rem+env(safe-area-inset-bottom))]">

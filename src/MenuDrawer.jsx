@@ -52,7 +52,10 @@ export default function MenuDrawer({ isOpen, onClose }) {
         className={`fixed top-0 h-full w-[272px] bg-white dark:bg-slate-900 shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.4)] z-50 flex flex-col border-slate-200/60 dark:border-slate-800 ${isRtl ? 'left-0 border-r' : 'right-0 border-l'}`}
       >
         {/* Header */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+        <div
+          className="px-5 pb-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}
+        >
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 tracking-tight">{t('menu')}</h2>
           <button
             onClick={onClose}

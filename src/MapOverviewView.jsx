@@ -149,6 +149,7 @@ export default function MapOverviewView() {
   const markersRef = useRef([]);
   const infoWindowRef = useRef(null);
   const polylineRef = useRef(null);
+  const directionsRendererRef = useRef(null);
   const geocodeCacheRef = useRef({});
 
   const zones = useMemo(() => {
@@ -357,25 +358,74 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw connecting route line
+      // Draw road-snapped route via Directions Service
+      if (directionsRendererRef.current) {
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
+      }
       if (polylineRef.current) {
         if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
         polylineRef.current.setMap(null);
         polylineRef.current = null;
       }
+
       if (ordered.length >= 2) {
-        const routePath = ordered.map(r => r.point);
+        const points = ordered.map(r => r.point);
+        const origin = points[0];
+        const destination = points[points.length - 1];
+        const waypoints = points.slice(1, -1).map(p => ({ location: p, stopover: true }));
+
+        // Google Directions supports max 25 waypoints per request
+        if (waypoints.length <= 25) {
+          const directionsService = new window.google.maps.DirectionsService();
+          const renderer = new window.google.maps.DirectionsRenderer({
+            map: mapRef.current,
+            suppressMarkers: true,
+            preserveViewport: true,
+            polylineOptions: {
+              strokeColor: '#3b5fc0',
+              strokeWeight: 5,
+              strokeOpacity: 0.85,
+              zIndex: 2,
+            },
+          });
+          directionsRendererRef.current = renderer;
+
+          directionsService.route(
+            {
+              origin,
+              destination,
+              waypoints,
+              travelMode: window.google.maps.TravelMode.DRIVING,
+              optimizeWaypoints: false,
+            },
+            (result, status) => {
+              if (!active) return;
+              if (status === 'OK') {
+                renderer.setDirections(result);
+              } else {
+                // Fallback to straight line if directions fail
+                drawFallbackLine(points);
+              }
+            }
+          );
+        } else {
+          drawFallbackLine(points);
+        }
+      }
+
+      function drawFallbackLine(points) {
         const outlineLine = new window.google.maps.Polyline({
-          path: routePath,
+          path: points,
           strokeColor: '#1e3a5f',
           strokeWeight: 7,
-          strokeOpacity: 0.6,
+          strokeOpacity: 0.5,
           map: mapRef.current,
           geodesic: true,
           zIndex: 1,
         });
         polylineRef.current = new window.google.maps.Polyline({
-          path: routePath,
+          path: points,
           strokeColor: '#3b5fc0',
           strokeWeight: 4,
           strokeOpacity: 1,
@@ -398,6 +448,10 @@ export default function MapOverviewView() {
     return () => {
       active = false;
       clearMarkers();
+      if (directionsRendererRef.current) {
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
+      }
       if (polylineRef.current) {
         if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
         polylineRef.current.setMap(null);

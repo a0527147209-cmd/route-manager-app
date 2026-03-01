@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, Navigation, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
-import { sortRouteCircular } from './utils/routeOptimizer';
 import MenuDrawer from './MenuDrawer';
 import BackButton from './BackButton';
 
@@ -161,7 +160,6 @@ export default function MapOverviewView() {
   const [showRoute] = useState(true);
   const [routeNumbers, setRouteNumbers] = useState({});
   const [mapFullscreen, setMapFullscreen] = useState(false);
-  const [routeLoading, setRouteLoading] = useState(false);
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -337,7 +335,7 @@ export default function MapOverviewView() {
         resolved.push({ loc, point, zone, address });
       }
 
-      // Phase 2: Group by zone, number within each zone, optimize per zone if route mode
+      // Phase 2: Group by zone, sort each zone strictly by stop order
       const zoneGroups = new Map();
       for (const r of resolved) {
         const list = zoneGroups.get(r.zone) || [];
@@ -351,11 +349,7 @@ export default function MapOverviewView() {
       const allOrdered = [];
 
       for (const [zoneName, group] of zoneGroups) {
-        let zoneItems = group;
-        if (showRoute && group.length >= 2) {
-          const withCoords = group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }));
-          zoneItems = sortRouteCircular(withCoords, MIDWOOD_DEPOT);
-        }
+        const zoneItems = [...group].sort((a, b) => (a.loc.order ?? 9999) - (b.loc.order ?? 9999));
         const zoneColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
         zoneItems.forEach((r, idx) => {
           numMap[r.loc.id] = idx + 1;
@@ -414,7 +408,8 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw road-snapped routes per zone using Google Directions Service
+      // Draw one sequential straight-line polyline per zone:
+      // Depot -> Stop 1 -> Stop 2 -> ... -> Last Stop -> Depot
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
@@ -430,81 +425,26 @@ export default function MapOverviewView() {
       }
 
       const allLines = [];
-      const directionsService = new window.google.maps.DirectionsService();
-      const MAX_WAYPOINTS = 23;
-      const STEP = MAX_WAYPOINTS + 1;
-      const delay = (ms) => new Promise(r => setTimeout(r, ms));
-
-      const requestRoute = (origin, destination, waypoints) => new Promise((resolve) => {
-        directionsService.route({
-          origin: new window.google.maps.LatLng(origin.lat, origin.lng),
-          destination: new window.google.maps.LatLng(destination.lat, destination.lng),
-          waypoints,
-          travelMode: window.google.maps.TravelMode.DRIVING,
-          optimizeWaypoints: false,
-        }, (result, status) => {
-          resolve(status === 'OK' ? result : null);
-        });
-      });
-
-      setRouteLoading(true);
       colorIdx = 0;
       for (const [zoneName, group] of zoneGroups) {
-        let zoneItems = group;
-        if (showRoute && group.length >= 2) {
-          const withCoords = group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }));
-          zoneItems = sortRouteCircular(withCoords, MIDWOOD_DEPOT);
-        }
-        if (zoneItems.length < 2) { colorIdx++; continue; }
+        const zoneItems = [...group].sort((a, b) => (a.loc.order ?? 9999) - (b.loc.order ?? 9999));
+        if (zoneItems.length < 1) { colorIdx++; continue; }
 
         const lineColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
-        const points = zoneItems.map(r => r.point);
+        const stopPoints = zoneItems.map(r => r.point);
+        const path = [MIDWOOD_DEPOT, ...stopPoints, MIDWOOD_DEPOT];
 
-        for (let start = 0; start < points.length - 1; start += STEP) {
-          if (!active) return;
-          const end = Math.min(start + STEP + 1, points.length);
-          const chunk = points.slice(start, end);
-          if (chunk.length < 2) continue;
-
-          const origin = chunk[0];
-          const destination = chunk[chunk.length - 1];
-          const waypoints = chunk.slice(1, -1).map(p => ({
-            location: new window.google.maps.LatLng(p.lat, p.lng),
-            stopover: true,
-          }));
-
-          const result = await requestRoute(origin, destination, waypoints);
-
-          if (result && active) {
-            const renderer = new window.google.maps.DirectionsRenderer({
-              map: mapRef.current,
-              directions: result,
-              suppressMarkers: true,
-              preserveViewport: true,
-              polylineOptions: {
-                strokeColor: lineColor,
-                strokeWeight: 4,
-                strokeOpacity: 0.75,
-                zIndex: 2,
-              },
-            });
-            allLines.push(renderer);
-          } else if (active) {
-            allLines.push(new window.google.maps.Polyline({
-              path: chunk,
-              strokeColor: lineColor,
-              strokeWeight: 3,
-              strokeOpacity: 0.35,
-              map: mapRef.current,
-              geodesic: true,
-              zIndex: 1,
-            }));
-          }
-          await delay(250);
-        }
+        allLines.push(new window.google.maps.Polyline({
+          path,
+          strokeColor: lineColor,
+          strokeWeight: 5,
+          strokeOpacity: 0.6,
+          map: mapRef.current,
+          geodesic: true,
+          zIndex: 2,
+        }));
         colorIdx++;
       }
-      if (active) setRouteLoading(false);
       polylineRef.current = allLines;
 
       if (markersRef.current.length === 1) {
@@ -587,12 +527,6 @@ export default function MapOverviewView() {
                   {zone}
                 </span>
               ))}
-              {routeLoading && (
-                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-[10px] font-semibold text-blue-600 dark:text-blue-300 animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
-                  Loading routes...
-                </span>
-              )}
             </div>
           </div>
 

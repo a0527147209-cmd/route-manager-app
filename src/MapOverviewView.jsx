@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, Navigation, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
-import { sortRouteNearestNeighbor } from './utils/routeOptimizer';
+import { sortRouteCircular } from './utils/routeOptimizer';
 import MenuDrawer from './MenuDrawer';
 import BackButton from './BackButton';
 
@@ -352,10 +352,8 @@ export default function MapOverviewView() {
       for (const [zoneName, group] of zoneGroups) {
         let zoneItems = group;
         if (showRoute && group.length >= 2) {
-          const depotEntry = { _isDepot: true, lat: MIDWOOD_DEPOT.lat, lng: MIDWOOD_DEPOT.lng, point: MIDWOOD_DEPOT };
-          const withCoords = [depotEntry, ...group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }))];
-          const sorted = sortRouteNearestNeighbor(withCoords);
-          zoneItems = sorted.filter(r => !r._isDepot);
+          const withCoords = group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }));
+          zoneItems = sortRouteCircular(withCoords, MIDWOOD_DEPOT);
         }
         const zoneColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
         zoneItems.forEach((r, idx) => {
@@ -435,10 +433,8 @@ export default function MapOverviewView() {
       for (const [zoneName, group] of zoneGroups) {
         let zoneItems = group;
         if (showRoute && group.length >= 2) {
-          const depotEntry = { _isDepot: true, lat: MIDWOOD_DEPOT.lat, lng: MIDWOOD_DEPOT.lng, point: MIDWOOD_DEPOT };
-          const withCoords = [depotEntry, ...group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }))];
-          const sorted = sortRouteNearestNeighbor(withCoords);
-          zoneItems = sorted.filter(r => !r._isDepot);
+          const withCoords = group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }));
+          zoneItems = sortRouteCircular(withCoords, MIDWOOD_DEPOT);
         }
         if (zoneItems.length < 2) { colorIdx++; continue; }
 

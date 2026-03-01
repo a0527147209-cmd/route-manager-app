@@ -76,8 +76,36 @@ export function getLocationCoords(loc, geoCache = {}) {
 }
 
 /**
+ * Circular route: departs from depot, visits all stops via nearest neighbor,
+ * and ensures the last stop is the one closest to the depot — forming a loop.
+ * The depot itself is not included in the returned array.
+ */
+export function sortRouteCircular(locations, depot = MIDWOOD_DEPOT) {
+  if (!locations || locations.length <= 1) return locations || [];
+  if (locations.length === 2) {
+    const d0 = getDistance(depot.lat, depot.lng, locations[0].lat, locations[0].lng);
+    const d1 = getDistance(depot.lat, depot.lng, locations[1].lat, locations[1].lng);
+    return d0 <= d1 ? [locations[1], locations[0]] : [locations[0], locations[1]];
+  }
+
+  let closestIdx = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < locations.length; i++) {
+    const d = getDistance(depot.lat, depot.lng, locations[i].lat, locations[i].lng);
+    if (d < minDist) { minDist = d; closestIdx = i; }
+  }
+  const lastStop = locations[closestIdx];
+  const remaining = locations.filter((_, i) => i !== closestIdx);
+
+  const depotEntry = { _isDepot: true, lat: depot.lat, lng: depot.lng };
+  const sorted = sortRouteNearestNeighbor([depotEntry, ...remaining]);
+  const realStops = sorted.filter(r => !r._isDepot);
+  return [...realStops, lastStop];
+}
+
+/**
  * High-level helper: takes an array of app location objects, resolves
- * their coordinates, runs the Nearest Neighbor sort, and returns the
+ * their coordinates, runs the circular route sort, and returns the
  * reordered list. Locations without coordinates are appended at the end.
  */
 export function optimizeRoute(locations) {
@@ -98,8 +126,6 @@ export function optimizeRoute(locations) {
 
   if (withCoords.length <= 1) return [...withCoords, ...withoutCoords];
 
-  const depotEntry = { _isDepot: true, lat: MIDWOOD_DEPOT.lat, lng: MIDWOOD_DEPOT.lng };
-  const optimized = sortRouteNearestNeighbor([depotEntry, ...withCoords]);
-  const realStops = optimized.filter(r => !r._isDepot);
-  return [...realStops, ...withoutCoords];
+  const optimized = sortRouteCircular(withCoords);
+  return [...optimized, ...withoutCoords];
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Navigation, ExternalLink, Route as RouteIcon } from 'lucide-react';
+import { Menu, Navigation, ExternalLink, Route as RouteIcon, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import { sortRouteNearestNeighbor } from './utils/routeOptimizer';
@@ -160,6 +160,7 @@ export default function MapOverviewView() {
   const [mapsReady, setMapsReady] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [routeNumbers, setRouteNumbers] = useState({});
+  const [mapFullscreen, setMapFullscreen] = useState(false);
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -224,7 +225,7 @@ export default function MapOverviewView() {
       zoom: 10,
       mapTypeControl: false,
       streetViewControl: false,
-      fullscreenControl: true,
+      fullscreenControl: false,
       restriction: {
         latLngBounds: {
           north: NORTHEAST_BOUNDS.maxLat,
@@ -510,8 +511,24 @@ export default function MapOverviewView() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[520px] mx-auto w-full px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden">
-            <div className="relative">
-              <div ref={mapContainerRef} className="w-full rounded-xl bg-slate-100 dark:bg-slate-800 h-[220px]" />
+            <div className={mapFullscreen ? 'fixed inset-0 z-[9999] bg-white dark:bg-slate-900' : 'relative'}>
+              <div
+                ref={mapContainerRef}
+                className={`bg-slate-100 dark:bg-slate-800 ${mapFullscreen ? 'w-full h-full' : 'w-full rounded-xl h-[220px]'}`}
+              />
+              <button
+                onClick={() => {
+                  setMapFullscreen(v => {
+                    const next = !v;
+                    setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 100);
+                    return next;
+                  });
+                }}
+                className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300 active:scale-90 transition-all"
+                title={mapFullscreen ? 'Minimize' : 'Fullscreen'}
+              >
+                {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+              </button>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {Object.entries(zoneColorMap).map(([zone, color]) => (

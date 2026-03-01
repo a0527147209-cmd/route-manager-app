@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Navigation, ExternalLink, Route as RouteIcon, Maximize2, Minimize2 } from 'lucide-react';
+import { Menu, Navigation, ExternalLink, Route as RouteIcon } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import { sortRouteNearestNeighbor } from './utils/routeOptimizer';
@@ -8,7 +8,7 @@ import MenuDrawer from './MenuDrawer';
 import BackButton from './BackButton';
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-const GEO_CACHE_KEY = 'vrm_geo_cache_v1';
+const GEO_CACHE_KEY = 'vrm_geo_cache_v2';
 const ZONE_COLORS = ['#2563eb', '#16a34a', '#ea580c', '#7c3aed', '#db2777', '#0891b2', '#dc2626', '#0f766e'];
 const NO_VISIT_MEDIUM_DAYS = 35;
 const NO_VISIT_HIGH_DAYS = 65;
@@ -24,6 +24,14 @@ const NORTHEAST_BOUNDS = {
   minLng: -76.5,
   maxLng: -70.0,
 };
+const NYC_BOROUGH_BOUNDS = {
+  'manhattan':      { minLat: 40.700, maxLat: 40.882, minLng: -74.020, maxLng: -73.907 },
+  'brooklyn':       { minLat: 40.570, maxLat: 40.739, minLng: -74.042, maxLng: -73.833 },
+  'queens':         { minLat: 40.541, maxLat: 40.812, minLng: -73.962, maxLng: -73.700 },
+  'bronx':          { minLat: 40.785, maxLat: 40.917, minLng: -73.933, maxLng: -73.748 },
+  'staten island':  { minLat: 40.496, maxLat: 40.651, minLng: -74.255, maxLng: -74.052 },
+};
+const MIDWOOD_DEPOT = { lat: 40.6214, lng: -73.9676 };
 let mapsLoadPromise = null;
 
 function loadGoogleMaps() {
@@ -75,12 +83,21 @@ function buildGeocodeQuery(loc) {
   const zip = (loc?.zipCode || '').trim();
   const zone = (loc?.region || loc?.zone || '').trim();
   const z = zoneKey(zone);
+
+  const NYC_BOROUGHS = ['bronx', 'brooklyn', 'staten island', 'queens', 'manhattan'];
+  if (NYC_BOROUGHS.includes(z)) {
+    const parts = [address, zone, 'New York', state || 'NY', zip].filter(Boolean);
+    return parts.join(', ') + ', USA';
+  }
   const base = [address, city, state, zip].filter(Boolean).join(', ');
   if (!base) return '';
-  if (z === 'bronx' || z === 'brooklyn' || z === 'staten island' || z === 'queens' || z === 'manhattan') {
-    return `${base}, ${zone}, New York, USA`;
-  }
   return `${base}, USA`;
+}
+
+function isInBoroughBounds(point, boroughKey) {
+  const b = NYC_BOROUGH_BOUNDS[boroughKey];
+  if (!b || !point) return true;
+  return point.lat >= b.minLat && point.lat <= b.maxLat && point.lng >= b.minLng && point.lng <= b.maxLng;
 }
 
 function escapeHtml(value) {
@@ -143,7 +160,7 @@ export default function MapOverviewView() {
   const [mapsReady, setMapsReady] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [routeNumbers, setRouteNumbers] = useState({});
-  const [mapExpanded, setMapExpanded] = useState(false);
+
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -231,24 +248,35 @@ export default function MapOverviewView() {
       markersRef.current = [];
     };
 
-    const geocodeAddress = (query) => new Promise((resolve) => {
+    const geocodeAddress = (query, boroughKey) => new Promise((resolve) => {
+      const bBounds = NYC_BOROUGH_BOUNDS[boroughKey];
+      const searchBounds = bBounds
+        ? new window.google.maps.LatLngBounds(
+            new window.google.maps.LatLng(bBounds.minLat, bBounds.minLng),
+            new window.google.maps.LatLng(bBounds.maxLat, bBounds.maxLng)
+          )
+        : new window.google.maps.LatLngBounds(
+            new window.google.maps.LatLng(NORTHEAST_BOUNDS.minLat, NORTHEAST_BOUNDS.minLng),
+            new window.google.maps.LatLng(NORTHEAST_BOUNDS.maxLat, NORTHEAST_BOUNDS.maxLng)
+          );
+
       geocoder.geocode({
         address: query,
         componentRestrictions: { country: 'US' },
-        bounds: new window.google.maps.LatLngBounds(
-          new window.google.maps.LatLng(NORTHEAST_BOUNDS.minLat, NORTHEAST_BOUNDS.minLng),
-          new window.google.maps.LatLng(NORTHEAST_BOUNDS.maxLat, NORTHEAST_BOUNDS.maxLng)
-        ),
+        bounds: searchBounds,
       }, (results, status) => {
         if (status === 'OK' && results?.[0]?.geometry?.location) {
           const first = results[0];
           const country = first.address_components?.find((c) => c.types?.includes('country'))?.short_name;
-          if (country && country !== 'US') {
+          if (country && country !== 'US') { resolve(null); return; }
+          const loc = first.geometry.location;
+          const pt = { lat: loc.lat(), lng: loc.lng() };
+          if (bBounds && !isInBoroughBounds(pt, boroughKey)) {
+            console.warn(`[Map] Geocode for "${query}" landed outside ${boroughKey} bounds – skipping`);
             resolve(null);
             return;
           }
-          const loc = first.geometry.location;
-          resolve({ lat: loc.lat(), lng: loc.lng() });
+          resolve(pt);
         } else {
           resolve(null);
         }
@@ -269,6 +297,7 @@ export default function MapOverviewView() {
       const resolved = [];
       for (const loc of filtered) {
         const zone = (loc?.region || loc?.zone || loc?.city || t('other')).trim();
+        const boroughKey = zoneKey(loc?.region || loc?.zone || '');
         const address = loc?.fullAddress || loc?.address || `${loc?.city || ''} ${loc?.state || ''}`.trim();
         const geocodeQuery = buildGeocodeQuery(loc);
         const cacheKey = loc?.id || address;
@@ -278,11 +307,20 @@ export default function MapOverviewView() {
         let point = null;
         if (lat != null && lng != null) {
           const rawPoint = { lat, lng };
-          point = isInUsBounds(rawPoint) && isInNortheastBounds(rawPoint) ? rawPoint : null;
-        } else if (cacheKey && nextCache[cacheKey] && isInUsBounds(nextCache[cacheKey]) && isInNortheastBounds(nextCache[cacheKey])) {
-          point = nextCache[cacheKey];
-        } else if (geocodeQuery) {
-          point = await geocodeAddress(geocodeQuery);
+          if (isInUsBounds(rawPoint) && isInNortheastBounds(rawPoint) && isInBoroughBounds(rawPoint, boroughKey)) {
+            point = rawPoint;
+          }
+        }
+        if (!point && cacheKey && nextCache[cacheKey]) {
+          const cached = nextCache[cacheKey];
+          if (isInUsBounds(cached) && isInNortheastBounds(cached) && isInBoroughBounds(cached, boroughKey)) {
+            point = cached;
+          } else {
+            delete nextCache[cacheKey];
+          }
+        }
+        if (!point && geocodeQuery) {
+          point = await geocodeAddress(geocodeQuery, boroughKey);
           if (point && isInUsBounds(point) && isInNortheastBounds(point) && cacheKey) {
             nextCache[cacheKey] = point;
           } else if (cacheKey) {
@@ -296,34 +334,51 @@ export default function MapOverviewView() {
         resolved.push({ loc, point, zone, address });
       }
 
-      // Phase 2: Always number stops. Optimize order when route mode is on.
-      let ordered = resolved;
-
-      if (showRoute && resolved.length >= 2) {
-        const withCoords = resolved.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }));
-        ordered = sortRouteNearestNeighbor(withCoords);
+      // Phase 2: Group by zone, number within each zone, optimize per zone if route mode
+      const zoneGroups = new Map();
+      for (const r of resolved) {
+        const list = zoneGroups.get(r.zone) || [];
+        list.push(r);
+        zoneGroups.set(r.zone, list);
       }
 
+      const LINE_COLORS = ['#4A54E1', '#16a34a', '#ea580c', '#db2777', '#0891b2', '#7c3aed', '#dc2626', '#ca8a04', '#0f766e', '#6366f1'];
       const numMap = {};
-      ordered.forEach((r, idx) => { numMap[r.loc.id] = idx + 1; });
+      let colorIdx = 0;
+      const allOrdered = [];
+
+      for (const [zoneName, group] of zoneGroups) {
+        let zoneItems = group;
+        if (showRoute && group.length >= 2) {
+          const depotEntry = { _isDepot: true, lat: MIDWOOD_DEPOT.lat, lng: MIDWOOD_DEPOT.lng, point: MIDWOOD_DEPOT };
+          const withCoords = [depotEntry, ...group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }))];
+          const sorted = sortRouteNearestNeighbor(withCoords);
+          zoneItems = sorted.filter(r => !r._isDepot);
+        }
+        const zoneColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
+        zoneItems.forEach((r, idx) => {
+          numMap[r.loc.id] = idx + 1;
+          allOrdered.push({ ...r, stopNum: idx + 1, zoneColor });
+        });
+        colorIdx++;
+      }
       setRouteNumbers(numMap);
 
-      // Phase 3: Create green pin markers with stop numbers
-      const makePinSvg = (num) => {
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#16a34a" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
+      // Phase 3: Create pin markers — colored per zone with sequence number
+      const makePinSvg = (num, color) => {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="${color}" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
         return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
       };
 
-      for (let i = 0; i < ordered.length; i++) {
-        const { loc, point, zone, address } = ordered[i];
-        const stopNum = i + 1;
+      for (const item of allOrdered) {
+        const { loc, point, zone, address, stopNum, zoneColor } = item;
 
         const marker = new window.google.maps.Marker({
           map: mapRef.current,
           position: point,
-          title: `#${stopNum} ${loc?.name || ''}`,
+          title: `#${stopNum} ${loc?.name || ''} (${zone})`,
           icon: {
-            url: makePinSvg(stopNum),
+            url: makePinSvg(stopNum, zoneColor),
             scaledSize: new window.google.maps.Size(28, 40),
             anchor: new window.google.maps.Point(14, 40),
           },
@@ -336,12 +391,12 @@ export default function MapOverviewView() {
           const content = `
             <div style="min-width:200px;max-width:240px;padding:2px 0;">
               <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#16a34a;color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${zoneColor};color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>
                 ${escapeHtml(loc?.name || '')}
               </div>
               <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.35;">${escapeHtml(address || '-')}</div>
               <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <span style="font-size:11px;font-weight:600;color:#334155;background:#f1f5f9;padding:3px 8px;border-radius:999px;">${escapeHtml(zone || t('other'))}</span>
+                <span style="font-size:11px;font-weight:600;color:#fff;background:${zoneColor};padding:3px 8px;border-radius:999px;">${escapeHtml(zone || t('other'))}</span>
                 <span style="font-size:11px;font-weight:700;color:#0f172a;">${escapeHtml(statusLabel)}</span>
               </div>
             </div>
@@ -358,83 +413,48 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw road-snapped route via Directions Service
+      // Draw one separate polyline per zone (no cross-zone connections)
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
       }
       if (polylineRef.current) {
-        if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
-        polylineRef.current.setMap(null);
+        if (Array.isArray(polylineRef.current)) {
+          polylineRef.current.forEach(l => l.setMap(null));
+        } else {
+          if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
+          polylineRef.current.setMap(null);
+        }
         polylineRef.current = null;
       }
 
-      if (ordered.length >= 2) {
-        const points = ordered.map(r => r.point);
-        const origin = points[0];
-        const destination = points[points.length - 1];
-        const waypoints = points.slice(1, -1).map(p => ({ location: p, stopover: true }));
-
-        // Google Directions supports max 25 waypoints per request
-        if (waypoints.length <= 25) {
-          const directionsService = new window.google.maps.DirectionsService();
-          const renderer = new window.google.maps.DirectionsRenderer({
-            map: mapRef.current,
-            suppressMarkers: true,
-            preserveViewport: true,
-            polylineOptions: {
-              strokeColor: '#3b5fc0',
-              strokeWeight: 5,
-              strokeOpacity: 0.85,
-              zIndex: 2,
-            },
-          });
-          directionsRendererRef.current = renderer;
-
-          directionsService.route(
-            {
-              origin,
-              destination,
-              waypoints,
-              travelMode: window.google.maps.TravelMode.DRIVING,
-              optimizeWaypoints: false,
-            },
-            (result, status) => {
-              if (!active) return;
-              if (status === 'OK') {
-                renderer.setDirections(result);
-              } else {
-                // Fallback to straight line if directions fail
-                drawFallbackLine(points);
-              }
-            }
-          );
-        } else {
-          drawFallbackLine(points);
+      const allLines = [];
+      colorIdx = 0;
+      for (const [zoneName, group] of zoneGroups) {
+        let zoneItems = group;
+        if (showRoute && group.length >= 2) {
+          const depotEntry = { _isDepot: true, lat: MIDWOOD_DEPOT.lat, lng: MIDWOOD_DEPOT.lng, point: MIDWOOD_DEPOT };
+          const withCoords = [depotEntry, ...group.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }))];
+          const sorted = sortRouteNearestNeighbor(withCoords);
+          zoneItems = sorted.filter(r => !r._isDepot);
         }
-      }
+        if (zoneItems.length < 2) { colorIdx++; continue; }
 
-      function drawFallbackLine(points) {
-        const outlineLine = new window.google.maps.Polyline({
-          path: points,
-          strokeColor: '#1e3a5f',
-          strokeWeight: 7,
-          strokeOpacity: 0.5,
-          map: mapRef.current,
-          geodesic: true,
-          zIndex: 1,
-        });
-        polylineRef.current = new window.google.maps.Polyline({
-          path: points,
-          strokeColor: '#3b5fc0',
-          strokeWeight: 4,
-          strokeOpacity: 1,
+        const lineColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
+        const path = zoneItems.map(r => r.point);
+
+        allLines.push(new window.google.maps.Polyline({
+          path,
+          strokeColor: lineColor,
+          strokeWeight: 5,
+          strokeOpacity: 0.6,
           map: mapRef.current,
           geodesic: true,
           zIndex: 2,
-        });
-        polylineRef.current._outline = outlineLine;
+        }));
+        colorIdx++;
       }
+      polylineRef.current = allLines;
 
       if (markersRef.current.length === 1) {
         mapRef.current.setCenter(bounds.getCenter());
@@ -453,8 +473,12 @@ export default function MapOverviewView() {
         directionsRendererRef.current = null;
       }
       if (polylineRef.current) {
-        if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
-        polylineRef.current.setMap(null);
+        if (Array.isArray(polylineRef.current)) {
+          polylineRef.current.forEach(l => l.setMap(null));
+        } else {
+          if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
+          polylineRef.current.setMap(null);
+        }
         polylineRef.current = null;
       }
     };
@@ -487,14 +511,7 @@ export default function MapOverviewView() {
         <div className="max-w-[520px] mx-auto w-full px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden">
             <div className="relative">
-              <div ref={mapContainerRef} className={`w-full rounded-xl bg-slate-100 dark:bg-slate-800 transition-all duration-300 ${mapExpanded ? 'h-[70vh]' : 'h-[220px]'}`} />
-              <button
-                onClick={() => { setMapExpanded(v => !v); setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 350); }}
-                className="absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 active:scale-90 transition-all"
-                title={mapExpanded ? 'Minimize' : 'Fullscreen'}
-              >
-                {mapExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-              </button>
+              <div ref={mapContainerRef} className="w-full rounded-xl bg-slate-100 dark:bg-slate-800 h-[220px]" />
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {Object.entries(zoneColorMap).map(([zone, color]) => (
@@ -567,7 +584,10 @@ export default function MapOverviewView() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2.5 min-w-0">
                     {routeNumbers[loc.id] && (
-                      <span className="shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-[11px] font-bold mt-0.5">
+                      <span
+                        className="shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center text-[11px] font-bold mt-0.5"
+                        style={{ backgroundColor: zoneColorMap[zone] || '#64748b' }}
+                      >
                         {routeNumbers[loc.id]}
                       </span>
                     )}

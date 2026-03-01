@@ -1,4 +1,5 @@
-const GEO_CACHE_KEY = 'vrm_geo_cache_v1';
+const GEO_CACHE_KEY = 'vrm_geo_cache_v2';
+const MIDWOOD_DEPOT = { lat: 40.6214, lng: -73.9676 };
 
 /**
  * Haversine formula — accurate distance (km) between two GPS coordinates.
@@ -97,6 +98,8 @@ export function optimizeRoute(locations) {
 
   if (withCoords.length <= 1) return [...withCoords, ...withoutCoords];
 
-  const optimized = sortRouteNearestNeighbor(withCoords);
-  return [...optimized, ...withoutCoords];
+  const depotEntry = { _isDepot: true, lat: MIDWOOD_DEPOT.lat, lng: MIDWOOD_DEPOT.lng };
+  const optimized = sortRouteNearestNeighbor([depotEntry, ...withCoords]);
+  const realStops = optimized.filter(r => !r._isDepot);
+  return [...realStops, ...withoutCoords];
 }

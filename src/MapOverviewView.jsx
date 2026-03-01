@@ -364,29 +364,47 @@ export default function MapOverviewView() {
 
       // Draw connecting line between all stops in order
       if (polylineRef.current) {
+        if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
         polylineRef.current.setMap(null);
         polylineRef.current = null;
       }
       if (ordered.length >= 2) {
-        const lineColor = showRoute ? '#4f46e5' : '#94a3b8';
-        polylineRef.current = new window.google.maps.Polyline({
-          path: ordered.map(r => r.point),
-          strokeColor: lineColor,
-          strokeWeight: showRoute ? 3 : 2,
-          strokeOpacity: showRoute ? 0.85 : 0.5,
+        const lineColor = showRoute ? '#4f46e5' : '#475569';
+        // Dashed outline for depth, then solid colored line on top
+        const outlinePath = ordered.map(r => r.point);
+        const outlineLine = new window.google.maps.Polyline({
+          path: outlinePath,
+          strokeColor: '#ffffff',
+          strokeWeight: 6,
+          strokeOpacity: 0.7,
           map: mapRef.current,
           geodesic: true,
-          icons: [{
-            icon: {
-              path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 2.5,
-              fillColor: lineColor,
-              fillOpacity: 1,
-              strokeWeight: 0,
-            },
-            repeat: '100px',
-          }],
+          zIndex: 1,
         });
+        polylineRef.current = new window.google.maps.Polyline({
+          path: outlinePath,
+          strokeColor: lineColor,
+          strokeWeight: 3.5,
+          strokeOpacity: 1,
+          map: mapRef.current,
+          geodesic: true,
+          zIndex: 2,
+          icons: [
+            {
+              icon: {
+                path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 3.5,
+                fillColor: lineColor,
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 1,
+              },
+              repeat: '70px',
+            },
+          ],
+        });
+        // Store outline so we can clean it up
+        polylineRef.current._outline = outlineLine;
       }
 
       if (markersRef.current.length === 1) {
@@ -402,6 +420,7 @@ export default function MapOverviewView() {
       active = false;
       clearMarkers();
       if (polylineRef.current) {
+        if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
         polylineRef.current.setMap(null);
         polylineRef.current = null;
       }

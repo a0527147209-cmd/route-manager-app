@@ -226,7 +226,6 @@ export default function MapOverviewView() {
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
-      zoomControl: true,
       restriction: {
         latLngBounds: {
           north: NORTHEAST_BOUNDS.maxLat,
@@ -512,26 +511,25 @@ export default function MapOverviewView() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[520px] mx-auto w-full px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden">
-            <div className={mapFullscreen ? 'fixed inset-0 z-[9999] bg-white dark:bg-slate-900' : 'relative'}>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden relative">
+            <div className={mapFullscreen ? 'fixed inset-0 z-[9999] bg-white dark:bg-slate-900' : ''}>
               <div
                 ref={mapContainerRef}
                 className={`bg-slate-100 dark:bg-slate-800 ${mapFullscreen ? 'w-full h-full' : 'w-full rounded-xl h-[220px]'}`}
               />
-              <button
-                onClick={() => {
-                  setMapFullscreen(v => {
-                    const next = !v;
-                    setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 100);
-                    return next;
-                  });
-                }}
-                className="absolute top-3 left-3 z-[10000] w-10 h-10 flex items-center justify-center rounded-xl bg-white/95 dark:bg-slate-800/95 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 active:scale-90 transition-all"
-                title={mapFullscreen ? 'Minimize' : 'Fullscreen'}
-              >
-                {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-              </button>
             </div>
+            <button
+              onClick={() => {
+                setMapFullscreen(v => {
+                  const next = !v;
+                  setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 100);
+                  return next;
+                });
+              }}
+              className={`${mapFullscreen ? 'fixed top-4 left-4 z-[99999]' : 'absolute top-4 left-4 z-10'} w-10 h-10 flex items-center justify-center rounded-xl bg-white/95 dark:bg-slate-800/95 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 active:scale-90 transition-all`}
+            >
+              {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {Object.entries(zoneColorMap).map(([zone, color]) => (
                 <span key={zone} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Navigation, ExternalLink, Route as RouteIcon, Maximize2, Minimize2 } from 'lucide-react';
+import { Menu, Navigation, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import { sortRouteNearestNeighbor } from './utils/routeOptimizer';
@@ -158,7 +158,7 @@ export default function MapOverviewView() {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [mapsReady, setMapsReady] = useState(false);
-  const [showRoute, setShowRoute] = useState(false);
+  const [showRoute] = useState(true);
   const [routeNumbers, setRouteNumbers] = useState({});
   const [mapFullscreen, setMapFullscreen] = useState(false);
 
@@ -498,6 +498,19 @@ export default function MapOverviewView() {
 
   return (
     <div className="h-full flex flex-col bg-[#F5F6F8] dark:bg-slate-950 overflow-hidden">
+      <button
+        onClick={() => {
+          setMapFullscreen(v => {
+            const next = !v;
+            setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 100);
+            return next;
+          });
+        }}
+        className="fixed top-20 left-6 z-[99999] w-10 h-10 flex items-center justify-center rounded-xl bg-white/95 dark:bg-slate-800/95 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 active:scale-90 transition-all"
+        style={{ display: mapsReady ? '' : 'none' }}
+      >
+        {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+      </button>
       <header className="shrink-0 sticky top-0 z-20 bg-white dark:bg-slate-900 border-b border-slate-200/70 dark:border-slate-800" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between gap-2">
           <BackButton onClick={() => navigate(-1)} />
@@ -511,25 +524,13 @@ export default function MapOverviewView() {
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[520px] mx-auto w-full px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden">
             <div className={mapFullscreen ? 'fixed inset-0 z-[9999] bg-white dark:bg-slate-900' : ''}>
               <div
                 ref={mapContainerRef}
                 className={`bg-slate-100 dark:bg-slate-800 ${mapFullscreen ? 'w-full h-full' : 'w-full rounded-xl h-[220px]'}`}
               />
             </div>
-            <button
-              onClick={() => {
-                setMapFullscreen(v => {
-                  const next = !v;
-                  setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 100);
-                  return next;
-                });
-              }}
-              className={`${mapFullscreen ? 'fixed top-4 left-4 z-[99999]' : 'absolute top-4 left-4 z-10'} w-10 h-10 flex items-center justify-center rounded-xl bg-white/95 dark:bg-slate-800/95 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 active:scale-90 transition-all`}
-            >
-              {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-            </button>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {Object.entries(zoneColorMap).map(([zone, color]) => (
                 <span key={zone} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
@@ -567,16 +568,6 @@ export default function MapOverviewView() {
                 <option value="pending">{t('statusNoAction')}</option>
                 <option value="visitedToday">{t('statusVisitedToday')}</option>
               </select>
-              <button
-                onClick={() => setShowRoute(v => !v)}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95 ${showRoute
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200'
-                }`}
-                title={t('optimizeRoute') || 'Route'}
-              >
-                <RouteIcon size={14} />
-              </button>
             </div>
           </div>
 

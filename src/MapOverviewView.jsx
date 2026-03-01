@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Navigation, ExternalLink, Route as RouteIcon } from 'lucide-react';
+import { Menu, Navigation, ExternalLink, Route as RouteIcon, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
 import { sortRouteNearestNeighbor } from './utils/routeOptimizer';
@@ -143,6 +143,7 @@ export default function MapOverviewView() {
   const [mapsReady, setMapsReady] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [routeNumbers, setRouteNumbers] = useState({});
+  const [mapExpanded, setMapExpanded] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -205,7 +206,7 @@ export default function MapOverviewView() {
       zoom: 10,
       mapTypeControl: false,
       streetViewControl: false,
-      fullscreenControl: false,
+      fullscreenControl: true,
       restriction: {
         latLngBounds: {
           north: NORTHEAST_BOUNDS.maxLat,
@@ -445,7 +446,16 @@ export default function MapOverviewView() {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[520px] mx-auto w-full px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-3">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-2 overflow-hidden">
-            <div ref={mapContainerRef} className="w-full h-[220px] rounded-xl bg-slate-100 dark:bg-slate-800" />
+            <div className="relative">
+              <div ref={mapContainerRef} className={`w-full rounded-xl bg-slate-100 dark:bg-slate-800 transition-all duration-300 ${mapExpanded ? 'h-[70vh]' : 'h-[220px]'}`} />
+              <button
+                onClick={() => { setMapExpanded(v => !v); setTimeout(() => { if (mapRef.current) window.google?.maps?.event?.trigger(mapRef.current, 'resize'); }, 350); }}
+                className="absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 active:scale-90 transition-all"
+                title={mapExpanded ? 'Minimize' : 'Fullscreen'}
+              >
+                {mapExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+              </button>
+            </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {Object.entries(zoneColorMap).map(([zone, color]) => (
                 <span key={zone} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">

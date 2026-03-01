@@ -399,7 +399,8 @@ export default function CustomersView() {
               <p className="text-slate-500 dark:text-slate-400 text-sm">{t('openMenuAddCustomer')}</p>
             </div>
           ) : isInnerPage ? (
-            areaLocations.length > 0 && (
+            <>
+            {areaLocations.length > 0 && (
               <div className="px-4 pt-3 pb-1">
                 <div className="flex items-center gap-2">
                   <button
@@ -424,8 +425,8 @@ export default function CustomersView() {
                   </button>
                 </div>
               </div>
-            ),
-            areaLocations.length === 0 ? (
+            )}
+            {areaLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
@@ -480,7 +481,8 @@ export default function CustomersView() {
                   </div>
                 ))}
               </div>
-            )
+            )}
+            </>
           ) : searchTerm && searchTerm.trim() ? (
             filteredLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center px-6">

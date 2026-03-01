@@ -22,7 +22,7 @@ import { useAuth } from './AuthContext';
 import BackButton from './BackButton';
 import MenuDrawer from './MenuDrawer';
 
-const ZONES = ['Staten Island', 'Brooklyn', 'Bronx'];
+const ZONES = ['Staten Island', 'Brooklyn', 'Bronx', 'New Jersey'];
 
 const COLORS = {
   totalWeight: '#2563eb',

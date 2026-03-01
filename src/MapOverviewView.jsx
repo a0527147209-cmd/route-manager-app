@@ -526,7 +526,7 @@ export default function MapOverviewView() {
                     return next;
                   });
                 }}
-                className="absolute top-2 left-2 z-10 w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300 active:scale-90 transition-all"
+                className="absolute top-3 left-3 z-[10000] w-10 h-10 flex items-center justify-center rounded-xl bg-white/95 dark:bg-slate-800/95 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 active:scale-90 transition-all"
                 title={mapFullscreen ? 'Minimize' : 'Fullscreen'}
               >
                 {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}

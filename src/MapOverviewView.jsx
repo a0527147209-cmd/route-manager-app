@@ -439,7 +439,8 @@ export default function MapOverviewView() {
         if (zoneItems.length < 2) { colorIdx++; continue; }
 
         const lineColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
-        const path = zoneItems.map(r => r.point);
+        const pts = zoneItems.map(r => r.point);
+        const path = [...pts, pts[0]];
 
         allLines.push(new window.google.maps.Polyline({
           path,

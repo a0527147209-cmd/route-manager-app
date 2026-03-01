@@ -320,16 +320,16 @@ export default function MapOverviewView() {
           label: {
             text: String(stopNum),
             color: '#ffffff',
-            fontSize: '10px',
+            fontSize: '7px',
             fontWeight: '700',
           },
           icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 13,
+            scale: 7,
             fillColor,
             fillOpacity: 1,
             strokeColor: '#ffffff',
-            strokeWeight: 2,
+            strokeWeight: 1.5,
             labelOrigin: new window.google.maps.Point(0, 0),
           },
         });
@@ -340,7 +340,7 @@ export default function MapOverviewView() {
           const content = `
             <div style="min-width:200px;max-width:240px;padding:2px 0;">
               <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${fillColor};color:#fff;font-size:11px;font-weight:700;margin-right:8px;shrink:0;">${stopNum}</span>
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${fillColor};color:#fff;font-size:9px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>
                 ${escapeHtml(loc?.name || '')}
               </div>
               <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.35;">${escapeHtml(address || '-')}</div>
@@ -362,28 +362,29 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw optimized route polyline
+      // Draw connecting line between all stops in order
       if (polylineRef.current) {
         polylineRef.current.setMap(null);
         polylineRef.current = null;
       }
-      if (showRoute && ordered.length >= 2) {
+      if (ordered.length >= 2) {
+        const lineColor = showRoute ? '#4f46e5' : '#94a3b8';
         polylineRef.current = new window.google.maps.Polyline({
           path: ordered.map(r => r.point),
-          strokeColor: '#4f46e5',
-          strokeWeight: 3,
-          strokeOpacity: 0.8,
+          strokeColor: lineColor,
+          strokeWeight: showRoute ? 3 : 2,
+          strokeOpacity: showRoute ? 0.85 : 0.5,
           map: mapRef.current,
           geodesic: true,
           icons: [{
             icon: {
               path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-              scale: 3,
-              fillColor: '#4f46e5',
+              scale: 2.5,
+              fillColor: lineColor,
               fillOpacity: 1,
               strokeWeight: 0,
             },
-            repeat: '120px',
+            repeat: '100px',
           }],
         });
       }

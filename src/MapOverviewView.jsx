@@ -161,6 +161,7 @@ export default function MapOverviewView() {
   const [showRoute] = useState(true);
   const [routeNumbers, setRouteNumbers] = useState({});
   const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -413,7 +414,7 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw one separate polyline per zone (no cross-zone connections)
+      // Draw road-snapped routes per zone using Google Directions Service
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
@@ -429,6 +430,24 @@ export default function MapOverviewView() {
       }
 
       const allLines = [];
+      const directionsService = new window.google.maps.DirectionsService();
+      const MAX_WAYPOINTS = 23;
+      const STEP = MAX_WAYPOINTS + 1;
+      const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+      const requestRoute = (origin, destination, waypoints) => new Promise((resolve) => {
+        directionsService.route({
+          origin: new window.google.maps.LatLng(origin.lat, origin.lng),
+          destination: new window.google.maps.LatLng(destination.lat, destination.lng),
+          waypoints,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+          optimizeWaypoints: false,
+        }, (result, status) => {
+          resolve(status === 'OK' ? result : null);
+        });
+      });
+
+      setRouteLoading(true);
       colorIdx = 0;
       for (const [zoneName, group] of zoneGroups) {
         let zoneItems = group;
@@ -439,20 +458,53 @@ export default function MapOverviewView() {
         if (zoneItems.length < 2) { colorIdx++; continue; }
 
         const lineColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
-        const pts = zoneItems.map(r => r.point);
-        const path = [...pts, pts[0]];
+        const points = zoneItems.map(r => r.point);
 
-        allLines.push(new window.google.maps.Polyline({
-          path,
-          strokeColor: lineColor,
-          strokeWeight: 5,
-          strokeOpacity: 0.6,
-          map: mapRef.current,
-          geodesic: true,
-          zIndex: 2,
-        }));
+        for (let start = 0; start < points.length - 1; start += STEP) {
+          if (!active) return;
+          const end = Math.min(start + STEP + 1, points.length);
+          const chunk = points.slice(start, end);
+          if (chunk.length < 2) continue;
+
+          const origin = chunk[0];
+          const destination = chunk[chunk.length - 1];
+          const waypoints = chunk.slice(1, -1).map(p => ({
+            location: new window.google.maps.LatLng(p.lat, p.lng),
+            stopover: true,
+          }));
+
+          const result = await requestRoute(origin, destination, waypoints);
+
+          if (result && active) {
+            const renderer = new window.google.maps.DirectionsRenderer({
+              map: mapRef.current,
+              directions: result,
+              suppressMarkers: true,
+              preserveViewport: true,
+              polylineOptions: {
+                strokeColor: lineColor,
+                strokeWeight: 4,
+                strokeOpacity: 0.75,
+                zIndex: 2,
+              },
+            });
+            allLines.push(renderer);
+          } else if (active) {
+            allLines.push(new window.google.maps.Polyline({
+              path: chunk,
+              strokeColor: lineColor,
+              strokeWeight: 3,
+              strokeOpacity: 0.35,
+              map: mapRef.current,
+              geodesic: true,
+              zIndex: 1,
+            }));
+          }
+          await delay(250);
+        }
         colorIdx++;
       }
+      if (active) setRouteLoading(false);
       polylineRef.current = allLines;
 
       if (markersRef.current.length === 1) {
@@ -528,13 +580,19 @@ export default function MapOverviewView() {
                 className={`bg-slate-100 dark:bg-slate-800 ${mapFullscreen ? 'w-full h-full' : 'w-full rounded-xl h-[220px]'}`}
               />
             </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap gap-1.5 items-center">
               {Object.entries(zoneColorMap).map(([zone, color]) => (
                 <span key={zone} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
                   {zone}
                 </span>
               ))}
+              {routeLoading && (
+                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-[10px] font-semibold text-blue-600 dark:text-blue-300 animate-pulse">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping" />
+                  Loading routes...
+                </span>
+              )}
             </div>
           </div>
 

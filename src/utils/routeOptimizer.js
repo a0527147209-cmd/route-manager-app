@@ -76,9 +76,10 @@ export function getLocationCoords(loc, geoCache = {}) {
 }
 
 /**
- * Circular route: departs from depot, visits all stops via nearest neighbor,
- * and ensures the last stop is the one closest to the depot — forming a loop.
- * The depot itself is not included in the returned array.
+ * Angular sweep circular route: sorts stops by angle around their centroid,
+ * producing a clean non-crossing loop. The route starts from the stop whose
+ * angle from the centroid is closest to the depot's angle, so the loop
+ * naturally departs from and returns toward the depot.
  */
 export function sortRouteCircular(locations, depot = MIDWOOD_DEPOT) {
   if (!locations || locations.length <= 1) return locations || [];
@@ -88,19 +89,26 @@ export function sortRouteCircular(locations, depot = MIDWOOD_DEPOT) {
     return d0 <= d1 ? [locations[1], locations[0]] : [locations[0], locations[1]];
   }
 
-  let closestIdx = 0;
-  let minDist = Infinity;
-  for (let i = 0; i < locations.length; i++) {
-    const d = getDistance(depot.lat, depot.lng, locations[i].lat, locations[i].lng);
-    if (d < minDist) { minDist = d; closestIdx = i; }
-  }
-  const lastStop = locations[closestIdx];
-  const remaining = locations.filter((_, i) => i !== closestIdx);
+  const cLat = locations.reduce((s, l) => s + l.lat, 0) / locations.length;
+  const cLng = locations.reduce((s, l) => s + l.lng, 0) / locations.length;
 
-  const depotEntry = { _isDepot: true, lat: depot.lat, lng: depot.lng };
-  const sorted = sortRouteNearestNeighbor([depotEntry, ...remaining]);
-  const realStops = sorted.filter(r => !r._isDepot);
-  return [...realStops, lastStop];
+  const withAngle = locations.map(loc => ({
+    ...loc,
+    _angle: Math.atan2(loc.lng - cLng, loc.lat - cLat),
+  }));
+  withAngle.sort((a, b) => a._angle - b._angle);
+
+  const depotAngle = Math.atan2(depot.lng - cLng, depot.lat - cLat);
+  let startIdx = 0;
+  let minAngleDiff = Infinity;
+  for (let i = 0; i < withAngle.length; i++) {
+    let diff = Math.abs(withAngle[i]._angle - depotAngle);
+    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+    if (diff < minAngleDiff) { minAngleDiff = diff; startIdx = i; }
+  }
+
+  const rotated = [...withAngle.slice(startIdx), ...withAngle.slice(0, startIdx)];
+  return rotated;
 }
 
 /**

@@ -390,6 +390,8 @@ const translations = {
     saved: 'Saved!',
     noUsersFound: 'No users match your filters',
     quickKPIs: 'Daily Performance',
+    // Route Optimization
+    optimizeRoute: 'Route Order',
   },
 };
 

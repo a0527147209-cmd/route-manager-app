@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
+import { Users, Menu, Search, ChevronRight, X, MoreVertical, Route as RouteIcon, ListOrdered } from 'lucide-react';
 import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
 import { LinkifyText } from './utils/textUtils';
+import { optimizeRoute } from './utils/routeOptimizer';
 import MenuDrawer from './MenuDrawer';
 import { useLanguage } from './LanguageContext';
 import { useAuth } from './AuthContext';
@@ -168,6 +169,8 @@ export default function CustomersView() {
   const scrollRef = useRef(null);
   useScrollRestore(scrollRef);
 
+  const [routeOptimized, setRouteOptimized] = useState(false);
+
   const isInnerPage = Boolean(urlAreaKey);
   const areaKeyDecoded = urlAreaKey ? decodeURIComponent(urlAreaKey) : null;
   const focusCustomerId = routeLocation.state?.focusCustomerId || null;
@@ -313,7 +316,11 @@ export default function CustomersView() {
     navigate(`/customers/area/${encodeURIComponent(compositeOrGroupKey)}`);
   };
 
-  const areaLocations = isInnerPage && areaKeyDecoded ? getLocationsByCompositeKey(areaKeyDecoded) : [];
+  const areaLocationsRaw = isInnerPage && areaKeyDecoded ? getLocationsByCompositeKey(areaKeyDecoded) : [];
+  const areaLocations = useMemo(() => {
+    if (!routeOptimized || !isInnerPage) return areaLocationsRaw;
+    return optimizeRoute(areaLocationsRaw);
+  }, [areaLocationsRaw, routeOptimized, isInnerPage]);
   const areaDisplayLabel =
     areaLocations.length > 0
       ? norm(areaLocations[0]?.region ?? areaLocations[0]?.zone ?? areaLocations[0]?.city ?? areaLocations[0]?.state)
@@ -392,6 +399,32 @@ export default function CustomersView() {
               <p className="text-slate-500 dark:text-slate-400 text-sm">{t('openMenuAddCustomer')}</p>
             </div>
           ) : isInnerPage ? (
+            areaLocations.length > 0 && (
+              <div className="px-4 pt-3 pb-1">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setRouteOptimized(false)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all active:scale-95 ${!routeOptimized
+                      ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+                    }`}
+                  >
+                    <ListOrdered size={14} />
+                    {t('defaultOrder')}
+                  </button>
+                  <button
+                    onClick={() => setRouteOptimized(true)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all active:scale-95 ${routeOptimized
+                      ? 'bg-indigo-600 dark:bg-indigo-500 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+                    }`}
+                  >
+                    <RouteIcon size={14} />
+                    {t('optimizeRoute') || 'Route Order'}
+                  </button>
+                </div>
+              </div>
+            ),
             areaLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>

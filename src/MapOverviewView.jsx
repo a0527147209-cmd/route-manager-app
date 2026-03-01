@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Navigation, ExternalLink } from 'lucide-react';
+import { Menu, Navigation, ExternalLink, Route as RouteIcon } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
+import { sortRouteNearestNeighbor } from './utils/routeOptimizer';
 import MenuDrawer from './MenuDrawer';
 import BackButton from './BackButton';
 
@@ -140,10 +141,12 @@ export default function MapOverviewView() {
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');
   const [mapsReady, setMapsReady] = useState(false);
+  const [showRoute, setShowRoute] = useState(false);
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const infoWindowRef = useRef(null);
+  const polylineRef = useRef(null);
   const geocodeCacheRef = useRef({});
 
   const zones = useMemo(() => {
@@ -323,6 +326,37 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
+      // Draw optimized route polyline
+      if (polylineRef.current) {
+        polylineRef.current.setMap(null);
+        polylineRef.current = null;
+      }
+      if (showRoute && markersRef.current.length >= 2) {
+        const points = markersRef.current.map(m => ({
+          lat: m.getPosition().lat(),
+          lng: m.getPosition().lng(),
+        }));
+        const optimizedPath = sortRouteNearestNeighbor(points);
+        polylineRef.current = new window.google.maps.Polyline({
+          path: optimizedPath,
+          strokeColor: '#4f46e5',
+          strokeWeight: 3,
+          strokeOpacity: 0.8,
+          map: mapRef.current,
+          geodesic: true,
+          icons: [{
+            icon: {
+              path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+              scale: 3,
+              fillColor: '#4f46e5',
+              fillOpacity: 1,
+              strokeWeight: 0,
+            },
+            repeat: '120px',
+          }],
+        });
+      }
+
       if (markersRef.current.length === 1) {
         mapRef.current.setCenter(bounds.getCenter());
         mapRef.current.setZoom(13);
@@ -335,8 +369,12 @@ export default function MapOverviewView() {
     return () => {
       active = false;
       clearMarkers();
+      if (polylineRef.current) {
+        polylineRef.current.setMap(null);
+        polylineRef.current = null;
+      }
     };
-  }, [filtered, mapsReady, t, zoneColorMap]);
+  }, [filtered, mapsReady, t, zoneColorMap, showRoute]);
 
   useEffect(() => {
     if (!mapsReady || !mapRef.current || !selected) return;
@@ -383,18 +421,18 @@ export default function MapOverviewView() {
               placeholder={t('mapSearchPlaceholder')}
               className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm dark:text-white outline-none"
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex gap-2">
               <select
                 value={zoneFilter}
                 onChange={(e) => setZoneFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm dark:text-white outline-none"
+                className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm dark:text-white outline-none"
               >
                 {zones.map((z) => <option key={z} value={z}>{z === 'all' ? t('allTime') : z}</option>)}
               </select>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm dark:text-white outline-none"
+                className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm dark:text-white outline-none"
               >
                 <option value="all">{t('taskFilterAll')}</option>
                 <option value="urgent">{t('statusUrgent')}</option>
@@ -402,6 +440,16 @@ export default function MapOverviewView() {
                 <option value="pending">{t('statusNoAction')}</option>
                 <option value="visitedToday">{t('statusVisitedToday')}</option>
               </select>
+              <button
+                onClick={() => setShowRoute(v => !v)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all active:scale-95 ${showRoute
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-200'
+                }`}
+                title={t('optimizeRoute') || 'Route'}
+              >
+                <RouteIcon size={14} />
+              </button>
             </div>
           </div>
 

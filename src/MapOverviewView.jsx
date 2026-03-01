@@ -226,6 +226,7 @@ export default function MapOverviewView() {
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
+      zoomControl: true,
       restriction: {
         latLngBounds: {
           north: NORTHEAST_BOUNDS.maxLat,
@@ -236,6 +237,7 @@ export default function MapOverviewView() {
         strictBounds: false,
       },
     });
+    mapRef.current.setOptions({ fullscreenControl: false });
     infoWindowRef.current = new window.google.maps.InfoWindow();
   }, [mapsReady]);
 
@@ -524,7 +526,7 @@ export default function MapOverviewView() {
                     return next;
                   });
                 }}
-                className="absolute top-2 right-2 z-10 w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300 active:scale-90 transition-all"
+                className="absolute top-2 left-2 z-10 w-9 h-9 flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-800/90 shadow-md border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300 active:scale-90 transition-all"
                 title={mapFullscreen ? 'Minimize' : 'Fullscreen'}
               >
                 {mapFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}

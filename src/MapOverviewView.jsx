@@ -295,67 +295,54 @@ export default function MapOverviewView() {
         resolved.push({ loc, point, zone, address });
       }
 
-      // Phase 2: Determine route order when optimization is active
+      // Phase 2: Always number stops. Optimize order when route mode is on.
       let ordered = resolved;
-      const routeNumberMap = new Map();
 
       if (showRoute && resolved.length >= 2) {
         const withCoords = resolved.map(r => ({ ...r, lat: r.point.lat, lng: r.point.lng }));
         ordered = sortRouteNearestNeighbor(withCoords);
-        const numMap = {};
-        ordered.forEach((r, idx) => {
-          routeNumberMap.set(r.loc.id, idx + 1);
-          numMap[r.loc.id] = idx + 1;
-        });
-        setRouteNumbers(numMap);
-      } else {
-        setRouteNumbers({});
       }
 
-      // Phase 3: Create markers (numbered when route mode is on)
-      for (const { loc, point, zone, address } of ordered) {
-        const routeNum = routeNumberMap.get(loc.id);
-        const markerOpts = {
+      const numMap = {};
+      ordered.forEach((r, idx) => { numMap[r.loc.id] = idx + 1; });
+      setRouteNumbers(numMap);
+
+      // Phase 3: Create numbered markers
+      for (let i = 0; i < ordered.length; i++) {
+        const { loc, point, zone, address } = ordered[i];
+        const stopNum = i + 1;
+        const fillColor = showRoute ? '#4f46e5' : (zoneColorMap[zone] || '#64748b');
+
+        const marker = new window.google.maps.Marker({
           map: mapRef.current,
           position: point,
-          title: loc?.name || '',
-        };
-
-        if (routeNum) {
-          markerOpts.label = {
-            text: String(routeNum),
+          title: `#${stopNum} ${loc?.name || ''}`,
+          label: {
+            text: String(stopNum),
             color: '#ffffff',
             fontSize: '10px',
             fontWeight: '700',
-          };
-          markerOpts.icon = {
+          },
+          icon: {
             path: window.google.maps.SymbolPath.CIRCLE,
             scale: 13,
-            fillColor: '#4f46e5',
+            fillColor,
             fillOpacity: 1,
             strokeColor: '#ffffff',
             strokeWeight: 2,
             labelOrigin: new window.google.maps.Point(0, 0),
-          };
-        } else {
-          markerOpts.icon = {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor: zoneColorMap[zone] || '#64748b',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 1.5,
-          };
-        }
+          },
+        });
 
-        const marker = new window.google.maps.Marker(markerOpts);
         marker.addListener('click', () => {
           setSelectedId(loc.id);
           const statusLabel = getStatusLabel(loc.computedStatus, t);
-          const stopLabel = routeNum ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#4f46e5;color:#fff;font-size:11px;font-weight:700;margin-right:6px;">${routeNum}</span>` : '';
           const content = `
             <div style="min-width:200px;max-width:240px;padding:2px 0;">
-              <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">${stopLabel}${escapeHtml(loc?.name || '')}</div>
+              <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${fillColor};color:#fff;font-size:11px;font-weight:700;margin-right:8px;shrink:0;">${stopNum}</span>
+                ${escapeHtml(loc?.name || '')}
+              </div>
               <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.35;">${escapeHtml(address || '-')}</div>
               <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
                 <span style="font-size:11px;font-weight:600;color:#334155;background:#f1f5f9;padding:3px 8px;border-radius:999px;">${escapeHtml(zone || t('other'))}</span>

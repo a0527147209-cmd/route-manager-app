@@ -307,31 +307,26 @@ export default function MapOverviewView() {
       ordered.forEach((r, idx) => { numMap[r.loc.id] = idx + 1; });
       setRouteNumbers(numMap);
 
-      // Phase 3: Create numbered markers
+      // Phase 3: Create green pin markers with stop numbers
+      const makePinSvg = (num) => {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#16a34a" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
+        return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+      };
+
       for (let i = 0; i < ordered.length; i++) {
         const { loc, point, zone, address } = ordered[i];
         const stopNum = i + 1;
-        const fillColor = showRoute ? '#4f46e5' : (zoneColorMap[zone] || '#64748b');
 
         const marker = new window.google.maps.Marker({
           map: mapRef.current,
           position: point,
           title: `#${stopNum} ${loc?.name || ''}`,
-          label: {
-            text: String(stopNum),
-            color: '#ffffff',
-            fontSize: '7px',
-            fontWeight: '700',
-          },
           icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 7,
-            fillColor,
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 1.5,
-            labelOrigin: new window.google.maps.Point(0, 0),
+            url: makePinSvg(stopNum),
+            scaledSize: new window.google.maps.Size(28, 40),
+            anchor: new window.google.maps.Point(14, 40),
           },
+          zIndex: 1000 + stopNum,
         });
 
         marker.addListener('click', () => {
@@ -340,7 +335,7 @@ export default function MapOverviewView() {
           const content = `
             <div style="min-width:200px;max-width:240px;padding:2px 0;">
               <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:${fillColor};color:#fff;font-size:9px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#16a34a;color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>
                 ${escapeHtml(loc?.name || '')}
               </div>
               <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.35;">${escapeHtml(address || '-')}</div>
@@ -362,48 +357,32 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw connecting line between all stops in order
+      // Draw connecting route line
       if (polylineRef.current) {
         if (polylineRef.current._outline) polylineRef.current._outline.setMap(null);
         polylineRef.current.setMap(null);
         polylineRef.current = null;
       }
       if (ordered.length >= 2) {
-        const lineColor = showRoute ? '#4f46e5' : '#475569';
-        // Dashed outline for depth, then solid colored line on top
-        const outlinePath = ordered.map(r => r.point);
+        const routePath = ordered.map(r => r.point);
         const outlineLine = new window.google.maps.Polyline({
-          path: outlinePath,
-          strokeColor: '#ffffff',
-          strokeWeight: 6,
-          strokeOpacity: 0.7,
+          path: routePath,
+          strokeColor: '#1e3a5f',
+          strokeWeight: 7,
+          strokeOpacity: 0.6,
           map: mapRef.current,
           geodesic: true,
           zIndex: 1,
         });
         polylineRef.current = new window.google.maps.Polyline({
-          path: outlinePath,
-          strokeColor: lineColor,
-          strokeWeight: 3.5,
+          path: routePath,
+          strokeColor: '#3b5fc0',
+          strokeWeight: 4,
           strokeOpacity: 1,
           map: mapRef.current,
           geodesic: true,
           zIndex: 2,
-          icons: [
-            {
-              icon: {
-                path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 3.5,
-                fillColor: lineColor,
-                fillOpacity: 1,
-                strokeColor: '#ffffff',
-                strokeWeight: 1,
-              },
-              repeat: '70px',
-            },
-          ],
         });
-        // Store outline so we can clean it up
         polylineRef.current._outline = outlineLine;
       }
 
@@ -534,7 +513,7 @@ export default function MapOverviewView() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2.5 min-w-0">
                     {routeNumbers[loc.id] && (
-                      <span className="shrink-0 w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[12px] font-bold mt-0.5">
+                      <span className="shrink-0 w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center text-[11px] font-bold mt-0.5">
                         {routeNumbers[loc.id]}
                       </span>
                     )}

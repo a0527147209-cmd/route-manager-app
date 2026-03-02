@@ -14,6 +14,8 @@ import {
   Trash2,
   Save,
   MoreVertical,
+  PowerOff,
+  Power,
 } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import MenuDrawer from './MenuDrawer';
@@ -266,6 +268,13 @@ export default function CustomerDetailsView() {
 
 
       <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
+        {location.inactive && (
+          <div className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700">
+            <PowerOff size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">{t('inactiveCustomer')}</span>
+          </div>
+        )}
+
         {/* Customer Info Card */}
         {isEditingCustomer ? (
           <div className="bg-card p-4 rounded-xl shadow-sm border-2 border-primary/40 space-y-3">
@@ -897,7 +906,28 @@ export default function CustomerDetailsView() {
         )}
         {/* Admin Actions */}
         {isAdmin && (
-          <div className="mt-8 px-4">
+          <div className="mt-8 px-4 space-y-3">
+            <button
+              onClick={async () => {
+                const isCurrentlyInactive = !!location.inactive;
+                if (await confirm({
+                  title: isCurrentlyInactive ? (t('markActive')) : (t('markInactive')),
+                  message: isCurrentlyInactive ? (t('confirmMarkActive')) : (t('confirmMarkInactive')),
+                  confirmText: isCurrentlyInactive ? (t('markActive')) : (t('markInactive')),
+                  cancelText: t('cancel'),
+                })) {
+                  updateLocation(location.id, { inactive: !isCurrentlyInactive });
+                }
+              }}
+              className={`w-full py-3 rounded-xl font-semibold border active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
+                location.inactive
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                  : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+              }`}
+            >
+              {location.inactive ? <Power size={16} /> : <PowerOff size={16} />}
+              <span>{location.inactive ? t('markActive') : t('markInactive')}</span>
+            </button>
             <button
               onClick={async () => {
                 if (await confirm({

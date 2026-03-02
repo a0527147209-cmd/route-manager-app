@@ -392,6 +392,17 @@ const translations = {
     quickKPIs: 'Daily Performance',
     // Route Optimization
     optimizeRoute: 'Route Order',
+    // Inactive
+    inactive: 'Inactive',
+    active: 'Active',
+    markInactive: 'Mark as Inactive',
+    markActive: 'Mark as Active',
+    confirmMarkInactive: 'Mark this customer as inactive? (e.g. machine collected)',
+    confirmMarkActive: 'Reactivate this customer?',
+    inactiveCustomer: 'Inactive Customer',
+    showInactive: 'Show Inactive',
+    hideInactive: 'Hide Inactive',
+    machineCollected: 'Machine Collected',
   },
 };
 

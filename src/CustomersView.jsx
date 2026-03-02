@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, Search, ChevronRight, X, MoreVertical } from 'lucide-react';
+import { Users, Menu, Search, ChevronRight, X, MoreVertical, EyeOff } from 'lucide-react';
 import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
@@ -110,10 +110,11 @@ function StatBox({ loc, t }) {
 }
 
 function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visited, showIndex, isFocused }) {
+  const isInactive = !!loc?.inactive;
   return (
     <div
       data-customer-id={loc?.id}
-      className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${visited ? 'bg-slate-50/60 dark:bg-slate-800/30' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
+      className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${isInactive ? 'opacity-50' : ''} ${visited ? 'bg-slate-50/60 dark:bg-slate-800/30' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {showIndex && (
@@ -124,12 +125,19 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+          <span className={`text-[13px] font-semibold truncate ${isInactive ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-100'}`}>
             {loc?.name ?? '—'}
           </span>
-          <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
-            {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-          </span>
+          {isInactive && (
+            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0">
+              {t('inactive')}
+            </span>
+          )}
+          {!isInactive && (
+            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
+              {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+            </span>
+          )}
           {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
             <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
               x{loc.changeMachineCount || 1}
@@ -166,6 +174,7 @@ export default function CustomersView() {
   const { isAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
+  const [showInactive, setShowInactive] = useState(false);
   const scrollRef = useRef(null);
   useScrollRestore(scrollRef);
 
@@ -227,7 +236,11 @@ export default function CustomersView() {
     }
   };
 
-  const filteredLocations = useMemo(() => validLocations.filter(matchesSearch), [validLocations, searchWords]);
+  const inactiveCount = useMemo(() => validLocations.filter(loc => loc.inactive).length, [validLocations]);
+  const filteredLocations = useMemo(() => validLocations.filter(loc => {
+    if (!showInactive && loc.inactive) return false;
+    return matchesSearch(loc);
+  }), [validLocations, searchWords, showInactive]);
 
   function getGroupKey(loc) {
     if (sortBy === 'city') return zoneKey(loc?.city);
@@ -372,6 +385,22 @@ export default function CustomersView() {
                 </button>
               )}
             </div>
+            {inactiveCount > 0 && (
+              <button
+                onClick={() => setShowInactive(v => !v)}
+                className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all active:scale-95 shrink-0 relative ${
+                  showInactive
+                    ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400'
+                    : 'border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+                }`}
+                title={showInactive ? t('hideInactive') : t('showInactive')}
+              >
+                <EyeOff size={15} strokeWidth={1.8} />
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {inactiveCount}
+                </span>
+              </button>
+            )}
             {!isInnerPage && (
               <select
                 value={sortBy}
@@ -420,15 +449,21 @@ export default function CustomersView() {
                     <DraggableCard key={loc?.id} loc={loc} index={index} visited={isRecentlyVisited(loc)}>
                       <div
                         data-customer-id={loc?.id}
-                        className={`flex-1 min-w-0 flex items-center gap-2.5 ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
+                        className={`flex-1 min-w-0 flex items-center gap-2.5 ${loc?.inactive ? 'opacity-50' : ''} ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
                         onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
                       >
                         <div className="flex-1 min-w-0 cursor-pointer">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">{loc?.name ?? '—'}</span>
-                            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
-                              {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-                            </span>
+                            <span className={`text-[13px] font-semibold truncate ${loc?.inactive ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-100'}`}>{loc?.name ?? '—'}</span>
+                            {loc?.inactive ? (
+                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0">
+                                {t('inactive')}
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
+                                {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+                              </span>
+                            )}
                             {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
                               <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
                                 x{loc.changeMachineCount || 1}

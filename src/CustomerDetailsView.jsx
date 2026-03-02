@@ -171,27 +171,22 @@ export default function CustomerDetailsView() {
     navigate(`/maps?q=${encodeURIComponent(addr)}`);
   };
 
-  const formatVisitDateShort = (isoStr) => {
+  const parseLocalDate = (isoStr) => {
     if (!isoStr) return null;
-    try {
-      const d = new Date(isoStr);
-      if (Number.isNaN(d.getTime())) return null;
-      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-    } catch {
-      return null;
-    }
+    const [y, m, d] = isoStr.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return null;
+    const date = new Date(y, m - 1, d);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
+  const formatVisitDateShort = (isoStr) => {
+    const d = parseLocalDate(isoStr);
+    return d ? d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : null;
   };
 
   const formatLogDate = (isoStr) => {
-    if (!isoStr) return '—';
-    try {
-      const d = new Date(isoStr);
-      if (Number.isNaN(d.getTime())) return '—';
-      // Requested format: Month Day Year (MM/DD/YYYY numeric)
-      return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-    } catch {
-      return '—';
-    }
+    const d = parseLocalDate(isoStr);
+    return d ? d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : '—';
   };
 
   const calculateIReceive = (log) => {

@@ -28,7 +28,7 @@ export default function HomeView() {
   const isReturning = routeLocation.state?.fromMenu || routeLocation.key !== 'default';
 
   const totalCustomers = locations.length;
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
   const todayEarnings = useMemo(() => {
     let sum = 0;

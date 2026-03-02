@@ -143,9 +143,10 @@ export function LocationsProvider({ children }) {
     const snapshot = await getDocs(colRef);
     if (!snapshot.empty) return;
 
-    const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const lastWeek = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const _fmt = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const today = _fmt(new Date());
+    const yesterday = _fmt(new Date(Date.now() - 86400000));
+    const lastWeek = _fmt(new Date(Date.now() - 7 * 86400000));
 
     const seed = [
       { name: 'Cafe Central', address: '123 Main St', city: 'Tel Aviv', state: 'Israel', region: 'Center', status: 'visited', commissionRate: 0.4, hasChangeMachine: true, lastVisited: today, lastCollection: '245.00', notes: '', logNotes: 'מילוי מכונה הושלם.', bills: { 50: 4, 20: 2, 10: 0, 5: 1, 1: 0 }, logs: [{ date: today, commissionRate: 0.4, collection: '245.00', bills: { 50: 4, 20: 2, 10: 0, 5: 1, 1: 0 }, notes: 'מילוי מכונה הושלם.' }] },

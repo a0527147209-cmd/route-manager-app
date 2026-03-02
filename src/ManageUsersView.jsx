@@ -335,7 +335,7 @@ export default function ManageUsersView() {
     return () => clearInterval(id);
   }, []);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 
   // KPIs per user
   const userKPIs = useMemo(() => {

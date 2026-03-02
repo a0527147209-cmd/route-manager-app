@@ -64,7 +64,10 @@ export default function LocationDetailsView() {
     setLoading(false);
   }, [id, locations]);
 
-  const getTodayISO = () => new Date().toISOString().slice(0, 10);
+  const getTodayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
   const getTodayFormatted = () => formatVisitDateShort(getTodayISO());
 
   const handleSave = () => {

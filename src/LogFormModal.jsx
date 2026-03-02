@@ -33,10 +33,19 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
     }
   }, [location, initialLog]);
 
-  const getTodayISO = () => new Date().toISOString().slice(0, 10);
+  const getTodayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
   const getTodayFormatted = () => {
     try {
-      const d = initialLog ? new Date(initialLog.date) : new Date();
+      let d;
+      if (initialLog?.date) {
+        const [y, m, day] = initialLog.date.slice(0, 10).split('-').map(Number);
+        d = new Date(y, m - 1, day);
+      } else {
+        d = new Date();
+      }
       return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
     } catch {
       return '—';
@@ -82,10 +91,13 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
     if (!location) return;
 
     if (initialLog && logIndex >= 0) {
-      // Update existing log
+      const coll = parseFloat(amount) || 0;
+      const cr = parseFloat(initialLog.commissionRate ?? location.commissionRate ?? 0.4) || 0;
       const updatedLogEntry = {
         ...initialLog,
         collection: amount,
+        totalWeight: coll,
+        halfWeight: +(coll * (1 - cr)).toFixed(2),
         bills,
         notes,
         noMoney,
@@ -104,11 +116,14 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
       }
 
     } else {
-      // Create new log
+      const coll = parseFloat(amount) || 0;
+      const cr = parseFloat(location.commissionRate ?? 0.4) || 0;
       const newLog = {
         date: getTodayISO(),
-        commissionRate: location.commissionRate ?? 0.4,
+        commissionRate: cr,
         collection: amount,
+        totalWeight: coll,
+        halfWeight: +(coll * (1 - cr)).toFixed(2),
         bills,
         notes,
         noMoney,

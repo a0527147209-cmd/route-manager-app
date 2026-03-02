@@ -13,7 +13,8 @@ const NO_VISIT_HIGH_DAYS = 65;
 const NO_MONEY_STREAK = 2;
 
 function toIsoDate(d) {
-  return new Date(d).toISOString().slice(0, 10);
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
 }
 
 function daysSince(isoDate) {

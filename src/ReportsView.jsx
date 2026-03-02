@@ -45,22 +45,24 @@ function getAllLogs(locations) {
   return logs;
 }
 
+function localISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function getDateRangeForPreset(preset) {
   const now = new Date();
-  const to = now.toISOString().slice(0, 10);
+  const to = localISO(now);
   let from;
   if (preset === 'month') {
-    from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    from = localISO(new Date(now.getFullYear(), now.getMonth(), 1));
   } else if (preset === '3mo') {
-    const d = new Date(now);
-    d.setMonth(d.getMonth() - 3);
-    from = d.toISOString().slice(0, 10);
+    const d = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+    from = localISO(d);
   } else if (preset === '6mo') {
-    const d = new Date(now);
-    d.setMonth(d.getMonth() - 6);
-    from = d.toISOString().slice(0, 10);
+    const d = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+    from = localISO(d);
   } else if (preset === 'year') {
-    from = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
+    from = localISO(new Date(now.getFullYear(), 0, 1));
   } else {
     from = '1970-01-01';
   }
@@ -68,15 +70,14 @@ function getDateRangeForPreset(preset) {
 }
 
 function getPreviousPeriod(from, to) {
-  const f = new Date(from);
-  const t = new Date(to);
+  const [fy, fm, fd] = from.split('-').map(Number);
+  const [ty, tm, td] = to.split('-').map(Number);
+  const f = new Date(fy, fm - 1, fd);
+  const t = new Date(ty, tm - 1, td);
   const diff = t.getTime() - f.getTime();
   const prevTo = new Date(f.getTime() - 1);
   const prevFrom = new Date(prevTo.getTime() - diff);
-  return {
-    from: prevFrom.toISOString().slice(0, 10),
-    to: prevTo.toISOString().slice(0, 10),
-  };
+  return { from: localISO(prevFrom), to: localISO(prevTo) };
 }
 
 function groupByTime(logs, granularity) {
@@ -89,7 +90,7 @@ function groupByTime(logs, granularity) {
     } else if (granularity === 'weekly') {
       const weekStart = new Date(d);
       weekStart.setDate(d.getDate() - d.getDay());
-      key = weekStart.toISOString().slice(0, 10);
+      key = localISO(weekStart);
     } else {
       key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
@@ -130,11 +131,8 @@ export default function ReportsView() {
   const [visitsPreset, setVisitsPreset] = useState(5); // 2 | 5 | 8 | 'custom'
   const [visitsCustom, setVisitsCustom] = useState(10);
   const [datePreset, setDatePreset] = useState('month'); // 'month'|'3mo'|'6mo'|'year'|'all'|'custom'
-  const [dateFrom, setDateFrom] = useState(() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-  });
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateFrom, setDateFrom] = useState(() => localISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
+  const [dateTo, setDateTo] = useState(() => localISO(new Date()));
   const [filterBy, setFilterBy] = useState('zone'); // 'zone' | 'location'
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);

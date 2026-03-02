@@ -123,13 +123,13 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
         </span>
       )}
 
-      <div className="flex-1 min-w-0">
+      <div className={`flex-1 min-w-0 ${isInactive ? 'line-through decoration-slate-400 dark:decoration-slate-500' : ''}`}>
         <div className="flex items-center gap-1.5">
-          <span className={`text-[13px] font-semibold truncate ${isInactive ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-100'}`}>
+          <span className={`text-[13px] font-semibold truncate ${isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
             {loc?.name ?? '—'}
           </span>
           {isInactive && (
-            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0">
+            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0 no-underline">
               {t('inactive')}
             </span>
           )}
@@ -452,11 +452,11 @@ export default function CustomersView() {
                         className={`flex-1 min-w-0 flex items-center gap-2.5 ${loc?.inactive ? 'opacity-50' : ''} ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
                         onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
                       >
-                        <div className="flex-1 min-w-0 cursor-pointer">
+                        <div className={`flex-1 min-w-0 cursor-pointer ${loc?.inactive ? 'line-through decoration-slate-400 dark:decoration-slate-500' : ''}`}>
                           <div className="flex items-center gap-1.5">
-                            <span className={`text-[13px] font-semibold truncate ${loc?.inactive ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-800 dark:text-slate-100'}`}>{loc?.name ?? '—'}</span>
+                            <span className={`text-[13px] font-semibold truncate ${loc?.inactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{loc?.name ?? '—'}</span>
                             {loc?.inactive ? (
-                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0">
+                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0 no-underline">
                                 {t('inactive')}
                               </span>
                             ) : (

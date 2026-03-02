@@ -61,6 +61,8 @@ export default function CustomerDetailsView() {
       subtitle: location?.subtitle ?? '',
       commissionRate: location?.commissionRate ? Math.round(location.commissionRate * 100) : 40,
       changeMachineCount: location?.changeMachineCount ?? (location?.hasChangeMachine ? 1 : 0),
+      lat: location?.lat ?? null,
+      lng: location?.lng ?? null,
     });
     setIsEditingCustomer(true);
   };
@@ -79,6 +81,8 @@ export default function CustomerDetailsView() {
       changeMachineCount: parseInt(editForm.changeMachineCount) || 0,
       hasChangeMachine: false,
       fullAddress: (editForm.fullAddress || '').trim(),
+      lat: editForm.lat ?? null,
+      lng: editForm.lng ?? null,
     });
     setIsEditingCustomer(false);
   };
@@ -295,6 +299,8 @@ export default function CustomerDetailsView() {
                       state: place.state || f.state,
                       zipCode: place.zipCode || f.zipCode,
                       fullAddress: place.fullAddress || f.fullAddress,
+                      lat: place.lat ?? f.lat,
+                      lng: place.lng ?? f.lng,
                     }));
                   }}
                   className="w-full p-2.5 text-sm bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary dark:text-white transition-all"

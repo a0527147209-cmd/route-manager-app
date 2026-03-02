@@ -25,7 +25,9 @@ export default function AddLocationView() {
     fullAddress: '',
     commissionRate: '0.40',
     hasChangeMachine: false,
-    notes: ''
+    notes: '',
+    lat: null,
+    lng: null,
   });
 
   const handleChange = (e) => {
@@ -52,13 +54,23 @@ export default function AddLocationView() {
       fullAddress: formData.fullAddress || '',
       notes: formData.notes || '',
       lastVisited: null,
-      status: 'pending'
+      status: 'pending',
+      lat: formData.lat ?? null,
+      lng: formData.lng ?? null,
     };
 
     try {
       const newId = await addLocation(newLocation);
       console.log("Customer added with Firestore ID:", newId);
-      navigate('/customers');
+      const zoneKey = (formData.zone || '').trim().toLowerCase();
+      const areaKey = zoneKey ? `zone|${zoneKey}` : null;
+      if (areaKey) {
+        navigate(`/customers/area/${encodeURIComponent(areaKey)}`, {
+          state: { focusCustomerId: newId },
+        });
+      } else {
+        navigate('/customers');
+      }
     } catch (error) {
       console.error("Failed to add customer:", error);
       alert("Error adding customer: " + error.message);
@@ -127,6 +139,8 @@ export default function AddLocationView() {
                       state: place.state || prev.state,
                       zipCode: place.zipCode || prev.zipCode,
                       fullAddress: place.fullAddress || prev.fullAddress,
+                      lat: place.lat ?? prev.lat,
+                      lng: place.lng ?? prev.lng,
                     }));
                   }}
                   placeholder="Start typing an address..."

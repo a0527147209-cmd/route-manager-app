@@ -191,8 +191,7 @@ export default function CustomerDetailsView() {
 
   const calculateIReceive = (log) => {
     const collection = parseFloat(log.collection) || 0;
-    const raw = parseFloat(log.commissionRate);
-    const rate = Number.isFinite(raw) ? raw : (parseFloat(location?.commissionRate) || 0.4);
+    const rate = parseFloat(log.commissionRate) || parseFloat(location?.commissionRate) || 0.4;
     return (collection * (1 - rate)).toFixed(2);
   };
 

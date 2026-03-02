@@ -92,8 +92,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
 
     if (initialLog && logIndex >= 0) {
       const coll = parseFloat(amount) || 0;
-      const rawCr = parseFloat(initialLog.commissionRate ?? location.commissionRate);
-      const cr = Number.isFinite(rawCr) ? rawCr : 0.4;
+      const cr = parseFloat(initialLog.commissionRate ?? location.commissionRate) || 0.4;
       const updatedLogEntry = {
         ...initialLog,
         collection: amount,
@@ -118,8 +117,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
 
     } else {
       const coll = parseFloat(amount) || 0;
-      const rawCr = parseFloat(location.commissionRate);
-      const cr = Number.isFinite(rawCr) ? rawCr : 0.4;
+      const cr = parseFloat(location.commissionRate) || 0.4;
       const newLog = {
         date: getTodayISO(),
         commissionRate: cr,

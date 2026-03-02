@@ -246,8 +246,7 @@ export default function ReportsView() {
     const customerSet = new Set();
     for (const log of filteredLogs) {
       const coll = parseFloat(log.collection) || 0;
-      const rawR = parseFloat(log.commissionRate);
-      const rate = Number.isFinite(rawR) ? rawR : 0.4;
+      const rate = parseFloat(log.commissionRate) || 0.4;
       totalW += coll;
       halfW += coll * (1 - rate);
       custCut += coll * rate;
@@ -280,8 +279,7 @@ export default function ReportsView() {
       let tw = 0, hw = 0, cc = 0, prevTw = 0;
       for (const log of (cLogs || [])) {
         const coll = parseFloat(log.collection) || 0;
-        const rawR2 = parseFloat(log.commissionRate);
-        const rate = Number.isFinite(rawR2) ? rawR2 : 0.4;
+        const rate = parseFloat(log.commissionRate) || 0.4;
         tw += coll; hw += coll * (1 - rate); cc += coll * rate;
       }
       for (const log of (pLogs || [])) {

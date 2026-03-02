@@ -30,6 +30,7 @@ const NYC_BOROUGH_BOUNDS = {
   'staten island':  { minLat: 40.496, maxLat: 40.651, minLng: -74.255, maxLng: -74.052 },
 };
 const MIDWOOD_DEPOT = { lat: 40.6214, lng: -73.9676 };
+const ZONE_LINE_COLORS = ['#E63946', '#2A9D8F', '#F4A261', '#8338EC', '#3A86FF', '#FF006E', '#FB5607'];
 let mapsLoadPromise = null;
 
 // --- TSP Solver: Nearest Neighbor + 2-Opt ---
@@ -419,33 +420,9 @@ export default function MapOverviewView() {
       }
       setRouteNumbers(numMap);
 
-      // Phase 3: Markers
+      // Phase 3: Markers (depot is hidden — used only as TSP anchor)
 
-      // 3a — Depot marker (star icon, dark purple)
-      const depotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><polygon points="18,2 22.4,13.2 34,13.2 24.8,20.8 28.4,32 18,25 7.6,32 11.2,20.8 2,13.2 13.6,13.2" fill="#6D28D9" stroke="#fff" stroke-width="1.5"/></svg>`;
-      const depotMarker = new window.google.maps.Marker({
-        map: mapRef.current,
-        position: MIDWOOD_DEPOT,
-        title: 'Midwood Depot (Start / End)',
-        icon: {
-          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(depotSvg),
-          scaledSize: new window.google.maps.Size(36, 36),
-          anchor: new window.google.maps.Point(18, 18),
-        },
-        zIndex: 9999,
-      });
-      depotMarker.addListener('click', () => {
-        if (infoWindowRef.current) {
-          infoWindowRef.current.setContent(
-            `<div style="padding:2px 0;"><div style="font-size:14px;font-weight:700;color:#6D28D9;">★ Midwood Depot</div><div style="margin-top:4px;font-size:12px;color:#475569;">Route start &amp; end point</div></div>`
-          );
-          infoWindowRef.current.open({ map: mapRef.current, anchor: depotMarker });
-        }
-      });
-      markersRef.current.push(depotMarker);
-      bounds.extend(MIDWOOD_DEPOT);
-
-      // 3b — Green numbered pin SVG
+      // 3a — Green numbered pin SVG
       const makeGreenPin = (num) => {
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#16a34a" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
         return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
@@ -491,8 +468,7 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Phase 4: One closed-loop polyline per zone (straight lines, no road snapping)
-      // Depot → Stop 1 → Stop 2 → … → Last Stop → Depot
+      // Phase 4: One polyline per zone — unique color, no depot in path
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
@@ -508,25 +484,21 @@ export default function MapOverviewView() {
       }
 
       const allLines = [];
-      for (const { items } of optimizedZones) {
-        if (items.length === 0) continue;
+      optimizedZones.forEach(({ items }, zIdx) => {
+        if (items.length < 2) return;
 
-        const routeCoordinates = [
-          MIDWOOD_DEPOT,
-          ...items.map(r => r.point),
-          MIDWOOD_DEPOT,
-        ];
+        const routeCoordinates = items.map(r => r.point);
 
         allLines.push(new window.google.maps.Polyline({
           path: routeCoordinates,
-          strokeColor: '#3A58F9',
+          strokeColor: ZONE_LINE_COLORS[zIdx % ZONE_LINE_COLORS.length],
           strokeWeight: 5,
           strokeOpacity: 0.7,
           map: mapRef.current,
           geodesic: true,
           zIndex: 2,
         }));
-      }
+      });
       polylineRef.current = allLines;
 
       if (markersRef.current.length === 1) {
@@ -604,17 +576,15 @@ export default function MapOverviewView() {
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5 items-center">
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 shrink-0" style={{ color: '#6D28D9', fontSize: 10, lineHeight: 1 }}>★</span>
-                Depot
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#16a34a' }} />
                 Optimized Stop
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#3A58F9' }} />
-                Route Loop
-              </span>
+              {zones.filter(z => z !== 'all').map((z, i) => (
+                <span key={z} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ZONE_LINE_COLORS[i % ZONE_LINE_COLORS.length] }} />
+                  {z}
+                </span>
+              ))}
             </div>
           </div>
 

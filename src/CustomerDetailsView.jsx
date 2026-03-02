@@ -38,6 +38,9 @@ export default function CustomerDetailsView() {
   const [showNavMenu, setShowNavMenu] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [viewingLogNote, setViewingLogNote] = useState(null);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
 
   // Edit Log State
   const [editingLog, setEditingLog] = useState(null);
@@ -160,6 +163,37 @@ export default function CustomerDetailsView() {
     setShowLogModal(false);
     setEditingLog(null);
     setEditingLogIndex(-1);
+  };
+
+  const INACTIVE_PASSWORD = '123456';
+
+  const handleToggleInactive = async () => {
+    if (isAdmin) {
+      const isCurrentlyInactive = !!location.inactive;
+      if (await confirm({
+        title: isCurrentlyInactive ? t('markActive') : t('markInactive'),
+        message: isCurrentlyInactive ? t('confirmMarkActive') : t('confirmMarkInactive'),
+        confirmText: isCurrentlyInactive ? t('markActive') : t('markInactive'),
+        cancelText: t('cancel'),
+      })) {
+        updateLocation(location.id, { inactive: !isCurrentlyInactive });
+      }
+    } else {
+      setPasswordInput('');
+      setPasswordError(false);
+      setShowPasswordPrompt(true);
+    }
+  };
+
+  const handlePasswordSubmit = () => {
+    if (passwordInput === INACTIVE_PASSWORD) {
+      setShowPasswordPrompt(false);
+      setPasswordInput('');
+      setPasswordError(false);
+      updateLocation(location.id, { inactive: !location.inactive });
+    } else {
+      setPasswordError(true);
+    }
   };
 
   const openWaze = () => {
@@ -904,30 +938,22 @@ export default function CustomerDetailsView() {
             </div>
           </>
         )}
-        {/* Admin Actions */}
-        {isAdmin && (
-          <div className="mt-8 px-4 space-y-3">
-            <button
-              onClick={async () => {
-                const isCurrentlyInactive = !!location.inactive;
-                if (await confirm({
-                  title: isCurrentlyInactive ? (t('markActive')) : (t('markInactive')),
-                  message: isCurrentlyInactive ? (t('confirmMarkActive')) : (t('confirmMarkInactive')),
-                  confirmText: isCurrentlyInactive ? (t('markActive')) : (t('markInactive')),
-                  cancelText: t('cancel'),
-                })) {
-                  updateLocation(location.id, { inactive: !isCurrentlyInactive });
-                }
-              }}
-              className={`w-full py-3 rounded-xl font-semibold border active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
-                location.inactive
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
-                  : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/40'
-              }`}
-            >
-              {location.inactive ? <Power size={16} /> : <PowerOff size={16} />}
-              <span>{location.inactive ? t('markActive') : t('markInactive')}</span>
-            </button>
+        {/* Inactive Toggle - All users */}
+        <div className="mt-8 px-4 space-y-3">
+          <button
+            onClick={handleToggleInactive}
+            className={`w-full py-3 rounded-xl font-semibold border active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
+              location.inactive
+                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/40'
+                : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/40'
+            }`}
+          >
+            {location.inactive ? <Power size={16} /> : <PowerOff size={16} />}
+            <span>{location.inactive ? t('markActive') : t('markInactive')}</span>
+          </button>
+
+          {/* Delete - Admin Only */}
+          {isAdmin && (
             <button
               onClick={async () => {
                 if (await confirm({
@@ -945,7 +971,66 @@ export default function CustomerDetailsView() {
             >
               <span>{t('deleteThisCustomer')}</span>
             </button>
-          </div>
+          )}
+        </div>
+
+        {/* Password Prompt Modal */}
+        {showPasswordPrompt && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-[9998]"
+              onClick={() => setShowPasswordPrompt(false)}
+              aria-hidden="true"
+            />
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-full max-w-[280px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-600 p-5 flex flex-col items-center gap-4">
+              <div className="text-center space-y-2">
+                <div className="mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-1 bg-amber-100 dark:bg-amber-900/30">
+                  <PowerOff size={20} className="text-amber-600 dark:text-amber-400" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+                  {location.inactive ? t('markActive') : t('markInactive')}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t('enterPassword')}
+                </p>
+              </div>
+              <div className="w-full">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  value={passwordInput}
+                  onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
+                  onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                  placeholder="••••••"
+                  autoFocus
+                  className={`w-full px-3 py-2.5 text-center text-base font-semibold rounded-xl border outline-none transition-all ${
+                    passwordError
+                      ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 ring-2 ring-red-300 dark:ring-red-700'
+                      : 'border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
+                  }`}
+                />
+                {passwordError && (
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1.5 text-center font-medium">
+                    {t('wrongPassword')}
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2 w-full">
+                <button
+                  onClick={() => setShowPasswordPrompt(false)}
+                  className="flex-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-95 transition-all text-xs"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  onClick={handlePasswordSubmit}
+                  className="flex-1 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md active:scale-95 transition-all text-xs"
+                >
+                  {t('confirm')}
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

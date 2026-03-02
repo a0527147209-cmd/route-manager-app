@@ -403,6 +403,9 @@ const translations = {
     showInactive: 'Show Inactive',
     hideInactive: 'Hide Inactive',
     machineCollected: 'Machine Collected',
+    enterPassword: 'Enter password to continue',
+    wrongPassword: 'Wrong password',
+    confirm: 'Confirm',
   },
 };
 

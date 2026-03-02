@@ -111,7 +111,7 @@ function StatBox({ loc, t }) {
 
 function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visitStatus = 'normal', showIndex, isFocused }) {
   const isInactive = !!loc?.inactive;
-  const statusBg = isInactive ? '' : visitStatus === 'recent' ? 'bg-slate-100/70 dark:bg-slate-800/40' : visitStatus === 'overdue' ? 'bg-red-50/70 dark:bg-red-950/30' : '';
+  const statusBg = isInactive ? '' : visitStatus === 'recent' ? 'bg-slate-200/60 dark:bg-slate-700/40' : visitStatus === 'overdue' ? 'bg-red-100/80 dark:bg-red-900/30' : '';
   return (
     <div
       data-customer-id={loc?.id}

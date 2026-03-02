@@ -33,7 +33,7 @@ const MIDWOOD_DEPOT = { lat: 40.6214, lng: -73.9676 };
 const ZONE_LINE_COLORS = ['#E63946', '#2A9D8F', '#F4A261', '#8338EC', '#3A86FF', '#FF006E', '#FB5607'];
 let mapsLoadPromise = null;
 
-// --- TSP Solver: Nearest Neighbor + 2-Opt ---
+// --- TSP Solver: Nearest Neighbor + 2-Opt (open-path) ---
 
 function haversineDist(a, b) {
   const toRad = v => v * Math.PI / 180;
@@ -50,24 +50,30 @@ function solveZoneTSP(items, depot) {
   const n = items.length;
   if (n <= 2) return items;
 
-  const pts = [depot, ...items.map(r => r.point)];
-  const total = pts.length;
+  const stops = items.map(r => r.point);
 
   const d = [];
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < n; i++) {
     d[i] = [];
-    for (let j = 0; j < total; j++) {
-      d[i][j] = i === j ? 0 : haversineDist(pts[i], pts[j]);
+    for (let j = 0; j < n; j++) {
+      d[i][j] = i === j ? 0 : haversineDist(stops[i], stops[j]);
     }
   }
 
-  // Step 1: Nearest Neighbor starting from depot (index 0)
-  const visited = new Set([0]);
-  const route = [];
-  let cur = 0;
-  for (let s = 0; s < n; s++) {
+  // Step 1: Nearest Neighbor — seed from the stop closest to depot
+  let startIdx = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < n; i++) {
+    const dd = haversineDist(depot, stops[i]);
+    if (dd < minDist) { minDist = dd; startIdx = i; }
+  }
+
+  const visited = new Set([startIdx]);
+  const route = [startIdx];
+  let cur = startIdx;
+  while (visited.size < n) {
     let best = -1, bestD = Infinity;
-    for (let j = 1; j < total; j++) {
+    for (let j = 0; j < n; j++) {
       if (!visited.has(j) && d[cur][j] < bestD) {
         bestD = d[cur][j];
         best = j;
@@ -79,8 +85,8 @@ function solveZoneTSP(items, depot) {
     cur = best;
   }
 
-  // Step 2: 2-Opt — reverse segments until no crossing edges remain
-  // Tour: depot(0) → route[0] → route[1] → … → route[m-1] → depot(0)
+  // Step 2: 2-Opt on OPEN path (matches rendered polyline — no depot edges)
+  // Path: route[0] → route[1] → … → route[m-1]
   const m = route.length;
   let improved = true;
   let safety = 1000;
@@ -88,10 +94,9 @@ function solveZoneTSP(items, depot) {
     improved = false;
     for (let i = 0; i < m - 1; i++) {
       for (let j = i + 1; j < m; j++) {
-        const prevI = i === 0 ? 0 : route[i - 1];
-        const nextJ = j === m - 1 ? 0 : route[j + 1];
-        const gain = (d[prevI][route[i]] + d[route[j]][nextJ])
-                   - (d[prevI][route[j]] + d[route[i]][nextJ]);
+        let gain = 0;
+        if (i > 0) gain += d[route[i - 1]][route[i]] - d[route[i - 1]][route[j]];
+        if (j < m - 1) gain += d[route[j]][route[j + 1]] - d[route[i]][route[j + 1]];
         if (gain > 1e-10) {
           for (let l = i, r = j; l < r; l++, r--) {
             [route[l], route[r]] = [route[r], route[l]];
@@ -102,7 +107,7 @@ function solveZoneTSP(items, depot) {
     }
   }
 
-  return route.map(idx => items[idx - 1]);
+  return route.map(idx => items[idx]);
 }
 
 function loadGoogleMaps() {

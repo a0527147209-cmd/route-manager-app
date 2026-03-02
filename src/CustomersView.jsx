@@ -109,12 +109,13 @@ function StatBox({ loc, t }) {
   );
 }
 
-function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visited, showIndex, isFocused }) {
+function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visitStatus = 'normal', showIndex, isFocused }) {
   const isInactive = !!loc?.inactive;
+  const statusBg = isInactive ? '' : visitStatus === 'recent' ? 'bg-slate-100/70 dark:bg-slate-800/40' : visitStatus === 'overdue' ? 'bg-red-50/70 dark:bg-red-950/30' : '';
   return (
     <div
       data-customer-id={loc?.id}
-      className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${isInactive ? 'opacity-50' : ''} ${visited ? 'bg-slate-50/60 dark:bg-slate-800/30' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
+      className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${isInactive ? 'opacity-50' : ''} ${statusBg || 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {showIndex && (
@@ -315,10 +316,13 @@ export default function CustomersView() {
   const getMapsUrl = (loc) =>
     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}`;
 
-  const isRecentlyVisited = (loc) => {
-    if (loc?.status !== 'visited' || !loc?.lastVisited) return false;
+  const getVisitStatus = (loc) => {
+    if (!loc?.lastVisited) return 'overdue';
     const [y, m, d] = loc.lastVisited.slice(0, 10).split('-').map(Number);
-    return (Date.now() - new Date(y, m - 1, d).getTime()) <= 10 * 24 * 60 * 60 * 1000;
+    const daysSince = (Date.now() - new Date(y, m - 1, d).getTime()) / (24 * 60 * 60 * 1000);
+    if (daysSince <= 10) return 'recent';
+    if (daysSince >= 40) return 'overdue';
+    return 'normal';
   };
 
   const handleBack = () => {
@@ -446,7 +450,7 @@ export default function CustomersView() {
                   onReorder={(newOrder) => reorderLocations(newOrder.map(loc => loc.id))}
                 >
                   {areaLocations.map((loc, index) => (
-                    <DraggableCard key={loc?.id} loc={loc} index={index} visited={isRecentlyVisited(loc)}>
+                    <DraggableCard key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)}>
                       <div
                         data-customer-id={loc?.id}
                         className={`flex-1 min-w-0 flex items-center gap-2.5 ${loc?.inactive ? 'opacity-50' : ''} ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
@@ -487,7 +491,7 @@ export default function CustomersView() {
               <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
                 {areaLocations.map((loc, index) => (
                     <div key={loc?.id} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
-                    <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
+                    <CustomerRow loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                   </div>
                 ))}
               </div>
@@ -503,7 +507,7 @@ export default function CustomersView() {
               <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
                 {filteredLocations.map((loc, index) => (
                   <div key={loc?.id ?? index} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
-                    <CustomerRow loc={loc} index={index} visited={isRecentlyVisited(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
+                    <CustomerRow loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                   </div>
                 ))}
               </div>

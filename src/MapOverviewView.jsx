@@ -8,7 +8,6 @@ import BackButton from './BackButton';
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 const GEO_CACHE_KEY = 'vrm_geo_cache_v2';
-const ZONE_COLORS = ['#2563eb', '#16a34a', '#ea580c', '#7c3aed', '#db2777', '#0891b2', '#dc2626', '#0f766e'];
 const NO_VISIT_MEDIUM_DAYS = 35;
 const NO_VISIT_HIGH_DAYS = 65;
 const US_BOUNDS = {
@@ -178,13 +177,6 @@ export default function MapOverviewView() {
     return ['all', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [locations]);
 
-  const zoneColorMap = useMemo(() => {
-    const uniqueZones = Array.from(new Set((locations || []).map((loc) => (loc?.region || loc?.zone || loc?.city || t('other')).trim())));
-    return uniqueZones.reduce((acc, zone, idx) => {
-      acc[zone] = ZONE_COLORS[idx % ZONE_COLORS.length];
-      return acc;
-    }, {});
-  }, [locations, t]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -335,7 +327,7 @@ export default function MapOverviewView() {
         resolved.push({ loc, point, zone, address });
       }
 
-      // Phase 2: Group by zone, sort each zone strictly by stop order
+      // Phase 2: Group by zone, split routed vs unassigned, sort routed by order
       const zoneGroups = new Map();
       for (const r of resolved) {
         const list = zoneGroups.get(r.zone) || [];
@@ -343,61 +335,105 @@ export default function MapOverviewView() {
         zoneGroups.set(r.zone, list);
       }
 
-      const LINE_COLORS = ['#4A54E1', '#16a34a', '#ea580c', '#db2777', '#0891b2', '#7c3aed', '#dc2626', '#ca8a04', '#0f766e', '#6366f1'];
       const numMap = {};
-      let colorIdx = 0;
-      const allOrdered = [];
+      const routedItems = [];
+      const unassignedItems = [];
 
-      for (const [zoneName, group] of zoneGroups) {
-        const zoneItems = [...group].sort((a, b) => (a.loc.order ?? 9999) - (b.loc.order ?? 9999));
-        const zoneColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
-        zoneItems.forEach((r, idx) => {
+      for (const [, group] of zoneGroups) {
+        const routed = group.filter(r => Number.isFinite(r.loc.order) && r.loc.order > 0);
+        const unassigned = group.filter(r => !Number.isFinite(r.loc.order) || r.loc.order <= 0);
+        routed.sort((a, b) => a.loc.order - b.loc.order);
+        routed.forEach((r, idx) => {
           numMap[r.loc.id] = idx + 1;
-          allOrdered.push({ ...r, stopNum: idx + 1, zoneColor });
+          routedItems.push({ ...r, stopNum: idx + 1 });
         });
-        colorIdx++;
+        unassignedItems.push(...unassigned);
       }
       setRouteNumbers(numMap);
 
-      // Phase 3: Create pin markers — colored per zone with sequence number
-      const makePinSvg = (num, color) => {
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="${color}" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
+      // Phase 3: Markers
+
+      // 3a — Depot marker (star icon, dark purple)
+      const depotSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><polygon points="18,2 22.4,13.2 34,13.2 24.8,20.8 28.4,32 18,25 7.6,32 11.2,20.8 2,13.2 13.6,13.2" fill="#6D28D9" stroke="#fff" stroke-width="1.5"/></svg>`;
+      const depotMarker = new window.google.maps.Marker({
+        map: mapRef.current,
+        position: MIDWOOD_DEPOT,
+        title: 'Midwood Depot (Start / End)',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(depotSvg),
+          scaledSize: new window.google.maps.Size(36, 36),
+          anchor: new window.google.maps.Point(18, 18),
+        },
+        zIndex: 9999,
+      });
+      depotMarker.addListener('click', () => {
+        if (infoWindowRef.current) {
+          infoWindowRef.current.setContent(
+            `<div style="padding:2px 0;"><div style="font-size:14px;font-weight:700;color:#6D28D9;">★ Midwood Depot</div><div style="margin-top:4px;font-size:12px;color:#475569;">Route start &amp; end point</div></div>`
+          );
+          infoWindowRef.current.open({ map: mapRef.current, anchor: depotMarker });
+        }
+      });
+      markersRef.current.push(depotMarker);
+      bounds.extend(MIDWOOD_DEPOT);
+
+      // 3b — Green numbered pin SVG for routed stops
+      const makeGreenPin = (num) => {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#16a34a" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
         return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
       };
 
-      for (const item of allOrdered) {
-        const { loc, point, zone, address, stopNum, zoneColor } = item;
+      // 3c — Red pin SVG for unassigned stops
+      const redPinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#dc2626" stroke="#fff" stroke-width="1.5"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>`;
+      const redPinUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(redPinSvg);
 
+      const makeInfoContent = (loc, address, zone, badge) => `
+        <div style="min-width:200px;max-width:240px;padding:2px 0;">
+          <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
+            ${badge}${escapeHtml(loc?.name || '')}
+          </div>
+          <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.35;">${escapeHtml(address || '-')}</div>
+          <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:600;color:#fff;background:#475569;padding:3px 8px;border-radius:999px;">${escapeHtml(zone || t('other'))}</span>
+            <span style="font-size:11px;font-weight:700;color:#0f172a;">${escapeHtml(getStatusLabel(loc.computedStatus, t))}</span>
+          </div>
+        </div>`;
+
+      for (const item of routedItems) {
+        const { loc, point, zone, address, stopNum } = item;
         const marker = new window.google.maps.Marker({
           map: mapRef.current,
           position: point,
           title: `#${stopNum} ${loc?.name || ''} (${zone})`,
-          icon: {
-            url: makePinSvg(stopNum, zoneColor),
-            scaledSize: new window.google.maps.Size(28, 40),
-            anchor: new window.google.maps.Point(14, 40),
-          },
+          icon: { url: makeGreenPin(stopNum), scaledSize: new window.google.maps.Size(28, 40), anchor: new window.google.maps.Point(14, 40) },
           zIndex: 1000 + stopNum,
         });
-
         marker.addListener('click', () => {
           setSelectedId(loc.id);
-          const statusLabel = getStatusLabel(loc.computedStatus, t);
-          const content = `
-            <div style="min-width:200px;max-width:240px;padding:2px 0;">
-              <div style="display:flex;align-items:center;font-size:14px;font-weight:700;color:#0f172a;line-height:1.2;">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:${zoneColor};color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>
-                ${escapeHtml(loc?.name || '')}
-              </div>
-              <div style="margin-top:4px;font-size:12px;color:#475569;line-height:1.35;">${escapeHtml(address || '-')}</div>
-              <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <span style="font-size:11px;font-weight:600;color:#fff;background:${zoneColor};padding:3px 8px;border-radius:999px;">${escapeHtml(zone || t('other'))}</span>
-                <span style="font-size:11px;font-weight:700;color:#0f172a;">${escapeHtml(statusLabel)}</span>
-              </div>
-            </div>
-          `;
+          const badge = `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#16a34a;color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>`;
           if (infoWindowRef.current) {
-            infoWindowRef.current.setContent(content);
+            infoWindowRef.current.setContent(makeInfoContent(loc, address, zone, badge));
+            infoWindowRef.current.open({ map: mapRef.current, anchor: marker });
+          }
+        });
+        markersRef.current.push(marker);
+        bounds.extend(point);
+      }
+
+      for (const item of unassignedItems) {
+        const { loc, point, zone, address } = item;
+        const marker = new window.google.maps.Marker({
+          map: mapRef.current,
+          position: point,
+          title: `${loc?.name || ''} (${zone}) — unassigned`,
+          icon: { url: redPinUrl, scaledSize: new window.google.maps.Size(28, 40), anchor: new window.google.maps.Point(14, 40) },
+          zIndex: 500,
+        });
+        marker.addListener('click', () => {
+          setSelectedId(loc.id);
+          const badge = `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;margin-right:6px;flex-shrink:0;">—</span>`;
+          if (infoWindowRef.current) {
+            infoWindowRef.current.setContent(makeInfoContent(loc, address, zone, badge));
             infoWindowRef.current.open({ map: mapRef.current, anchor: marker });
           }
         });
@@ -408,8 +444,8 @@ export default function MapOverviewView() {
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Draw one sequential straight-line polyline per zone:
-      // Depot -> Stop 1 -> Stop 2 -> ... -> Last Stop -> Depot
+      // Phase 4: Draw ONE closed-loop polyline per zone (straight lines only)
+      // [Midwood Depot] -> [Stop 1] -> [Stop 2] -> ... -> [Last Stop] -> [Midwood Depot]
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
@@ -425,25 +461,27 @@ export default function MapOverviewView() {
       }
 
       const allLines = [];
-      colorIdx = 0;
-      for (const [zoneName, group] of zoneGroups) {
-        const zoneItems = [...group].sort((a, b) => (a.loc.order ?? 9999) - (b.loc.order ?? 9999));
-        if (zoneItems.length < 1) { colorIdx++; continue; }
+      for (const [, group] of zoneGroups) {
+        const routed = group
+          .filter(r => Number.isFinite(r.loc.order) && r.loc.order > 0)
+          .sort((a, b) => a.loc.order - b.loc.order);
+        if (routed.length === 0) continue;
 
-        const lineColor = zoneColorMap[zoneName] || LINE_COLORS[colorIdx % LINE_COLORS.length];
-        const stopPoints = zoneItems.map(r => r.point);
-        const path = [MIDWOOD_DEPOT, ...stopPoints, MIDWOOD_DEPOT];
+        const routeCoordinates = [
+          MIDWOOD_DEPOT,
+          ...routed.map(r => r.point),
+          MIDWOOD_DEPOT,
+        ];
 
         allLines.push(new window.google.maps.Polyline({
-          path,
-          strokeColor: lineColor,
+          path: routeCoordinates,
+          strokeColor: '#3A58F9',
           strokeWeight: 5,
-          strokeOpacity: 0.6,
+          strokeOpacity: 0.7,
           map: mapRef.current,
           geodesic: true,
           zIndex: 2,
         }));
-        colorIdx++;
       }
       polylineRef.current = allLines;
 
@@ -473,7 +511,7 @@ export default function MapOverviewView() {
         polylineRef.current = null;
       }
     };
-  }, [filtered, mapsReady, t, zoneColorMap, showRoute]);
+  }, [filtered, mapsReady, t, showRoute]);
 
   useEffect(() => {
     if (!mapsReady || !mapRef.current || !selected) return;
@@ -521,12 +559,22 @@ export default function MapOverviewView() {
               />
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5 items-center">
-              {Object.entries(zoneColorMap).map(([zone, color]) => (
-                <span key={zone} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
-                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                  {zone}
-                </span>
-              ))}
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
+                <span className="w-2.5 h-2.5 shrink-0" style={{ color: '#6D28D9', fontSize: 10, lineHeight: 1 }}>★</span>
+                Depot
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#16a34a' }} />
+                Route Stop
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#dc2626' }} />
+                Unassigned
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#3A58F9' }} />
+                Route Line
+              </span>
             </div>
           </div>
 
@@ -580,14 +628,12 @@ export default function MapOverviewView() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-2.5 min-w-0">
-                    {routeNumbers[loc.id] && (
-                      <span
-                        className="shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center text-[11px] font-bold mt-0.5"
-                        style={{ backgroundColor: zoneColorMap[zone] || '#64748b' }}
-                      >
-                        {routeNumbers[loc.id]}
-                      </span>
-                    )}
+                    <span
+                      className="shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center text-[11px] font-bold mt-0.5"
+                      style={{ backgroundColor: routeNumbers[loc.id] ? '#16a34a' : '#dc2626' }}
+                    >
+                      {routeNumbers[loc.id] || '—'}
+                    </span>
                     <div className="min-w-0">
                       <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 truncate">{loc.name}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{address || '-'}</p>

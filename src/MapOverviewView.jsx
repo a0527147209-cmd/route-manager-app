@@ -32,6 +32,78 @@ const NYC_BOROUGH_BOUNDS = {
 const MIDWOOD_DEPOT = { lat: 40.6214, lng: -73.9676 };
 let mapsLoadPromise = null;
 
+// --- TSP Solver: Nearest Neighbor + 2-Opt ---
+
+function haversineDist(a, b) {
+  const toRad = v => v * Math.PI / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const sin2Lat = Math.sin(dLat / 2) ** 2;
+  const sin2Lng = Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(
+    sin2Lat + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * sin2Lng
+  ));
+}
+
+function solveZoneTSP(items, depot) {
+  const n = items.length;
+  if (n <= 2) return items;
+
+  const pts = [depot, ...items.map(r => r.point)];
+  const total = pts.length;
+
+  const d = [];
+  for (let i = 0; i < total; i++) {
+    d[i] = [];
+    for (let j = 0; j < total; j++) {
+      d[i][j] = i === j ? 0 : haversineDist(pts[i], pts[j]);
+    }
+  }
+
+  // Step 1: Nearest Neighbor starting from depot (index 0)
+  const visited = new Set([0]);
+  const route = [];
+  let cur = 0;
+  for (let s = 0; s < n; s++) {
+    let best = -1, bestD = Infinity;
+    for (let j = 1; j < total; j++) {
+      if (!visited.has(j) && d[cur][j] < bestD) {
+        bestD = d[cur][j];
+        best = j;
+      }
+    }
+    if (best === -1) break;
+    visited.add(best);
+    route.push(best);
+    cur = best;
+  }
+
+  // Step 2: 2-Opt — reverse segments until no crossing edges remain
+  // Tour: depot(0) → route[0] → route[1] → … → route[m-1] → depot(0)
+  const m = route.length;
+  let improved = true;
+  let safety = 1000;
+  while (improved && safety-- > 0) {
+    improved = false;
+    for (let i = 0; i < m - 1; i++) {
+      for (let j = i + 1; j < m; j++) {
+        const prevI = i === 0 ? 0 : route[i - 1];
+        const nextJ = j === m - 1 ? 0 : route[j + 1];
+        const gain = (d[prevI][route[i]] + d[route[j]][nextJ])
+                   - (d[prevI][route[j]] + d[route[i]][nextJ]);
+        if (gain > 1e-10) {
+          for (let l = i, r = j; l < r; l++, r--) {
+            [route[l], route[r]] = [route[r], route[l]];
+          }
+          improved = true;
+        }
+      }
+    }
+  }
+
+  return route.map(idx => items[idx - 1]);
+}
+
 function loadGoogleMaps() {
   if (typeof window === 'undefined') return Promise.resolve(false);
   if (window.google?.maps) return Promise.resolve(true);
@@ -327,7 +399,7 @@ export default function MapOverviewView() {
         resolved.push({ loc, point, zone, address });
       }
 
-      // Phase 2: Group by zone, split routed vs unassigned, sort routed by order
+      // Phase 2: Group by zone → TSP optimize each zone independently
       const zoneGroups = new Map();
       for (const r of resolved) {
         const list = zoneGroups.get(r.zone) || [];
@@ -336,18 +408,14 @@ export default function MapOverviewView() {
       }
 
       const numMap = {};
-      const routedItems = [];
-      const unassignedItems = [];
+      const optimizedZones = []; // { zoneName, items[] }
 
-      for (const [, group] of zoneGroups) {
-        const routed = group.filter(r => Number.isFinite(r.loc.order) && r.loc.order > 0);
-        const unassigned = group.filter(r => !Number.isFinite(r.loc.order) || r.loc.order <= 0);
-        routed.sort((a, b) => a.loc.order - b.loc.order);
-        routed.forEach((r, idx) => {
+      for (const [zoneName, group] of zoneGroups) {
+        const sorted = solveZoneTSP(group, MIDWOOD_DEPOT);
+        sorted.forEach((r, idx) => {
           numMap[r.loc.id] = idx + 1;
-          routedItems.push({ ...r, stopNum: idx + 1 });
         });
-        unassignedItems.push(...unassigned);
+        optimizedZones.push({ zoneName, items: sorted });
       }
       setRouteNumbers(numMap);
 
@@ -377,15 +445,11 @@ export default function MapOverviewView() {
       markersRef.current.push(depotMarker);
       bounds.extend(MIDWOOD_DEPOT);
 
-      // 3b — Green numbered pin SVG for routed stops
+      // 3b — Green numbered pin SVG
       const makeGreenPin = (num) => {
         const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#16a34a" stroke="#fff" stroke-width="1.5"/><text x="14" y="19" text-anchor="middle" fill="#fff" font-size="${num > 99 ? 9 : num > 9 ? 11 : 12}px" font-weight="bold" font-family="Arial,Helvetica,sans-serif">${num}</text></svg>`;
         return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
       };
-
-      // 3c — Red pin SVG for unassigned stops
-      const redPinSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40"><path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#dc2626" stroke="#fff" stroke-width="1.5"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>`;
-      const redPinUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(redPinSvg);
 
       const makeInfoContent = (loc, address, zone, badge) => `
         <div style="min-width:200px;max-width:240px;padding:2px 0;">
@@ -399,53 +463,36 @@ export default function MapOverviewView() {
           </div>
         </div>`;
 
-      for (const item of routedItems) {
-        const { loc, point, zone, address, stopNum } = item;
-        const marker = new window.google.maps.Marker({
-          map: mapRef.current,
-          position: point,
-          title: `#${stopNum} ${loc?.name || ''} (${zone})`,
-          icon: { url: makeGreenPin(stopNum), scaledSize: new window.google.maps.Size(28, 40), anchor: new window.google.maps.Point(14, 40) },
-          zIndex: 1000 + stopNum,
-        });
-        marker.addListener('click', () => {
-          setSelectedId(loc.id);
-          const badge = `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#16a34a;color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>`;
-          if (infoWindowRef.current) {
-            infoWindowRef.current.setContent(makeInfoContent(loc, address, zone, badge));
-            infoWindowRef.current.open({ map: mapRef.current, anchor: marker });
-          }
-        });
-        markersRef.current.push(marker);
-        bounds.extend(point);
-      }
-
-      for (const item of unassignedItems) {
-        const { loc, point, zone, address } = item;
-        const marker = new window.google.maps.Marker({
-          map: mapRef.current,
-          position: point,
-          title: `${loc?.name || ''} (${zone}) — unassigned`,
-          icon: { url: redPinUrl, scaledSize: new window.google.maps.Size(28, 40), anchor: new window.google.maps.Point(14, 40) },
-          zIndex: 500,
-        });
-        marker.addListener('click', () => {
-          setSelectedId(loc.id);
-          const badge = `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#dc2626;color:#fff;font-size:9px;font-weight:700;margin-right:6px;flex-shrink:0;">—</span>`;
-          if (infoWindowRef.current) {
-            infoWindowRef.current.setContent(makeInfoContent(loc, address, zone, badge));
-            infoWindowRef.current.open({ map: mapRef.current, anchor: marker });
-          }
-        });
-        markersRef.current.push(marker);
-        bounds.extend(point);
+      // 3c — Place green numbered markers for every stop
+      for (const { items } of optimizedZones) {
+        for (let i = 0; i < items.length; i++) {
+          const { loc, point, zone, address } = items[i];
+          const stopNum = i + 1;
+          const marker = new window.google.maps.Marker({
+            map: mapRef.current,
+            position: point,
+            title: `#${stopNum} ${loc?.name || ''} (${zone})`,
+            icon: { url: makeGreenPin(stopNum), scaledSize: new window.google.maps.Size(28, 40), anchor: new window.google.maps.Point(14, 40) },
+            zIndex: 1000 + stopNum,
+          });
+          marker.addListener('click', () => {
+            setSelectedId(loc.id);
+            const badge = `<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#16a34a;color:#fff;font-size:10px;font-weight:700;margin-right:6px;flex-shrink:0;">${stopNum}</span>`;
+            if (infoWindowRef.current) {
+              infoWindowRef.current.setContent(makeInfoContent(loc, address, zone, badge));
+              infoWindowRef.current.open({ map: mapRef.current, anchor: marker });
+            }
+          });
+          markersRef.current.push(marker);
+          bounds.extend(point);
+        }
       }
 
       geocodeCacheRef.current = nextCache;
       localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(nextCache));
 
-      // Phase 4: Draw ONE closed-loop polyline per zone (straight lines only)
-      // [Midwood Depot] -> [Stop 1] -> [Stop 2] -> ... -> [Last Stop] -> [Midwood Depot]
+      // Phase 4: One closed-loop polyline per zone (straight lines, no road snapping)
+      // Depot → Stop 1 → Stop 2 → … → Last Stop → Depot
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
         directionsRendererRef.current = null;
@@ -461,15 +508,12 @@ export default function MapOverviewView() {
       }
 
       const allLines = [];
-      for (const [, group] of zoneGroups) {
-        const routed = group
-          .filter(r => Number.isFinite(r.loc.order) && r.loc.order > 0)
-          .sort((a, b) => a.loc.order - b.loc.order);
-        if (routed.length === 0) continue;
+      for (const { items } of optimizedZones) {
+        if (items.length === 0) continue;
 
         const routeCoordinates = [
           MIDWOOD_DEPOT,
-          ...routed.map(r => r.point),
+          ...items.map(r => r.point),
           MIDWOOD_DEPOT,
         ];
 
@@ -565,15 +609,11 @@ export default function MapOverviewView() {
               </span>
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#16a34a' }} />
-                Route Stop
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#dc2626' }} />
-                Unassigned
+                Optimized Stop
               </span>
               <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#3A58F9' }} />
-                Route Line
+                Route Loop
               </span>
             </div>
           </div>
@@ -630,9 +670,9 @@ export default function MapOverviewView() {
                   <div className="flex items-start gap-2.5 min-w-0">
                     <span
                       className="shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center text-[11px] font-bold mt-0.5"
-                      style={{ backgroundColor: routeNumbers[loc.id] ? '#16a34a' : '#dc2626' }}
+                      style={{ backgroundColor: '#16a34a' }}
                     >
-                      {routeNumbers[loc.id] || '—'}
+                      {routeNumbers[loc.id] || '–'}
                     </span>
                     <div className="min-w-0">
                       <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 truncate">{loc.name}</p>

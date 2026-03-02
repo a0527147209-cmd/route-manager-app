@@ -191,7 +191,8 @@ export default function CustomerDetailsView() {
 
   const calculateIReceive = (log) => {
     const collection = parseFloat(log.collection) || 0;
-    const rate = parseFloat(log.commissionRate) || 0;
+    const raw = parseFloat(log.commissionRate);
+    const rate = Number.isFinite(raw) ? raw : (parseFloat(location?.commissionRate) || 0.4);
     return (collection * (1 - rate)).toFixed(2);
   };
 
@@ -763,7 +764,8 @@ export default function CustomerDetailsView() {
                         const latestLog = location.logs?.[0];
                         if (!latestLog) return '0.00';
                         const collection = parseFloat(latestLog.collection) || 0;
-                        const rate = parseFloat(latestLog.commissionRate) || 0;
+                        const rawR = parseFloat(latestLog.commissionRate);
+                        const rate = Number.isFinite(rawR) ? rawR : (parseFloat(location.commissionRate) || 0.4);
                         return (collection * (1 - rate)).toFixed(2);
                       })()}
                     </p>
@@ -772,7 +774,8 @@ export default function CustomerDetailsView() {
                         const latestLog = location.logs?.[0];
                         if (!latestLog) return '$0';
                         const collection = parseFloat(latestLog.collection) || 0;
-                        const rate = parseFloat(latestLog.commissionRate) || 0;
+                        const rawR = parseFloat(latestLog.commissionRate);
+                        const rate = Number.isFinite(rawR) ? rawR : (parseFloat(location.commissionRate) || 0.4);
                         const val = collection * (1 - rate);
                         return `$${(val * 20).toLocaleString()}`;
                       })()}
@@ -818,9 +821,11 @@ export default function CustomerDetailsView() {
                   <div className="flex items-baseline gap-2">
                     <p className="text-lg font-bold text-primary">
                       {(() => {
+                        const locRate = parseFloat(location.commissionRate) || 0.4;
                         const total = (location.logs || []).reduce((sum, log) => {
                           const collection = parseFloat(log.collection) || 0;
-                          const rate = parseFloat(log.commissionRate) || 0;
+                          const rawR = parseFloat(log.commissionRate);
+                          const rate = Number.isFinite(rawR) ? rawR : locRate;
                           return sum + (collection * (1 - rate));
                         }, 0);
                         return total.toFixed(2);
@@ -828,9 +833,11 @@ export default function CustomerDetailsView() {
                     </p>
                     <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
                       {(() => {
+                        const locRate = parseFloat(location.commissionRate) || 0.4;
                         const total = (location.logs || []).reduce((sum, log) => {
                           const collection = parseFloat(log.collection) || 0;
-                          const rate = parseFloat(log.commissionRate) || 0;
+                          const rawR = parseFloat(log.commissionRate);
+                          const rate = Number.isFinite(rawR) ? rawR : locRate;
                           return sum + (collection * (1 - rate));
                         }, 0);
                         return `$${(total * 20).toLocaleString()}`;

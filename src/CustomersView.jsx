@@ -40,9 +40,9 @@ const SORT_OPTIONS = [
 function formatDate(isoStr) {
   if (!isoStr) return null;
   try {
-    const d = new Date(isoStr);
-    if (Number.isNaN(d.getTime())) return null;
-    return `${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}/${d.getFullYear()}`;
+    const [y, m, d] = isoStr.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return `${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}/${y}`;
   } catch {
     return null;
   }
@@ -304,7 +304,8 @@ export default function CustomersView() {
 
   const isRecentlyVisited = (loc) => {
     if (loc?.status !== 'visited' || !loc?.lastVisited) return false;
-    return (Date.now() - new Date(loc.lastVisited).getTime()) <= 10 * 24 * 60 * 60 * 1000;
+    const [y, m, d] = loc.lastVisited.slice(0, 10).split('-').map(Number);
+    return (Date.now() - new Date(y, m - 1, d).getTime()) <= 10 * 24 * 60 * 60 * 1000;
   };
 
   const handleBack = () => {

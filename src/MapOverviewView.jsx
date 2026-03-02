@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, Navigation, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
+import { solveZoneTSP, MIDWOOD_DEPOT } from './utils/routeOptimizer';
 import MenuDrawer from './MenuDrawer';
 import BackButton from './BackButton';
 
@@ -29,81 +30,8 @@ const NYC_BOROUGH_BOUNDS = {
   'bronx':          { minLat: 40.785, maxLat: 40.917, minLng: -73.933, maxLng: -73.748 },
   'staten island':  { minLat: 40.496, maxLat: 40.651, minLng: -74.255, maxLng: -74.052 },
 };
-const MIDWOOD_DEPOT = { lat: 40.6214, lng: -73.9676 };
 const ZONE_LINE_COLORS = ['#E63946', '#2A9D8F', '#F4A261', '#8338EC', '#3A86FF', '#FF006E', '#FB5607'];
 let mapsLoadPromise = null;
-
-// --- TSP Solver: Nearest Neighbor + 2-Opt ---
-
-function haversineDist(a, b) {
-  const toRad = v => v * Math.PI / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const sin2Lat = Math.sin(dLat / 2) ** 2;
-  const sin2Lng = Math.sin(dLng / 2) ** 2;
-  return 2 * 6371 * Math.asin(Math.sqrt(
-    sin2Lat + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * sin2Lng
-  ));
-}
-
-function solveZoneTSP(items, depot) {
-  const n = items.length;
-  if (n <= 2) return items;
-
-  const pts = [depot, ...items.map(r => r.point)];
-  const total = pts.length;
-
-  const d = [];
-  for (let i = 0; i < total; i++) {
-    d[i] = [];
-    for (let j = 0; j < total; j++) {
-      d[i][j] = i === j ? 0 : haversineDist(pts[i], pts[j]);
-    }
-  }
-
-  // Step 1: Nearest Neighbor starting from depot (index 0)
-  const visited = new Set([0]);
-  const route = [];
-  let cur = 0;
-  for (let s = 0; s < n; s++) {
-    let best = -1, bestD = Infinity;
-    for (let j = 1; j < total; j++) {
-      if (!visited.has(j) && d[cur][j] < bestD) {
-        bestD = d[cur][j];
-        best = j;
-      }
-    }
-    if (best === -1) break;
-    visited.add(best);
-    route.push(best);
-    cur = best;
-  }
-
-  // Step 2: 2-Opt — reverse segments until no crossing edges remain
-  // Tour: depot(0) → route[0] → route[1] → … → route[m-1] → depot(0)
-  const m = route.length;
-  let improved = true;
-  let safety = 1000;
-  while (improved && safety-- > 0) {
-    improved = false;
-    for (let i = 0; i < m - 1; i++) {
-      for (let j = i + 1; j < m; j++) {
-        const prevI = i === 0 ? 0 : route[i - 1];
-        const nextJ = j === m - 1 ? 0 : route[j + 1];
-        const gain = (d[prevI][route[i]] + d[route[j]][nextJ])
-                   - (d[prevI][route[j]] + d[route[i]][nextJ]);
-        if (gain > 1e-10) {
-          for (let l = i, r = j; l < r; l++, r--) {
-            [route[l], route[r]] = [route[r], route[l]];
-          }
-          improved = true;
-        }
-      }
-    }
-  }
-
-  return route.map(idx => items[idx - 1]);
-}
 
 function loadGoogleMaps() {
   if (typeof window === 'undefined') return Promise.resolve(false);

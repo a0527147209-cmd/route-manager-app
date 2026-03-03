@@ -19,10 +19,95 @@ import { CustomerDetailContent } from './CustomerDetailsView';
 import { LogFormContent } from './LogFormModal';
 import {
   EMPTY, norm, zoneKey, label, SORT_OPTIONS, formatDate,
-  NavMenuButton, StatBox, CustomerRow,
   COMPOSITE_SEP, getVisitStatus, getWazeUrl, getMapsUrl,
   buildGroups, getLocationsByCompositeKey, matchesSearchTerms,
 } from './CustomersView';
+
+function CompactCustomerRow({ loc, isSelected, onClick, t }) {
+  const isInactive = !!loc?.inactive;
+  const visitStatus = getVisitStatus(loc);
+  const statusDot = isInactive ? 'bg-amber-400' : visitStatus === 'recent' ? 'bg-emerald-400' : visitStatus === 'overdue' ? 'bg-red-400' : 'bg-slate-300 dark:bg-slate-600';
+  const lastDate = loc?.lastVisited ? formatDate(loc.lastVisited) : null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(loc)}
+      className={`w-full flex items-center gap-3 px-3.5 py-3 text-left transition-all duration-150 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 ${
+        isSelected
+          ? 'bg-primary/8 dark:bg-primary/15'
+          : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 active:bg-slate-100 dark:active:bg-slate-800/60'
+      }`}
+    >
+      <div className={`w-2 h-2 rounded-full shrink-0 ${statusDot}`} />
+      <div className={`flex-1 min-w-0 ${isInactive ? 'opacity-50' : ''}`}>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[13px] font-semibold truncate ${
+            isSelected ? 'text-primary' : isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'
+          }`}>
+            {loc?.name ?? '—'}
+          </span>
+          {isInactive && (
+            <span className="px-1 py-px rounded text-[8px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 shrink-0">
+              {t('inactive')}
+            </span>
+          )}
+          {!isInactive && (
+            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 shrink-0">
+              {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+            </span>
+          )}
+        </div>
+        {loc?.address && (
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5 leading-tight">{loc.address}</p>
+        )}
+        {loc?.subtitle && (
+          <p className="text-[10px] font-medium text-red-500/80 dark:text-red-400/80 truncate mt-0.5">{loc.subtitle}</p>
+        )}
+      </div>
+      <div className="flex flex-col items-end gap-0.5 shrink-0">
+        {lastDate && (
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">{lastDate}</span>
+        )}
+        <ChevronRight size={14} className={`${isSelected ? 'text-primary' : 'text-slate-300 dark:text-slate-600'}`} strokeWidth={2} />
+      </div>
+    </button>
+  );
+}
+
+function CompactDraggableRow({ loc, isSelected, onClick, t }) {
+  const isInactive = !!loc?.inactive;
+  const visitStatus = getVisitStatus(loc);
+  const statusDot = isInactive ? 'bg-amber-400' : visitStatus === 'recent' ? 'bg-emerald-400' : visitStatus === 'overdue' ? 'bg-red-400' : 'bg-slate-300 dark:bg-slate-600';
+
+  return (
+    <div
+      className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer transition-colors ${
+        isSelected ? 'bg-primary/8 dark:bg-primary/15' : ''
+      } ${isInactive ? 'opacity-50' : ''}`}
+      onClick={() => onClick(loc)}
+    >
+      <div className={`w-2 h-2 rounded-full shrink-0 ${statusDot}`} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[13px] font-semibold truncate ${isSelected ? 'text-primary' : 'text-slate-800 dark:text-slate-100'}`}>
+            {loc?.name ?? '—'}
+          </span>
+          {!isInactive && (
+            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 shrink-0">
+              {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+            </span>
+          )}
+        </div>
+        {loc?.address && (
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{loc.address}</p>
+        )}
+        {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[10px] font-medium text-red-500/80 dark:text-red-400/80 mt-0.5 block truncate" />}
+      </div>
+      <ChevronRight size={14} className={`shrink-0 ${isSelected ? 'text-primary' : 'text-slate-300 dark:text-slate-600'}`} strokeWidth={2} />
+    </div>
+  );
+}
 
 export default function CustomersExplorer() {
   const navigate = useNavigate();
@@ -90,10 +175,8 @@ export default function CustomersExplorer() {
   useEffect(() => {
     const deepLinkId = searchParams.get('customerId');
     if (!deepLinkId || validLocations.length === 0) return;
-
     const customer = validLocations.find(l => String(l.id) === String(deepLinkId));
     if (!customer) return;
-
     const regionKey = zoneKey(customer.region ?? customer.zone ?? customer.city);
     if (regionKey && regionKey !== EMPTY) {
       setSelectedRegionKey(`zone${COMPOSITE_SEP}${regionKey}`);
@@ -138,18 +221,16 @@ export default function CustomersExplorer() {
     setLogAction(null);
   }, []);
 
-  const rowProps = { navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl };
-
   const searchResultsActive = searchTerm && searchTerm.trim();
   const searchFilteredAll = searchResultsActive ? filteredLocations : [];
 
   return (
     <div className="h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden">
       <header
-        className="shrink-0 sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
+        className="shrink-0 sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60"
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="w-full px-4 pt-2.5 pb-2.5">
+        <div className="max-w-[600px] mx-auto w-full px-4 pt-2.5 pb-2.5">
           <div className="flex justify-between items-center gap-2 w-full">
             <BackButton onClick={() => navigate('/')} title={t('backToHome')} />
             <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 truncate flex-1 text-center min-w-0 tracking-tight">
@@ -164,7 +245,7 @@ export default function CustomersExplorer() {
             </button>
           </div>
 
-          <div className="mt-2.5 flex items-center gap-2.5">
+          <div className="mt-2 flex items-center gap-2">
             <div className="relative flex-1">
               <Search size={15} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`} strokeWidth={1.8} />
               <input
@@ -172,7 +253,7 @@ export default function CustomersExplorer() {
                 placeholder={t('searchCustomer')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full py-2 text-[13px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-300 dark:focus:border-indigo-600 outline-none transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06] ${isRtl ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8 text-left'}`}
+                className={`w-full py-2 text-[13px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-primary/30 focus:border-primary/40 outline-none transition-all ring-1 ring-black/[0.04] dark:ring-white/[0.06] ${isRtl ? 'pr-9 pl-8 text-right' : 'pl-9 pr-8 text-left'}`}
               />
               {searchTerm && (
                 <button
@@ -187,15 +268,15 @@ export default function CustomersExplorer() {
             {inactiveCount > 0 && (
               <button
                 onClick={() => setShowInactive(v => !v)}
-                className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all active:scale-95 shrink-0 relative ${
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all active:scale-95 shrink-0 relative ${
                   showInactive
                     ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-600 dark:text-amber-400'
-                    : 'border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+                    : 'border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500'
                 }`}
                 title={showInactive ? t('hideInactive') : t('showInactive')}
               >
-                <EyeOff size={15} strokeWidth={1.8} />
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                <EyeOff size={14} strokeWidth={1.8} />
+                <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold flex items-center justify-center">
                   {inactiveCount}
                 </span>
               </button>
@@ -203,7 +284,7 @@ export default function CustomersExplorer() {
             <select
               value={sortBy}
               onChange={(e) => { setSortBy(e.target.value); setSelectedRegionKey(null); setSelectedCustomerId(null); setLogAction(null); }}
-              className={`py-2 text-[12px] rounded-xl border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-indigo-500/30 outline-none cursor-pointer shrink-0 ring-1 ring-black/[0.04] dark:ring-white/[0.06] transition-all ${isRtl ? 'pr-2.5 pl-7 text-right' : 'pl-2.5 pr-7 text-left'}`}
+              className={`py-1.5 text-[11px] rounded-lg border border-slate-200/80 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 focus:ring-2 focus:ring-primary/30 outline-none cursor-pointer shrink-0 transition-all ${isRtl ? 'pr-2 pl-5 text-right' : 'pl-2 pr-5 text-left'}`}
               title={t('sortBy')}
             >
               {SORT_OPTIONS.map((opt) => (
@@ -231,57 +312,69 @@ export default function CustomersExplorer() {
               <div className="h-full overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
                 {searchResultsActive ? (
                   searchFilteredAll.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-center px-6">
-                      <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
-                      <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
+                    <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+                      <p className="text-slate-500 font-medium text-sm">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
+                      <p className="text-slate-400 text-xs mt-1">{t('tryDifferentKeywords')}</p>
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-slate-900 overflow-hidden border-b border-slate-200/40 dark:border-slate-800/60">
-                      {searchFilteredAll.map((loc, index) => (
-                        <div key={loc?.id ?? index} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
-                          <CustomerRow
-                            loc={loc} index={index}
-                            visitStatus={getVisitStatus(loc)}
-                            showIndex={false}
-                            isFocused={selectedCustomerId === loc?.id}
-                            onClick={handleSelectCustomer}
-                            {...rowProps}
-                          />
-                        </div>
+                    <div className="bg-white dark:bg-slate-900">
+                      {searchFilteredAll.map((loc) => (
+                        <CompactCustomerRow
+                          key={loc?.id}
+                          loc={loc}
+                          isSelected={selectedCustomerId === loc?.id}
+                          onClick={(l) => {
+                            const regionKey = zoneKey(l.region ?? l.zone ?? l.city);
+                            if (regionKey && regionKey !== EMPTY) {
+                              setSelectedRegionKey(`zone${COMPOSITE_SEP}${regionKey}`);
+                            }
+                            handleSelectCustomer(l);
+                          }}
+                          t={t}
+                        />
                       ))}
                     </div>
                   )
                 ) : displayGroups.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-24 text-center px-6">
-                    <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
-                    <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
+                  <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+                    <p className="text-slate-500 font-medium text-sm">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
+                    <p className="text-slate-400 text-xs mt-1">{t('tryDifferentKeywords')}</p>
                   </div>
                 ) : (
-                  <div className="px-3 py-3 space-y-1.5">
+                  <div className="p-3 space-y-1.5">
                     {displayGroups.map((area) => {
                       const openKey = sortBy === 'all' ? area.key : `${sortBy}${COMPOSITE_SEP}${area.key}`;
                       const isActive = selectedRegionKey === openKey;
+                      const count = getAreaCount(area);
                       return (
                         <button
                           key={area.key}
                           type="button"
                           onClick={() => handleSelectRegion(openKey)}
-                          className={`w-full flex items-center gap-3 py-3 px-3.5 rounded-xl border transition-all duration-200 text-left ring-1 active:scale-[0.99] ${
+                          className={`w-full flex items-center gap-2.5 py-3 px-3.5 rounded-xl border transition-all duration-150 text-left active:scale-[0.99] ${
                             isActive
-                              ? 'bg-primary/10 dark:bg-primary/20 border-primary/30 dark:border-primary/40 ring-primary/10 shadow-sm'
-                              : 'bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-800/60 hover:border-slate-200 dark:hover:border-slate-700 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_2px_8px_rgba(0,0,0,0.3)] ring-black/[0.02] dark:ring-white/[0.04]'
+                              ? 'bg-primary/8 dark:bg-primary/15 border-primary/25 dark:border-primary/30 shadow-sm'
+                              : 'bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06)]'
                           }`}
                         >
-                          <ChevronRight size={14} className={`shrink-0 transition-transform duration-200 ${isActive ? 'text-primary rotate-90' : 'text-slate-400 dark:text-slate-500'} ${isRtl && !isActive ? 'rotate-180' : ''}`} strokeWidth={1.8} />
-                          <span className={`text-[13px] font-semibold flex-1 truncate ${isActive ? 'text-primary' : 'text-slate-800 dark:text-slate-100'}`}>
+                          <ChevronRight
+                            size={14}
+                            className={`shrink-0 transition-transform duration-200 ${
+                              isActive ? 'text-primary rotate-90' : 'text-slate-400 dark:text-slate-500'
+                            } ${isRtl && !isActive ? 'rotate-180' : ''}`}
+                            strokeWidth={2}
+                          />
+                          <span className={`text-[13px] font-semibold flex-1 truncate ${
+                            isActive ? 'text-primary' : 'text-slate-800 dark:text-slate-100'
+                          }`}>
                             {label(area.label, t)}
                           </span>
-                          <span className={`inline-flex items-center justify-center min-w-[28px] h-6 px-2 rounded-md text-[11px] font-semibold tabular-nums shrink-0 ${
+                          <span className={`inline-flex items-center justify-center min-w-[24px] h-5.5 px-1.5 rounded-md text-[10px] font-bold tabular-nums shrink-0 ${
                             isActive
-                              ? 'bg-primary/20 text-primary ring-1 ring-primary/20'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+                              ? 'bg-primary/15 text-primary'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                           }`}>
-                            {getAreaCount(area)}
+                            {count}
                           </span>
                         </button>
                       );
@@ -295,67 +388,45 @@ export default function CustomersExplorer() {
             {selectedRegionKey && (
               <Panel
                 id="customerList"
-                title={areaDisplayLabel}
+                title={`${areaDisplayLabel} (${areaLocations.length})`}
                 icon={MapPin}
                 onClose={handleCloseCustomerList}
               >
                 <div className="h-full overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
                   {areaLocations.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-center px-6">
-                      <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>
-                      <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
+                    <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+                      <p className="text-slate-500 font-medium text-sm">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>
+                      <p className="text-slate-400 text-xs mt-1">{t('tryDifferentKeywords')}</p>
                     </div>
                   ) : isAdmin ? (
-                    <div className="bg-white dark:bg-slate-900 overflow-hidden border-b border-slate-200/40 dark:border-slate-800/60">
+                    <div className="bg-white dark:bg-slate-900">
                       <Reorder.Group
                         axis="y"
                         values={areaLocations}
                         onReorder={(newOrder) => reorderLocations(newOrder.map(loc => loc.id))}
                       >
-                        {areaLocations.map((loc, index) => (
-                          <DraggableCard key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)}>
-                            <div
-                              data-customer-id={loc?.id}
-                              className={`flex-1 min-w-0 flex items-center gap-2.5 cursor-pointer ${loc?.inactive ? 'opacity-50' : ''} ${selectedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
-                              onClick={() => handleSelectCustomer(loc)}
-                            >
-                              <div className={`flex-1 min-w-0 ${loc?.inactive ? 'line-through decoration-slate-400 dark:decoration-slate-500' : ''}`}>
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`text-[13px] font-semibold truncate ${loc?.inactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{loc?.name ?? '—'}</span>
-                                  {loc?.inactive ? (
-                                    <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0 no-underline">{t('inactive')}</span>
-                                  ) : (
-                                    <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
-                                      {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-                                    </span>
-                                  )}
-                                  {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                                    <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
-                                      x{loc.changeMachineCount || 1}
-                                    </span>
-                                  )}
-                                </div>
-                                {loc?.address && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{loc.address}</p>}
-                                {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
-                              </div>
-                            </div>
+                        {areaLocations.map((loc) => (
+                          <DraggableCard key={loc?.id} loc={loc} index={0} visitStatus={getVisitStatus(loc)}>
+                            <CompactDraggableRow
+                              loc={loc}
+                              isSelected={selectedCustomerId === loc?.id}
+                              onClick={handleSelectCustomer}
+                              t={t}
+                            />
                           </DraggableCard>
                         ))}
                       </Reorder.Group>
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-slate-900 overflow-hidden border-b border-slate-200/40 dark:border-slate-800/60">
-                      {areaLocations.map((loc, index) => (
-                        <div key={loc?.id} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
-                          <CustomerRow
-                            loc={loc} index={index}
-                            visitStatus={getVisitStatus(loc)}
-                            showIndex
-                            isFocused={selectedCustomerId === loc?.id}
-                            onClick={handleSelectCustomer}
-                            {...rowProps}
-                          />
-                        </div>
+                    <div className="bg-white dark:bg-slate-900">
+                      {areaLocations.map((loc) => (
+                        <CompactCustomerRow
+                          key={loc?.id}
+                          loc={loc}
+                          isSelected={selectedCustomerId === loc?.id}
+                          onClick={handleSelectCustomer}
+                          t={t}
+                        />
                       ))}
                     </div>
                   )}

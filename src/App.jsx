@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, useParams, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LocationsProvider } from './LocationsContext';
 import { SearchProvider } from './SearchContext';
@@ -8,9 +8,9 @@ import { LanguageProvider, useLanguage } from './LanguageContext';
 import HomeView from './HomeView';
 import LocationsView from './LocationsView';
 import CustomersView from './CustomersView';
-import CustomersExplorer from './CustomersExplorer';
 import AddLocationView from './AddLocationView';
 import LocationDetailsView from './LocationDetailsView';
+import CustomerDetailsView from './CustomerDetailsView';
 import SettingsView from './SettingsView';
 import LoginView from './LoginView';
 import MapsView from './MapsView';
@@ -25,10 +25,7 @@ import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 import { TextSizeProvider } from './TextSizeContext';
 
-function CustomerRedirect() {
-  const { id } = useParams();
-  return <Navigate to={`/customers?customerId=${encodeURIComponent(id)}`} replace />;
-}
+import { useEffect } from 'react';
 
 function AppWithAuth() {
   const { user, isLoading } = useAuth();
@@ -60,10 +57,10 @@ function AppContent() {
         <Route path="/locations/area/:areaKey" element={<LocationsView />} />
         <Route path="/locations" element={<LocationsView />} />
         <Route path="/customers/area/:areaKey" element={<CustomersView />} />
-        <Route path="/customers" element={<CustomersExplorer />} />
+        <Route path="/customers" element={<CustomersView />} />
         <Route path="/add" element={<AddLocationView />} />
         <Route path="/location/:id" element={<LocationDetailsView />} />
-        <Route path="/customer/:id" element={<CustomerRedirect />} />
+        <Route path="/customer/:id" element={<CustomerDetailsView />} />
         <Route path="/settings" element={<SettingsView />} />
         <Route path="/maps" element={<MapsView />} />
         <Route path="/manage-users" element={<ManageUsersView />} />

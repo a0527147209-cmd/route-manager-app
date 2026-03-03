@@ -25,16 +25,18 @@ import AddressAutocomplete from './AddressAutocomplete';
 import { useAuth } from './AuthContext';
 import { useConfirmation } from './ConfirmationContext';
 
-export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel = false }) {
-  const id = customerId;
+export default function CustomerDetailsView() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const { state: navState } = useLocation();
+  const backPath = navState?.fromPath ?? '/customers';
   const { locations, updateLocation, removeLocation, removeLog } = useLocations();
   const { t, isRtl } = useLanguage();
   const { isAdmin, user } = useAuth();
   const { confirm } = useConfirmation();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [showNavMenu, setShowNavMenu] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [viewingLogNote, setViewingLogNote] = useState(null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -140,24 +142,20 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
         handleCancelEdit();
       }
     }
-    if (onBack) onBack();
-    else navigate('/customers');
+    navigate(backPath);
   };
 
   const handleEditLog = async (log, index) => {
+    // "Hard to edit" - confirmation dialog
     if (await confirm({
       title: t('editLog') || 'Edit Log',
       message: t('confirmEditLog') || 'Editing historical logs will change financial data. Are you sure?',
       confirmText: t('continue') || 'Continue',
       cancelText: t('cancel') || 'Cancel'
     })) {
-      if (isPanel && onOpenLog) {
-        onOpenLog({ edit: log, index });
-      } else {
-        setEditingLog(log);
-        setEditingLogIndex(index);
-        setShowLogModal(true);
-      }
+      setEditingLog(log);
+      setEditingLogIndex(index);
+      setShowLogModal(true);
     }
   };
 
@@ -247,7 +245,7 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
 
   if (loading) {
     return (
-      <div className={`${isPanel ? 'h-full' : 'min-h-screen'} bg-slate-50 dark:bg-slate-900 flex items-center justify-center`}>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
         <p className="text-slate-500 dark:text-slate-400">{t('loading')}</p>
       </div>
     );
@@ -255,7 +253,7 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
 
   if (!location) {
     return (
-      <div className={`${isPanel ? 'h-full' : 'min-h-screen'} bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6`}>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6">
         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
           {t('customerNotFound')}
         </h2>
@@ -263,7 +261,7 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
           {t('locationRemovedOrInvalid')}
         </p>
         <button
-          onClick={() => onBack ? onBack() : navigate('/customers')}
+          onClick={() => navigate(backPath)}
           className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl active:scale-95 transition-all"
         >
           {t('backToCustomers')}
@@ -272,8 +270,38 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
     );
   }
 
-  const innerContent = (
-    <div className={`${isPanel ? 'flex-1 overflow-y-auto' : 'flex-1 overflow-y-auto'} p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 ${isPanel ? 'w-full' : 'max-w-[380px] mx-auto w-full'}`}>
+  return (
+    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
+      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 pt-4 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}>
+        <BackButton onClick={handleBackClick} title={t('backToCustomers')} />
+        <div className="flex-1 min-w-0 flex items-center justify-center text-center px-2">
+          <h1 className="font-bold text-base text-slate-800 dark:text-white break-words leading-tight text-center w-full">
+            {location.name}
+          </h1>
+        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 shrink-0"
+          title={t('menu')}
+        >
+          <Menu size={22} />
+        </button>
+      </header>
+      <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+
+      {showLogModal && (
+        <LogFormModal
+          location={location}
+          onClose={handleCloseModal}
+          onSaved={handleCloseModal}
+          initialLog={editingLog}
+          logIndex={editingLogIndex}
+        />
+      )}
+
+
+
+      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
         {location.inactive && (
           <div className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700">
             <PowerOff size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />
@@ -449,10 +477,7 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
               </div>
             </div>
             <button
-              onClick={() => {
-                if (isPanel && onOpenLog) onOpenLog('new');
-                else setShowLogModal(true);
-              }}
+              onClick={() => setShowLogModal(true)}
               className="shrink-0 px-4 rounded-xl bg-slate-800 dark:bg-slate-200 hover:bg-slate-700 dark:hover:bg-slate-300 text-white dark:text-slate-900 shadow-md flex flex-col items-center justify-center gap-1 active:scale-95 transition-all"
               title={t('addLog')}
               aria-label={t('addLog')}
@@ -1008,54 +1033,8 @@ export function CustomerDetailContent({ customerId, onOpenLog, onBack, isPanel =
           </>
         )}
       </div>
-  );
 
-  if (isPanel) return innerContent;
 
-  return (
-    <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 pt-4 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}>
-        <BackButton onClick={handleBackClick} title={t('backToCustomers')} />
-        <div className="flex-1 min-w-0 flex items-center justify-center text-center px-2">
-          <h1 className="font-bold text-base text-slate-800 dark:text-white break-words leading-tight text-center w-full">
-            {location.name}
-          </h1>
-        </div>
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 shrink-0"
-          title={t('menu')}
-        >
-          <Menu size={22} />
-        </button>
-      </header>
-      <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
-
-      {showLogModal && (
-        <LogFormModal
-          location={location}
-          onClose={handleCloseModal}
-          onSaved={handleCloseModal}
-          initialLog={editingLog}
-          logIndex={editingLogIndex}
-        />
-      )}
-
-      {innerContent}
     </div>
-  );
-}
-
-export default function CustomerDetailsView() {
-  const { id } = useParams();
-  const { state: navState } = useLocation();
-  const navigate = useNavigate();
-  const backPath = navState?.fromPath ?? '/customers';
-
-  return (
-    <CustomerDetailContent
-      customerId={id}
-      onBack={() => navigate(backPath)}
-    />
   );
 }

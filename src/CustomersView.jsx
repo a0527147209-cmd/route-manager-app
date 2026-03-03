@@ -14,30 +14,30 @@ import { useSearch } from './SearchContext';
 import { Reorder } from 'framer-motion';
 import BackButton from './BackButton';
 
-export const EMPTY = '__empty__';
+const EMPTY = '__empty__';
 
-export function norm(v) {
+function norm(v) {
   const s = (v ?? '').toString().trim();
   return s || EMPTY;
 }
 
-export function zoneKey(raw) {
+function zoneKey(raw) {
   const s = (raw ?? '').toString().replace(/\s+/g, ' ').trim().toLowerCase();
   return s || EMPTY;
 }
 
-export function label(key, t) {
+function label(key, t) {
   return key === EMPTY ? t('other') : key;
 }
 
-export const SORT_OPTIONS = [
+const SORT_OPTIONS = [
   { value: 'all', labelKey: 'sortByAll' },
   { value: 'city', labelKey: 'sortByCity' },
   { value: 'state', labelKey: 'sortByState' },
   { value: 'zone', labelKey: 'sortByZone' },
 ];
 
-export function formatDate(isoStr) {
+function formatDate(isoStr) {
   if (!isoStr) return null;
   try {
     const [y, m, d] = isoStr.slice(0, 10).split('-').map(Number);
@@ -48,7 +48,7 @@ export function formatDate(isoStr) {
   }
 }
 
-export function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
+function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -90,7 +90,7 @@ export function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   );
 }
 
-export function StatBox({ loc, t }) {
+function StatBox({ loc, t }) {
   return (
     <div className="flex flex-col gap-0.5 px-2.5 py-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 min-w-[135px] ring-1 ring-black/[0.02] dark:ring-white/[0.04]">
       <div className="flex items-baseline justify-between gap-3">
@@ -109,18 +109,14 @@ export function StatBox({ loc, t }) {
   );
 }
 
-export function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visitStatus = 'normal', showIndex, isFocused, onClick }) {
+function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visitStatus = 'normal', showIndex, isFocused }) {
   const isInactive = !!loc?.inactive;
   const statusBg = isInactive ? '' : visitStatus === 'recent' ? 'bg-slate-200/60 dark:bg-slate-700/40' : visitStatus === 'overdue' ? 'bg-red-100/80 dark:bg-red-900/30' : '';
   return (
     <div
       data-customer-id={loc?.id}
       className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${isInactive ? 'opacity-50' : ''} ${statusBg || 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
-      onClick={() => {
-        if (loc?.id == null) return;
-        if (onClick) return onClick(loc);
-        navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } });
-      }}
+      onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {showIndex && (
         <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tabular-nums w-5 text-center shrink-0">
@@ -167,114 +163,6 @@ export function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, get
       </div>
     </div>
   );
-}
-
-export const COMPOSITE_SEP = '|';
-
-export function getVisitStatus(loc) {
-  if (!loc?.lastVisited) return 'overdue';
-  const [y, m, d] = loc.lastVisited.slice(0, 10).split('-').map(Number);
-  const daysSince = (Date.now() - new Date(y, m - 1, d).getTime()) / (24 * 60 * 60 * 1000);
-  if (daysSince <= 10) return 'recent';
-  if (daysSince >= 40) return 'overdue';
-  return 'normal';
-}
-
-export function getWazeUrl(loc) {
-  return `https://waze.com/ul?q=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}&navigate=yes`;
-}
-
-export function getMapsUrl(loc) {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}`;
-}
-
-export function buildGroups(filteredLocations, sortBy) {
-  const getGroupKeyForSort = (loc) => {
-    if (sortBy === 'city') return zoneKey(loc?.city);
-    if (sortBy === 'state') return zoneKey(loc?.state);
-    return zoneKey(loc?.region ?? loc?.zone ?? loc?.city);
-  };
-  const getGroupLabelForSort = (loc) => {
-    if (sortBy === 'city') return norm(loc?.city);
-    if (sortBy === 'state') return norm(loc?.state);
-    return norm(loc?.region ?? loc?.zone ?? loc?.city);
-  };
-
-  if (sortBy === 'all') {
-    const seen = new Map();
-    filteredLocations.forEach((loc) => {
-      let addedToAtLeastOne = false;
-      for (const dim of ['city', 'state', 'zone']) {
-        let k, lbl;
-        if (dim === 'city') { k = zoneKey(loc?.city); lbl = norm(loc?.city); }
-        else if (dim === 'state') { k = zoneKey(loc?.state); lbl = norm(loc?.state); }
-        else { k = zoneKey(loc?.region ?? loc?.zone ?? loc?.city); lbl = norm(loc?.region ?? loc?.zone ?? loc?.city); }
-        if (!k || k === EMPTY) continue;
-        const composite = `${dim}${COMPOSITE_SEP}${k}`;
-        if (!seen.has(composite)) { seen.set(composite, lbl); addedToAtLeastOne = true; }
-      }
-      if (!addedToAtLeastOne) {
-        const fallbackKey = `zone${COMPOSITE_SEP}other`;
-        if (!seen.has(fallbackKey)) seen.set(fallbackKey, 'Other');
-      }
-    });
-    return [...seen.entries()]
-      .map(([key, labelVal]) => ({ key, label: labelVal }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }
-
-  const map = new Map();
-  filteredLocations.forEach((loc) => {
-    const key = getGroupKeyForSort(loc);
-    const rawLabel = getGroupLabelForSort(loc);
-    if (!map.has(key)) map.set(key, rawLabel);
-  });
-  return [...map.entries()]
-    .map(([key, labelVal]) => ({ key, label: labelVal }))
-    .sort((a, b) => (a.key === EMPTY ? 1 : b.key === EMPTY ? -1 : a.label.localeCompare(b.label)));
-}
-
-export function getLocationsByCompositeKey(filteredLocations, compositeKey) {
-  if (!compositeKey) return [];
-  const keyNorm = (k) => (k ?? '').trim().toLowerCase();
-  if (compositeKey.includes(COMPOSITE_SEP)) {
-    const [dim, key] = compositeKey.split(COMPOSITE_SEP);
-    const kn = keyNorm(key);
-    return filteredLocations.filter((loc) => {
-      if (dim === 'city') return zoneKey(loc?.city) === kn;
-      if (dim === 'state') return zoneKey(loc?.state) === kn;
-      return zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn;
-    });
-  }
-  const kn = keyNorm(compositeKey);
-  return filteredLocations.filter((loc) => zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn);
-}
-
-export function matchesSearchTerms(loc, searchWords) {
-  if (!searchWords?.length) return true;
-  try {
-    const baseText = [
-      loc?.name, loc?.address, loc?.city, loc?.state, loc?.region, loc?.zone, loc?.type,
-      loc?.id, loc?.notes, loc?.logNotes, loc?.status, loc?.lastCollection,
-      loc?.commissionRate ? `${Math.round(loc.commissionRate * 100)}%` : null,
-      loc?.bills ? Object.entries(loc.bills || {}).map(([k, v]) => `${k}x${v}`).join(' ') : ''
-    ].filter(Boolean).map((v) => String(v).toLowerCase()).join(' ');
-
-    if (searchWords.every((word) => baseText.includes(word))) return true;
-
-    if (loc?.logs && Array.isArray(loc.logs)) {
-      const allLogsText = loc.logs.map(log =>
-        [log.date, log.collection, log.notes,
-          log.bills ? Object.entries(log.bills || {}).map(([k, v]) => `${k}x${v}`).join(' ') : ''
-        ].join(' ')
-      ).join(' ').toLowerCase();
-      return searchWords.every((word) => (baseText + ' ' + allLogsText).includes(word));
-    }
-    return searchWords.every((word) => baseText.includes(word));
-  } catch (error) {
-    console.error('Search error for loc:', loc, error);
-    return (loc?.name || '').toLowerCase().includes(searchWords[0]);
-  }
 }
 
 export default function CustomersView() {

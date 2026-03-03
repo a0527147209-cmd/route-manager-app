@@ -158,7 +158,31 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
   const giveToCustomerAmount = totalAmount > 0 ? totalAmount * rate : 0;
   const iReceiveAmount = totalAmount > 0 ? totalAmount * (1 - rate) : 0;
 
-  const formContent = (
+  return (
+    <>
+      <div
+        className="fixed inset-0 bg-black/50 z-[60]"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+      <div
+        className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[95%] max-w-[380px] max-h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 flex flex-col ${isRtl ? 'text-right' : 'text-left'}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="log-modal-title"
+      >
+        <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
+          <h2 id="log-modal-title" className="text-lg font-bold text-slate-800 dark:text-white">
+            {t('locationLog')} · {location.name}
+          </h2>
+          <button
+            onClick={handleClose}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95"
+            aria-label={t('close')}
+          >
+            <X size={22} />
+          </button>
+        </div>
         <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
           <div className="flex items-stretch gap-0 w-full rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500 overflow-hidden">
             <div className="flex-1 flex flex-col items-center justify-center px-2 py-2">
@@ -297,247 +321,7 @@ export default function LogFormModal({ location, onClose, onSaved, initialLog = 
             <span className={isRtl ? 'me-0.5' : 'ms-0.5'}>{t('logWord')}</span>
           </button>
         </div>
-  );
-
-  return (
-    <>
-      <div
-        className="fixed inset-0 bg-black/50 z-[60]"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
-      <div
-        className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] w-[95%] max-w-[380px] max-h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-600 flex flex-col ${isRtl ? 'text-right' : 'text-left'}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="log-modal-title"
-      >
-        <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
-          <h2 id="log-modal-title" className="text-lg font-bold text-slate-800 dark:text-white">
-            {t('locationLog')} · {location.name}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 active:scale-95"
-            aria-label={t('close')}
-          >
-            <X size={22} />
-          </button>
-        </div>
-        {formContent}
       </div>
     </>
-  );
-}
-
-export function LogFormContent({ location, onClose, onSaved, initialLog = null, logIndex = -1 }) {
-  const { updateLocation, updateLog } = useLocations();
-  const { t, isRtl } = useLanguage();
-  const { confirm } = useConfirmation();
-  const { user } = useAuth();
-  const [amount, setAmount] = useState('');
-  const [notes, setNotes] = useState('');
-  const [bills, setBills] = useState({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
-  const [animatingBill, setAnimatingBill] = useState(null);
-  const [noMoney, setNoMoney] = useState(false);
-
-  useEffect(() => {
-    if (!location) return;
-    if (initialLog) {
-      setBills(initialLog.bills || { 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
-      setAmount(initialLog.collection || '');
-      setNotes(initialLog.notes || '');
-      setNoMoney(!!initialLog.noMoney);
-    } else {
-      setBills({ 50: 0, 20: 0, 10: 0, 5: 0, 1: 0 });
-      setAmount('');
-      setNotes('');
-      setNoMoney(false);
-    }
-  }, [location, initialLog]);
-
-  const getTodayISO = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-  const getTodayFormatted = () => {
-    try {
-      let d;
-      if (initialLog?.date) {
-        const [y, m, day] = initialLog.date.slice(0, 10).split('-').map(Number);
-        d = new Date(y, m - 1, day);
-      } else {
-        d = new Date();
-      }
-      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-    } catch {
-      return '—';
-    }
-  };
-
-  const updateBillCount = (billValue, delta) => {
-    setAnimatingBill(billValue);
-    setBills((prev) => ({
-      ...prev,
-      [billValue]: Math.max(0, (prev[billValue] || 0) + delta),
-    }));
-    setTimeout(() => setAnimatingBill(null), 300);
-  };
-
-  const handleSave = () => {
-    if (!location) return;
-    if (initialLog && logIndex >= 0) {
-      const coll = parseFloat(amount) || 0;
-      const cr = parseFloat(initialLog.commissionRate ?? location.commissionRate) || 0.4;
-      const updatedLogEntry = {
-        ...initialLog,
-        collection: amount,
-        totalWeight: coll,
-        halfWeight: +(coll * (1 - cr)).toFixed(2),
-        bills, notes, noMoney,
-      };
-      updateLog(location.id, logIndex, updatedLogEntry);
-      if (logIndex === 0) {
-        updateLocation(location.id, { lastCollection: amount, logNotes: notes, bills });
-      }
-    } else {
-      const coll = parseFloat(amount) || 0;
-      const cr = parseFloat(location.commissionRate) || 0.4;
-      const newLog = {
-        date: getTodayISO(), commissionRate: cr, collection: amount,
-        totalWeight: coll, halfWeight: +(coll * (1 - cr)).toFixed(2),
-        bills, notes, noMoney, id: Date.now().toString(),
-        user: user?.name || 'Unknown'
-      };
-      const updatedLogs = [newLog, ...(location.logs || [])];
-      updateLocation(location.id, {
-        lastCollection: amount, status: location.status ?? 'pending',
-        logNotes: notes, commissionRate: location.commissionRate ?? 0.4,
-        hasChangeMachine: !!location.hasChangeMachine, lastVisited: getTodayISO(),
-        bills, logs: updatedLogs
-      });
-    }
-    onSaved?.();
-    onClose();
-  };
-
-  if (!location) return null;
-
-  const commissionRate = location.commissionRate ?? 0.4;
-  const rate = Math.min(0.99, Math.max(0, parseFloat(commissionRate) || 0.4));
-  const totalAmount = parseFloat(amount) || 0;
-  const giveToCustomerAmount = totalAmount > 0 ? totalAmount * rate : 0;
-  const iReceiveAmount = totalAmount > 0 ? totalAmount * (1 - rate) : 0;
-
-  return (
-    <div className="p-4 space-y-4 overflow-y-auto flex-1 min-h-0">
-      <div className="flex items-stretch gap-0 w-full rounded-lg bg-slate-100 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-500 overflow-hidden">
-        <div className="flex-1 flex flex-col items-center justify-center px-2 py-2">
-          <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide leading-tight">{t('logDate')}</p>
-          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight mt-0.5">{getTodayFormatted()}</p>
-        </div>
-        <div className="w-px bg-slate-300 dark:bg-slate-500 self-stretch my-1.5" />
-        <div className="flex-1 flex flex-col items-center justify-center px-2 py-2">
-          <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide leading-tight">{t('commission')}</p>
-          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight mt-0.5">{Number.isFinite(rate) ? `${Math.round(rate * 100)}%` : '—'}</p>
-        </div>
-        <div className="w-px bg-slate-300 dark:bg-slate-500 self-stretch my-1.5" />
-        <div className="flex-1 flex flex-col items-center justify-center px-2 py-2">
-          <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide leading-tight">{t('user') || 'USER'}</p>
-          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight mt-0.5 truncate max-w-[80px]">{user?.name || '—'}</p>
-        </div>
-      </div>
-
-      {location.hasChangeMachine && (
-        <div className="flex items-center gap-2.5 py-2 px-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700">
-          <Check size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-200">{t('hasChangeMachine')}</span>
-        </div>
-      )}
-
-      <div className="space-y-2.5">
-        <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block">
-          {t('collectionAmount')}
-        </label>
-        <div className="flex items-stretch gap-1.5">
-          <input
-            type="number" inputMode="decimal" step="0.01" min="0"
-            value={amount}
-            onChange={(e) => { setAmount(e.target.value); if (noMoney) setNoMoney(false); }}
-            placeholder="0.00" disabled={noMoney}
-            className={`flex-[85] min-w-0 px-3 py-2 text-base font-semibold rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${noMoney ? 'opacity-40' : ''} ${isRtl ? 'text-right' : 'text-left'}`}
-          />
-          <button
-            type="button"
-            onClick={() => { setNoMoney(prev => !prev); if (!noMoney) setAmount(''); }}
-            className={`flex-[15] rounded-lg text-[10px] font-bold uppercase leading-tight text-center px-1 transition-all active:scale-[0.96] ${noMoney ? 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700' : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600/60'}`}
-          >
-            {t('noMoney')}{noMoney ? ' ✓' : ''}
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="text-slate-600 dark:text-slate-400 text-[10px] font-semibold uppercase tracking-wide block mb-0.5">
-              {t('iReceive')} ({Math.round((1 - rate) * 100)}%)
-            </label>
-            <div className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 font-semibold text-sm text-center">
-              {totalAmount > 0 ? iReceiveAmount.toFixed(2) : '—'}
-            </div>
-          </div>
-          <div>
-            <label className="text-slate-600 dark:text-slate-400 text-[10px] font-semibold uppercase tracking-wide block mb-0.5">
-              {t('giveToCustomer')} ({Math.round(rate * 100)}%)
-            </label>
-            <div className="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-500 bg-slate-50 dark:bg-slate-700/50 text-slate-800 dark:text-slate-200 font-semibold text-sm text-center">
-              {totalAmount > 0 ? giveToCustomerAmount.toFixed(2) : '—'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide block mb-2">{t('bills')}</label>
-        <div className="grid grid-cols-5 gap-1">
-          {[50, 20, 10, 5, 1].map((billValue) => (
-            <div key={billValue} className="flex flex-col items-center">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-0.5">{t(`bill${billValue}`)}</span>
-              <div className="flex items-center gap-0.5">
-                <button onClick={() => updateBillCount(billValue, -1)} disabled={bills[billValue] <= 0}
-                  className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-900/30 disabled:opacity-25 disabled:cursor-not-allowed active:scale-90 transition-all">−</button>
-                <span className={`w-6 text-center text-base font-bold text-slate-900 dark:text-slate-100 transition-all duration-200 ${animatingBill === billValue ? 'scale-125 text-indigo-600 dark:text-indigo-400' : ''}`}>
-                  {bills[billValue] || 0}
-                </span>
-                <button onClick={() => updateBillCount(billValue, 1)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-green-100 dark:hover:bg-green-900/30 active:scale-90 transition-all">+</button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 flex items-center justify-end gap-1.5">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t('totalBills') || 'Total'}:</span>
-          <span className="text-sm font-bold text-slate-800 dark:text-slate-100 font-mono">
-            {Object.entries(bills).reduce((sum, [val, count]) => sum + (Number(val) * count), 0).toFixed(2)}
-          </span>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-600 space-y-2">
-        <label className="text-slate-600 dark:text-slate-400 text-xs font-semibold uppercase tracking-wide">{t('logNotes')}</label>
-        <textarea
-          value={notes} onChange={(e) => setNotes(e.target.value)}
-          placeholder={t('notesPlaceholder')} rows={2}
-          className="w-full p-3 text-sm bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-500 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:text-white resize-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
-        />
-      </div>
-
-      <button
-        onClick={handleSave}
-        className={`w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-[0.99] transition-all text-sm ${isRtl ? 'flex-row-reverse' : ''}`}
-      >
-        <Save size={18} />
-        <span>{t('saveWord')}</span>
-        <span className={isRtl ? 'me-0.5' : 'ms-0.5'}>{t('logWord')}</span>
-      </button>
-    </div>
   );
 }

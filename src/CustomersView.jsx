@@ -176,8 +176,23 @@ export default function CustomersView() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
   const [showInactive, setShowInactive] = useState(false);
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const lastScrollY = useRef(0);
   const scrollRef = useRef(null);
   useScrollRestore(scrollRef);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      if (y > 60 && y > lastScrollY.current) setHeaderCollapsed(true);
+      else if (y < lastScrollY.current) setHeaderCollapsed(false);
+      lastScrollY.current = y;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
 
   
 
@@ -360,16 +375,31 @@ export default function CustomersView() {
             <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 truncate flex-1 text-center min-w-0 tracking-tight">
               {isInnerPage ? areaDisplayLabel : t('customers')}
             </h1>
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
-              title={t('menu')}
-            >
-              <Menu size={20} strokeWidth={1.8} />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {isInnerPage && areaLocations.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => navigate(`/map-overview?zone=${encodeURIComponent(areaDisplayLabel)}`)}
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all active:scale-95"
+                  title={t('mapOverview')}
+                >
+                  <MapPin size={16} strokeWidth={2} />
+                </button>
+              )}
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
+                title={t('menu')}
+              >
+                <Menu size={20} strokeWidth={1.8} />
+              </button>
+            </div>
           </div>
 
-          <div className="mt-2.5 flex items-center gap-2.5">
+          <div
+            className={`transition-all duration-200 overflow-hidden ${headerCollapsed ? 'max-h-0 opacity-0 mt-0' : 'max-h-20 opacity-100 mt-2.5'}`}
+          >
+          <div className="flex items-center gap-2.5 pb-0.5">
             <div className="relative flex-1">
               <Search size={15} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none ${isRtl ? 'right-3' : 'left-3'}`} strokeWidth={1.8} />
               <input
@@ -418,6 +448,7 @@ export default function CustomersView() {
               </select>
             )}
           </div>
+          </div>
         </div>
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
@@ -434,18 +465,6 @@ export default function CustomersView() {
             </div>
           ) : isInnerPage ? (
             <>
-            {areaLocations.length > 0 && (
-              <div className="px-4 pt-3">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/map-overview?zone=${encodeURIComponent(areaDisplayLabel)}`)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white text-[13px] font-semibold shadow-sm active:scale-[0.98] transition-all"
-                >
-                  <MapPin size={16} strokeWidth={2} />
-                  {t('mapOverview')}
-                </button>
-              </div>
-            )}
             {areaLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>

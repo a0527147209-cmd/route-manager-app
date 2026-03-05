@@ -177,33 +177,24 @@ export default function CustomersView() {
   const [sortBy, setSortBy] = useState('zone');
   const [showInactive, setShowInactive] = useState(false);
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
-  const lastScrollY = useRef(0);
   const scrollRef = useRef(null);
-  const ticking = useRef(false);
   useScrollRestore(scrollRef);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    let raf = 0;
     const onScroll = () => {
-      if (ticking.current) return;
-      ticking.current = true;
-      requestAnimationFrame(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
         const y = el.scrollTop;
-        const delta = y - lastScrollY.current;
-        if (y > 80 && delta > 12) {
-          setHeaderCollapsed(true);
-          lastScrollY.current = y;
-        } else if (delta < -8) {
-          setHeaderCollapsed(false);
-          lastScrollY.current = y;
-        }
-        ticking.current = false;
+        if (y > 120 && !headerCollapsed) setHeaderCollapsed(true);
+        else if (y < 40 && headerCollapsed) setHeaderCollapsed(false);
       });
     };
     el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, []);
+    return () => { el.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
+  }, [headerCollapsed]);
 
   
 
@@ -408,7 +399,7 @@ export default function CustomersView() {
           </div>
 
           <div
-            className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out will-change-[max-height,opacity] ${headerCollapsed ? 'max-h-0 opacity-0 mt-0' : 'max-h-[52px] opacity-100 mt-2.5'}`}
+            style={{ transition: 'transform 200ms ease, opacity 200ms ease', transform: headerCollapsed ? 'scaleY(0)' : 'scaleY(1)', opacity: headerCollapsed ? 0 : 1, transformOrigin: 'top', height: headerCollapsed ? 0 : 'auto', marginTop: headerCollapsed ? 0 : '0.625rem', pointerEvents: headerCollapsed ? 'none' : 'auto' }}
           >
           <div className="flex items-center gap-2.5 pb-0.5">
             <div className="relative flex-1">

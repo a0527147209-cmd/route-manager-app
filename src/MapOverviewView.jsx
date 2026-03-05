@@ -154,6 +154,7 @@ export default function MapOverviewView() {
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const initialZone = searchParams.get('zone') || 'all';
+  const hasZoneParam = initialZone !== 'all';
   const [zoneFilter, setZoneFilter] = useState(initialZone);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -161,7 +162,8 @@ export default function MapOverviewView() {
   const [mapsReady, setMapsReady] = useState(false);
   const [showRoute] = useState(true);
   const [routeNumbers, setRouteNumbers] = useState({});
-  const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [mapFullscreen, setMapFullscreen] = useState(hasZoneParam);
+  const initialFitDone = useRef(false);
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
@@ -232,6 +234,9 @@ export default function MapOverviewView() {
     });
     mapRef.current.setOptions({ fullscreenControl: false });
     infoWindowRef.current = new window.google.maps.InfoWindow();
+    if (hasZoneParam) {
+      setTimeout(() => window.google?.maps?.event?.trigger(mapRef.current, 'resize'), 50);
+    }
   }, [mapsReady]);
 
   useEffect(() => {
@@ -433,10 +438,11 @@ export default function MapOverviewView() {
 
       if (markersRef.current.length === 1) {
         mapRef.current.setCenter(bounds.getCenter());
-        mapRef.current.setZoom(13);
+        mapRef.current.setZoom(14);
       } else if (markersRef.current.length > 1) {
-        mapRef.current.fitBounds(bounds, 40);
+        mapRef.current.fitBounds(bounds, 30);
       }
+      initialFitDone.current = true;
     };
 
     draw();
@@ -461,6 +467,7 @@ export default function MapOverviewView() {
 
   useEffect(() => {
     if (!mapsReady || !mapRef.current || !selected) return;
+    if (!initialFitDone.current) return;
     const lat = Number.isFinite(Number(selected?.lat)) ? Number(selected.lat) : null;
     const lng = Number.isFinite(Number(selected?.lng)) ? Number(selected.lng) : null;
     if (lat != null && lng != null) {

@@ -179,16 +179,27 @@ export default function CustomersView() {
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const lastScrollY = useRef(0);
   const scrollRef = useRef(null);
+  const ticking = useRef(false);
   useScrollRestore(scrollRef);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const onScroll = () => {
-      const y = el.scrollTop;
-      if (y > 60 && y > lastScrollY.current) setHeaderCollapsed(true);
-      else if (y < lastScrollY.current) setHeaderCollapsed(false);
-      lastScrollY.current = y;
+      if (ticking.current) return;
+      ticking.current = true;
+      requestAnimationFrame(() => {
+        const y = el.scrollTop;
+        const delta = y - lastScrollY.current;
+        if (y > 80 && delta > 12) {
+          setHeaderCollapsed(true);
+          lastScrollY.current = y;
+        } else if (delta < -8) {
+          setHeaderCollapsed(false);
+          lastScrollY.current = y;
+        }
+        ticking.current = false;
+      });
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
@@ -397,7 +408,7 @@ export default function CustomersView() {
           </div>
 
           <div
-            className={`transition-all duration-200 overflow-hidden ${headerCollapsed ? 'max-h-0 opacity-0 mt-0' : 'max-h-20 opacity-100 mt-2.5'}`}
+            className={`overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out will-change-[max-height,opacity] ${headerCollapsed ? 'max-h-0 opacity-0 mt-0' : 'max-h-[52px] opacity-100 mt-2.5'}`}
           >
           <div className="flex items-center gap-2.5 pb-0.5">
             <div className="relative flex-1">

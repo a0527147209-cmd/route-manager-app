@@ -29,6 +29,7 @@ const NYC_BOROUGH_BOUNDS = {
   'queens':         { minLat: 40.541, maxLat: 40.812, minLng: -73.962, maxLng: -73.700 },
   'bronx':          { minLat: 40.785, maxLat: 40.917, minLng: -73.933, maxLng: -73.748 },
   'staten island':  { minLat: 40.496, maxLat: 40.651, minLng: -74.255, maxLng: -74.052 },
+  'harlem':         { minLat: 40.795, maxLat: 40.835, minLng: -73.960, maxLng: -73.930 },
 };
 const ZONE_LINE_COLORS = ['#E63946', '#2A9D8F', '#F4A261', '#8338EC', '#3A86FF', '#FF006E', '#FB5607'];
 let mapsLoadPromise = null;

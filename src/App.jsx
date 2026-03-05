@@ -22,6 +22,7 @@ import MapOverviewView from './MapOverviewView';
 import NotificationsView from './NotificationsView';
 import AccountView from './AccountView';
 import NavigationMockup from './NavigationMockup';
+import ImportHarlem from './ImportHarlem';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 import { TextSizeProvider } from './TextSizeContext';
@@ -72,6 +73,7 @@ function AppContent() {
         <Route path="/notifications" element={<NotificationsView />} />
         <Route path="/account" element={<AccountView />} />
         <Route path="/nav-mockup" element={<NavigationMockup />} />
+        <Route path="/import-harlem" element={<ImportHarlem />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

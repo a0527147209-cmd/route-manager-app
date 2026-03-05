@@ -8,7 +8,7 @@ import MenuDrawer from './MenuDrawer';
 import BackButton from './BackButton';
 
 const GOOGLE_MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-const GEO_CACHE_KEY = 'vrm_geo_cache_v3';
+const GEO_CACHE_KEY = 'vrm_geo_cache_v4';
 const NO_VISIT_MEDIUM_DAYS = 35;
 const NO_VISIT_HIGH_DAYS = 65;
 const US_BOUNDS = {
@@ -18,9 +18,9 @@ const US_BOUNDS = {
   maxLng: -66.7,
 };
 const NORTHEAST_BOUNDS = {
-  minLat: 39.0,
+  minLat: 38.0,
   maxLat: 43.8,
-  minLng: -76.5,
+  minLng: -78.0,
   maxLng: -70.0,
 };
 const NYC_BOROUGH_BOUNDS = {

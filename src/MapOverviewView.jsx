@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, memo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Menu, Navigation, ExternalLink, Maximize2, Minimize2, ArrowLeft } from 'lucide-react';
 import { useLocations } from './LocationsContext';
@@ -149,6 +149,61 @@ function getStatusClass(status) {
   return 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300';
 }
 
+const LocationCard = memo(function LocationCard({ loc, isSelected, routeNum, onSelect, onOpenCustomers, t }) {
+  const zone = loc?.region || loc?.zone || loc?.city || t('other');
+  const address = loc?.fullAddress || loc?.address || `${loc?.city || ''} ${loc?.state || ''}`.trim();
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+  return (
+    <div
+      onClick={onSelect}
+      className={`bg-white dark:bg-slate-900 border rounded-2xl p-3 cursor-pointer ${
+        isSelected
+          ? 'border-indigo-500 dark:border-indigo-400'
+          : 'border-slate-200 dark:border-slate-700'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2.5 min-w-0">
+          <span
+            className="shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center text-[11px] font-bold mt-0.5"
+            style={{ backgroundColor: '#16a34a' }}
+          >
+            {routeNum || '–'}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 truncate">{loc.name}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{address || '-'}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{zone}</p>
+          </div>
+        </div>
+        <span className={`px-2 py-1 rounded-full text-[10px] font-bold shrink-0 ${getStatusClass(loc.computedStatus)}`}>
+          {getStatusLabel(loc.computedStatus, t)}
+        </span>
+      </div>
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenCustomers(); }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
+        >
+          <Navigation size={13} />
+          {t('openInCustomers')}
+        </button>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+        >
+          <ExternalLink size={13} />
+          {t('openInMaps')}
+        </a>
+      </div>
+    </div>
+  );
+});
+
 export default function MapOverviewView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -205,6 +260,14 @@ export default function MapOverviewView() {
     const found = filtered.find((x) => x.id === selectedId);
     return found || filtered[0];
   }, [filtered, selectedId]);
+
+  const handleSelectLocation = useCallback((id) => () => setSelectedId(id), []);
+  const handleOpenCustomers = useCallback((loc) => () => {
+    const zone = (loc?.region || loc?.zone || loc?.city || '').trim();
+    navigate(`/customers/area/${encodeURIComponent(`zone|${zoneKey(zone)}`)}`, {
+      state: { focusCustomerId: loc.id },
+    });
+  }, [navigate]);
 
   useEffect(() => {
     loadGoogleMaps().then((ok) => setMapsReady(ok));
@@ -575,67 +638,17 @@ export default function MapOverviewView() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center">
               <p className="font-semibold text-slate-700 dark:text-slate-200">{t('noMapResults')}</p>
             </div>
-          ) : filtered.map((loc) => {
-            const zone = loc?.region || loc?.zone || loc?.city || t('other');
-            const address = loc?.fullAddress || loc?.address || `${loc?.city || ''} ${loc?.state || ''}`.trim();
-            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-            return (
-              <div
+          ) : filtered.map((loc) => (
+              <LocationCard
                 key={loc.id}
-                onClick={() => setSelectedId(loc.id)}
-                className={`bg-white dark:bg-slate-900 border rounded-2xl p-3 transition-colors cursor-pointer ${
-                  selected?.id === loc.id
-                    ? 'border-indigo-500 dark:border-indigo-400'
-                    : 'border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-start gap-2.5 min-w-0">
-                    <span
-                      className="shrink-0 w-6 h-6 rounded-full text-white flex items-center justify-center text-[11px] font-bold mt-0.5"
-                      style={{ backgroundColor: '#16a34a' }}
-                    >
-                      {routeNumbers[loc.id] || '–'}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 truncate">{loc.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{address || '-'}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{zone}</p>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 rounded-full text-[10px] font-bold shrink-0 ${getStatusClass(loc.computedStatus)}`}>
-                    {getStatusLabel(loc.computedStatus, t)}
-                  </span>
-                </div>
-
-                <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/customers/area/${encodeURIComponent(`zone|${zoneKey(zone)}`)}`, {
-                        state: { focusCustomerId: loc.id },
-                      });
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900"
-                  >
-                    <Navigation size={13} />
-                    {t('openInCustomers')}
-                  </button>
-                  <a
-                    href={mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-                  >
-                    <ExternalLink size={13} />
-                    {t('openInMaps')}
-                  </a>
-                </div>
-              </div>
-            );
-          })}
+                loc={loc}
+                isSelected={selected?.id === loc.id}
+                routeNum={routeNumbers[loc.id]}
+                onSelect={handleSelectLocation(loc.id)}
+                onOpenCustomers={handleOpenCustomers(loc)}
+                t={t}
+              />
+          ))}
         </div>
       </main>
     </div>

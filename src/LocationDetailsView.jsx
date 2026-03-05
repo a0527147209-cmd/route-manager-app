@@ -184,24 +184,20 @@ export default function LocationDetailsView() {
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <BackButton onClick={handleBackClick} title={t('backToLocations')} />
-        <div className="flex-1 min-w-0 flex items-center justify-center gap-3 text-center px-2">
-          <h1 className="font-bold text-base text-slate-800 dark:text-white truncate">
-            {t('locationLog')}
-          </h1>
-          <span className="text-slate-400 dark:text-slate-500 shrink-0">·</span>
-          <p className="text-sm text-slate-600 dark:text-slate-300 truncate">
-            {location.name}
-          </p>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
+      <header className="shrink-0 sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between gap-2">
+          <BackButton onClick={handleBackClick} title={t('backToLocations')} />
+          <div className="flex-1 min-w-0 flex items-center justify-center gap-2 text-center">
+            <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 truncate tracking-tight">
+              {location.name}
+            </h1>
+          </div>
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95"
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
             title={t('menu')}
           >
-            <Menu size={22} />
+            <Menu size={20} strokeWidth={1.8} />
           </button>
         </div>
       </header>
@@ -241,7 +237,7 @@ export default function LocationDetailsView() {
         </>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[520px] mx-auto w-full">
         <div className="flex items-stretch gap-2.5 w-full">
           <div className="relative shrink-0 flex">
             <button

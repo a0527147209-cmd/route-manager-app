@@ -276,7 +276,7 @@ export default function LocationsView() {
   return (
     <div className="h-full flex flex-col bg-background overflow-hidden">
       <header className="shrink-0 bg-card p-2 min-h-[50px] flex flex-col justify-center shadow-sm border-b border-border" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="max-w-[380px] mx-auto w-full">
+        <div className="max-w-[520px] mx-auto w-full">
           <div className="flex justify-between items-center gap-1.5 w-full">
             <BackButton onClick={handleBack} title={isInnerPage ? t('backToLocations') : t('backToHome')} />
             <h1 className="text-base font-bold text-foreground truncate flex-1 text-center min-w-0">
@@ -335,7 +335,7 @@ export default function LocationsView() {
       </header>
 
       {/* Adjust 80px to match the header's height so content isn't hidden beneath it */}
-      <main ref={scrollRef} className="flex-1 overflow-y-auto p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] max-w-[380px] mx-auto w-full">
+      <main ref={scrollRef} className="flex-1 overflow-y-auto p-3 pb-[calc(1rem+env(safe-area-inset-bottom))] max-w-[520px] mx-auto w-full">
         {validLocations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <MapPin className="w-16 h-16 text-muted-foreground/50 mb-4" />

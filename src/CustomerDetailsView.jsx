@@ -272,20 +272,20 @@ export default function CustomerDetailsView() {
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden">
-      <header className="shrink-0 bg-white dark:bg-slate-800 p-3 pt-4 min-h-[50px] shadow-sm flex items-center justify-between gap-2 z-10 max-w-[380px] mx-auto w-full" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))' }}>
-        <BackButton onClick={handleBackClick} title={t('backToCustomers')} />
-        <div className="flex-1 min-w-0 flex items-center justify-center text-center px-2">
-          <h1 className="font-bold text-base text-slate-800 dark:text-white break-words leading-tight text-center w-full">
+      <header className="shrink-0 sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="max-w-[520px] mx-auto w-full px-4 py-2.5 flex items-center justify-between gap-2">
+          <BackButton onClick={handleBackClick} title={t('backToCustomers')} />
+          <h1 className="text-[16px] font-semibold text-slate-800 dark:text-slate-100 truncate flex-1 text-center min-w-0 tracking-tight">
             {location.name}
           </h1>
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shrink-0"
+            title={t('menu')}
+          >
+            <Menu size={20} strokeWidth={1.8} />
+          </button>
         </div>
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors active:scale-95 shrink-0"
-          title={t('menu')}
-        >
-          <Menu size={22} />
-        </button>
       </header>
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
@@ -301,7 +301,7 @@ export default function CustomerDetailsView() {
 
 
 
-      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[380px] mx-auto w-full">
+      <div className="flex-1 overflow-y-auto p-4 pb-[calc(2rem+env(safe-area-inset-bottom))] space-y-4 max-w-[520px] mx-auto w-full">
         {location.inactive && (
           <div className="flex items-center gap-2.5 py-2.5 px-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700">
             <PowerOff size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />

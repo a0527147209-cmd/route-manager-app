@@ -25,6 +25,7 @@ import NavigationMockup from './NavigationMockup';
 import ImportHarlem from './ImportHarlem';
 import ImportLongIsland from './ImportLongIsland';
 import ImportConnecticut from './ImportConnecticut';
+import ImportPoughkeepsie from './ImportPoughkeepsie';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ConfirmationProvider } from './ConfirmationContext';
 import { TextSizeProvider } from './TextSizeContext';
@@ -78,6 +79,7 @@ function AppContent() {
         <Route path="/import-harlem" element={<ImportHarlem />} />
         <Route path="/import-long-island" element={<ImportLongIsland />} />
         <Route path="/import-connecticut" element={<ImportConnecticut />} />
+        <Route path="/import-poughkeepsie" element={<ImportPoughkeepsie />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

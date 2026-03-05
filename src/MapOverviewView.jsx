@@ -503,15 +503,20 @@ export default function MapOverviewView() {
               />
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5 items-center">
-              <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: '#16a34a' }} />
-                Optimized Stop
-              </span>
               {zones.filter(z => z !== 'all').map((z, i) => (
-                <span key={z} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 dark:bg-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-200">
+                <button
+                  key={z}
+                  type="button"
+                  onClick={() => setZoneFilter(prev => prev === z ? 'all' : z)}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-semibold transition-all active:scale-95 cursor-pointer ${
+                    zoneFilter === z
+                      ? 'ring-2 ring-offset-1 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-200 dark:ring-offset-slate-900'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }`}
+                >
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: ZONE_LINE_COLORS[i % ZONE_LINE_COLORS.length] }} />
                   {z}
-                </span>
+                </button>
               ))}
             </div>
           </div>

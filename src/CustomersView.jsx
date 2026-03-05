@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, Search, ChevronRight, X, MoreVertical, EyeOff } from 'lucide-react';
+import { Users, Menu, Search, ChevronRight, X, MoreVertical, EyeOff, MapPin } from 'lucide-react';
 import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
@@ -434,6 +434,18 @@ export default function CustomersView() {
             </div>
           ) : isInnerPage ? (
             <>
+            {areaLocations.length > 0 && (
+              <div className="px-4 pt-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/map-overview?zone=${encodeURIComponent(areaDisplayLabel)}`)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 dark:bg-indigo-500 text-white text-[13px] font-semibold shadow-sm active:scale-[0.98] transition-all"
+                >
+                  <MapPin size={16} strokeWidth={2} />
+                  {t('mapOverview')}
+                </button>
+              </div>
+            )}
             {areaLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{areaDisplayLabel}&quot;</p>

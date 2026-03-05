@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Menu, Navigation, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { useLocations } from './LocationsContext';
 import { useLanguage } from './LanguageContext';
@@ -149,10 +149,12 @@ function getStatusClass(status) {
 
 export default function MapOverviewView() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { locations } = useLocations();
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [zoneFilter, setZoneFilter] = useState('all');
+  const initialZone = searchParams.get('zone') || 'all';
+  const [zoneFilter, setZoneFilter] = useState(initialZone);
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState('');

@@ -191,6 +191,7 @@ export default function AddLocationView() {
                     <option value="Connecticut">Connecticut</option>
                     <option value="Poughkeepsie">Poughkeepsie</option>
                     <option value="New Rochelle">New Rochelle</option>
+                    <option value="Maryland">Maryland</option>
                     <option value="New Jersey">New Jersey</option>
                   </select>
                 </div>

@@ -360,8 +360,7 @@ export default function MapOverviewView() {
       const nextCache = { ...geocodeCacheRef.current };
 
       // Phase 1: Resolve coordinates for all locations
-      const resolved = [];
-      for (const loc of filtered) {
+      const prepared = filtered.map((loc) => {
         const zone = (loc?.region || loc?.zone || loc?.city || t('other')).trim();
         const boroughKey = zoneKey(loc?.region || loc?.zone || '');
         const address = loc?.fullAddress || loc?.address || `${loc?.city || ''} ${loc?.state || ''}`.trim();
@@ -385,20 +384,28 @@ export default function MapOverviewView() {
             delete nextCache[cacheKey];
           }
         }
-        if (!point && geocodeQuery) {
-          point = await geocodeAddress(geocodeQuery, boroughKey);
-          if (point && isInUsBounds(point) && isInNortheastBounds(point) && cacheKey) {
-            nextCache[cacheKey] = point;
-          } else if (cacheKey) {
-            delete nextCache[cacheKey];
-            point = null;
-          }
-        }
-        if (!active) return;
-        if (!point) continue;
+        return { loc, zone, boroughKey, address, geocodeQuery, cacheKey, point };
+      });
 
-        resolved.push({ loc, point, zone, address });
+      const needGeocode = prepared.filter((p) => !p.point && p.geocodeQuery);
+      const BATCH = 10;
+      for (let i = 0; i < needGeocode.length; i += BATCH) {
+        if (!active) return;
+        const batch = needGeocode.slice(i, i + BATCH);
+        const results = await Promise.all(batch.map((p) => geocodeAddress(p.geocodeQuery, p.boroughKey)));
+        results.forEach((pt, idx) => {
+          const p = batch[idx];
+          if (pt && isInUsBounds(pt) && isInNortheastBounds(pt) && p.cacheKey) {
+            nextCache[p.cacheKey] = pt;
+            p.point = pt;
+          } else if (p.cacheKey) {
+            delete nextCache[p.cacheKey];
+          }
+        });
       }
+      if (!active) return;
+
+      const resolved = prepared.filter((p) => p.point).map((p) => ({ loc: p.loc, point: p.point, zone: p.zone, address: p.address }));
 
       // Phase 2: Group by zone → TSP optimize each zone independently
       const zoneGroups = new Map();

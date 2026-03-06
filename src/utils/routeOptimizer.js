@@ -56,7 +56,7 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
   if (n === 2) {
     const d0 = getDistance(depot.lat, depot.lng, locations[0].lat, locations[0].lng);
     const d1 = getDistance(depot.lat, depot.lng, locations[1].lat, locations[1].lng);
-    return d0 <= d1 ? [locations[1], locations[0]] : [locations[0], locations[1]];
+    return d0 <= d1 ? [locations[0], locations[1]] : [locations[1], locations[0]];
   }
 
   const pts = [depot, ...locations.map(l => ({ lat: l.lat, lng: l.lng }))];
@@ -107,6 +107,27 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
           improved = true;
         }
       }
+    }
+  }
+
+  // Step 3: Find the best rotation so both endpoints are closest to depot.
+  // The tour is circular (depot → route → depot). We find the edge in
+  // the route with the longest distance; cutting there places both ends
+  // closest to the depot side of the loop.
+  if (m > 2) {
+    let bestCut = 0;
+    let bestCost = d[0][route[0]] + d[route[m - 1]][0];
+    for (let k = 1; k < m; k++) {
+      const cost = d[0][route[k]] + d[route[k - 1]][0];
+      if (cost < bestCost) {
+        bestCost = cost;
+        bestCut = k;
+      }
+    }
+    if (bestCut > 0) {
+      const rotated = [...route.slice(bestCut), ...route.slice(0, bestCut)];
+      route.length = 0;
+      route.push(...rotated);
     }
   }
 

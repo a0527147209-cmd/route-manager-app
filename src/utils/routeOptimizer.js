@@ -167,28 +167,17 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     return applyDepotRotation(simple, depot);
   }
 
-  // Order clusters: greedy nearest-centroid starting from depot
-  const centroids = clusters.map(c => getCentroid(c));
-  const ordered = [];
-  const used = new Set();
-  let curPos = depot;
-  for (let s = 0; s < clusters.length; s++) {
-    let bestIdx = -1, bestDist = Infinity;
-    for (let i = 0; i < clusters.length; i++) {
-      if (used.has(i)) continue;
-      const dist = getDistance(curPos.lat, curPos.lng, centroids[i].lat, centroids[i].lng);
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-    }
-    used.add(bestIdx);
-    ordered.push(clusters[bestIdx]);
-    curPos = centroids[bestIdx];
-  }
+  // Order clusters using mini-TSP on centroids for a good loop
+  const centroidLocs = clusters.map((c, i) => ({ lat: getCentroid(c).lat, lng: getCentroid(c).lng, _ci: i }));
+  const orderedCentroids = solveTSPCore(centroidLocs, depot);
+  const ordered = orderedCentroids.map(c => clusters[c._ci]);
 
   // Solve TSP within each cluster
   const clusterRoutes = ordered.map(cl => cl.length <= 1 ? [...cl] : solveTSPCore(cl, depot));
 
   // Chain clusters, flipping direction when it shortens the inter-cluster gap
   const chained = [];
+  const clusterBoundaries = [0];
   let lastPoint = depot;
   for (const route of clusterRoutes) {
     if (route.length === 0) continue;
@@ -198,10 +187,29 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     const distFlipped = getDistance(lastPoint.lat, lastPoint.lng, last.lat, last.lng);
     if (distFlipped < distNormal) route.reverse();
     chained.push(...route);
+    clusterBoundaries.push(chained.length);
     lastPoint = chained[chained.length - 1];
   }
 
-  return applyDepotRotation(chained, depot);
+  // Rotate only at cluster boundaries to keep clusters intact
+  const m = chained.length;
+  if (m <= 2) return chained;
+  let bestCut = 0;
+  let bestCost = getDistance(depot.lat, depot.lng, chained[0].lat, chained[0].lng)
+               + getDistance(depot.lat, depot.lng, chained[m - 1].lat, chained[m - 1].lng);
+  for (const boundary of clusterBoundaries) {
+    if (boundary === 0 || boundary >= m) continue;
+    const cost = getDistance(depot.lat, depot.lng, chained[boundary].lat, chained[boundary].lng)
+               + getDistance(depot.lat, depot.lng, chained[boundary - 1].lat, chained[boundary - 1].lng);
+    if (cost < bestCost) {
+      bestCost = cost;
+      bestCut = boundary;
+    }
+  }
+  if (bestCut > 0) {
+    return [...chained.slice(bestCut), ...chained.slice(0, bestCut)];
+  }
+  return chained;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useLocations } from './LocationsContext';
-import { Users, Menu, Search, ChevronRight, X, MoreVertical, EyeOff, MapPin } from 'lucide-react';
+import { Users, Menu, Search, ChevronRight, X, MoreVertical, EyeOff, MapPin, Pencil } from 'lucide-react';
 import useScrollRestore from './useScrollRestore';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import DraggableCard from './DraggableCard';
@@ -178,8 +178,15 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
       </div>
       {/* Notes row */}
       {notes && (
-        <div className="px-2 py-1">
-          <LinkifyText text={notes} className="text-[10px] font-medium text-red-500 dark:text-red-400 block" />
+        <div className="px-2 py-1 flex items-start gap-1.5">
+          <LinkifyText text={notes} className="text-[10px] font-medium text-red-500 dark:text-red-400 block flex-1 min-w-0" />
+          <button
+            onClick={(e) => { e.stopPropagation(); loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname, editNotes: true } }); }}
+            className="shrink-0 p-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Edit notes"
+          >
+            <Pencil size={11} className="text-slate-400 dark:text-slate-500" strokeWidth={2} />
+          </button>
         </div>
       )}
     </div>

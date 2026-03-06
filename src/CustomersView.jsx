@@ -136,8 +136,8 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
         <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 tabular-nums`}>
           {loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}
         </span>
-        <span className={`${bdr} text-[10px] font-semibold text-center py-1.5 tabular-nums ${noMoney ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
-          {noMoney ? 'No $' : loc.lastCollection}
+        <span className={`${bdr} text-[10px] font-semibold text-center py-1.5 tabular-nums text-slate-700 dark:text-slate-200`}>
+          {noMoney ? 'No Money' : loc.lastCollection}
         </span>
         <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 truncate px-0.5`}>
           {loc?.logs?.[0]?.user || '—'}
@@ -507,12 +507,12 @@ export default function CustomersView() {
                 </button>
               </div>
             ) : isAdmin ? (
-              <div className="px-2 py-2 space-y-2.5">
+              <div className="px-2 py-2 space-y-1.5">
                 <Reorder.Group
                   axis="y"
                   values={areaLocations}
                   onReorder={(newOrder) => reorderLocations(newOrder.map(loc => loc.id))}
-                  className="space-y-2.5"
+                  className="space-y-1.5"
                 >
                   {areaLocations.map((loc, index) => (
                     <DraggableCard key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)}>
@@ -522,7 +522,7 @@ export default function CustomersView() {
                 </Reorder.Group>
               </div>
             ) : (
-              <div className="px-2 py-2 space-y-2.5">
+              <div className="px-2 py-2 space-y-1.5">
                 {areaLocations.map((loc, index) => (
                   <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}
@@ -536,7 +536,7 @@ export default function CustomersView() {
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
               </div>
             ) : (
-              <div className="px-2 py-2 space-y-2.5">
+              <div className="px-2 py-2 space-y-1.5">
                 {filteredLocations.map((loc, index) => (
                   <CustomerRow key={loc?.id ?? index} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}

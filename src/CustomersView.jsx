@@ -125,24 +125,24 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
       </div>
       {/* Row 1: Data */}
       <div className={`grid ${ROW1_COLS} items-center ${bdb}`}>
-        <span className={`${bdr} text-[10px] font-bold text-slate-400 dark:text-slate-500 tabular-nums text-center py-1.5`}>
+        <span className={`${bdr} text-[10px] font-bold text-slate-400 dark:text-slate-500 tabular-nums text-center py-0.5`}>
           {showIndex ? index + 1 : ''}
         </span>
-        <div className={`${bdr} py-1.5 px-1.5 min-w-0`}>
+        <div className={`${bdr} py-0.5 px-1.5 min-w-0`}>
           <span className={`text-[11px] font-semibold truncate block ${isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
             {loc?.name ?? '—'}
           </span>
         </div>
-        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 tabular-nums`}>
+        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-0.5 tabular-nums`}>
           {loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}
         </span>
-        <span className={`${bdr} text-[10px] font-semibold text-center py-1.5 tabular-nums text-slate-700 dark:text-slate-200`}>
+        <span className={`${bdr} text-[10px] font-semibold text-center py-0.5 tabular-nums text-slate-700 dark:text-slate-200`}>
           {noMoney ? 'No Money' : loc.lastCollection}
         </span>
-        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 truncate px-0.5`}>
+        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-0.5 truncate px-0.5`}>
           {loc?.logs?.[0]?.user || '—'}
         </span>
-        <div className="flex items-center justify-center py-1.5 relative" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center py-0.5 relative" onClick={(e) => e.stopPropagation()}>
           <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
         </div>
       </div>

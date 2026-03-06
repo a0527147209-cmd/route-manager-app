@@ -197,6 +197,7 @@ export default function CustomersView() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState('zone');
   const [showInactive, setShowInactive] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(null);
   const scrollRef = useRef(null);
   useScrollRestore(scrollRef);
 
@@ -261,8 +262,20 @@ export default function CustomersView() {
   const inactiveCount = useMemo(() => validLocations.filter(loc => loc.inactive).length, [validLocations]);
   const filteredLocations = useMemo(() => validLocations.filter(loc => {
     if (!showInactive && loc.inactive) return false;
-    return matchesSearch(loc);
-  }), [validLocations, searchWords, showInactive]);
+    if (!matchesSearch(loc)) return false;
+    if (statusFilter) {
+      const vs = (() => {
+        if (!loc?.lastVisited) return 'overdue';
+        const [y, m, d] = loc.lastVisited.slice(0, 10).split('-').map(Number);
+        const ds = (Date.now() - new Date(y, m - 1, d).getTime()) / (24 * 60 * 60 * 1000);
+        if (ds <= 10) return 'recent';
+        if (ds >= 40) return 'overdue';
+        return 'normal';
+      })();
+      if (vs !== statusFilter) return false;
+    }
+    return true;
+  }), [validLocations, searchWords, showInactive, statusFilter]);
 
   function getGroupKey(loc) {
     if (sortBy === 'city') return zoneKey(loc?.city);
@@ -452,10 +465,21 @@ export default function CustomersView() {
               </select>
             )}
           </div>
-          <div className="flex items-center gap-3 px-1 pt-1">
-            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-sm bg-emerald-500 inline-block" /><span className="text-[9px] text-slate-500 dark:text-slate-400">Visited &lt;10d</span></span>
-            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-sm bg-red-500 inline-block" /><span className="text-[9px] text-slate-500 dark:text-slate-400">Overdue 40d+</span></span>
-            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-sm bg-slate-300 dark:bg-slate-600 inline-block" /><span className="text-[9px] text-slate-500 dark:text-slate-400">Normal</span></span>
+          <div className="flex items-center gap-2 px-1 pt-1">
+            {[
+              { key: 'recent', color: 'bg-emerald-500', label: 'Visited last 10d' },
+              { key: 'overdue', color: 'bg-red-500', label: 'Overdue 40d+' },
+              { key: 'normal', color: 'bg-slate-300 dark:bg-slate-600', label: '10 to 30d' },
+            ].map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setStatusFilter(prev => prev === item.key ? null : item.key)}
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-all ${statusFilter === item.key ? 'bg-slate-200/80 dark:bg-slate-700/60 ring-1 ring-slate-300 dark:ring-slate-600' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              >
+                <span className={`w-3 h-1.5 rounded-sm ${item.color} inline-block`} />
+                <span className={`text-[9px] ${statusFilter === item.key ? 'text-slate-800 dark:text-slate-100 font-semibold' : 'text-slate-500 dark:text-slate-400'}`}>{item.label}</span>
+              </button>
+            ))}
           </div>
           </div>
         </div>

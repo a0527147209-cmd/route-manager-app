@@ -452,6 +452,11 @@ export default function CustomersView() {
               </select>
             )}
           </div>
+          <div className="flex items-center gap-3 px-1 pt-1">
+            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-sm bg-emerald-500 inline-block" /><span className="text-[9px] text-slate-500 dark:text-slate-400">Visited &lt;10d</span></span>
+            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-sm bg-red-500 inline-block" /><span className="text-[9px] text-slate-500 dark:text-slate-400">Overdue 40d+</span></span>
+            <span className="flex items-center gap-1"><span className="w-3 h-1.5 rounded-sm bg-slate-300 dark:bg-slate-600 inline-block" /><span className="text-[9px] text-slate-500 dark:text-slate-400">Normal</span></span>
+          </div>
           </div>
         </div>
       </header>

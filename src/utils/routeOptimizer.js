@@ -45,27 +45,35 @@ export function getLocationCoords(loc, geoCache = {}) {
 }
 
 
+// Zones where the route should start at the farthest point and work back
+const FARTHEST_FIRST_ZONES = new Set(['poughkeepsie']);
+
 /**
  * Pure Nearest Neighbor route solver.
  * Starts from the location closest to the depot, then always picks the
  * closest unvisited location. This naturally stays in one geographic area
  * before moving to the next, matching the original manual route ordering.
+ *
+ * When startFarthest is true, starts from the farthest location instead
+ * and works back towards the depot (used for long-distance zones like
+ * Poughkeepsie where you drive far first and finish close to home).
  */
-export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
+export function solveTSP(locations, depot = MIDWOOD_DEPOT, { startFarthest = false } = {}) {
   const n = locations.length;
   if (n <= 1) return locations || [];
   if (n === 2) {
     const d0 = getDistance(depot.lat, depot.lng, locations[0].lat, locations[0].lng);
     const d1 = getDistance(depot.lat, depot.lng, locations[1].lat, locations[1].lng);
+    if (startFarthest) return d0 >= d1 ? [locations[0], locations[1]] : [locations[1], locations[0]];
     return d0 <= d1 ? [locations[0], locations[1]] : [locations[1], locations[0]];
   }
 
-  // Find starting location: closest to depot
+  // Find starting location: farthest or closest to depot
   let startIdx = 0;
-  let minDist = Infinity;
+  let targetDist = startFarthest ? -Infinity : Infinity;
   for (let i = 0; i < n; i++) {
     const d = getDistance(depot.lat, depot.lng, locations[i].lat, locations[i].lng);
-    if (d < minDist) { minDist = d; startIdx = i; }
+    if (startFarthest ? d > targetDist : d < targetDist) { targetDist = d; startIdx = i; }
   }
 
   const unvisited = locations.map((loc, i) => ({ loc, i }));
@@ -82,6 +90,9 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     }
     route.push(unvisited.splice(nearestIdx, 1)[0].loc);
   }
+
+  // For farthest-first zones, skip rotation (route already ends near depot)
+  if (startFarthest) return route;
 
   // Rotate so both start and end are closest to Midwood
   if (route.length > 2) {
@@ -104,11 +115,13 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
 
 /**
  * Wrapper for MapOverviewView: solves TSP for items with { point: {lat,lng}, ... }
+ * zoneName is used to detect zones that need special routing (e.g. Poughkeepsie).
  */
-export function solveZoneTSP(items, depot = MIDWOOD_DEPOT) {
+export function solveZoneTSP(items, depot = MIDWOOD_DEPOT, zoneName = '') {
   if (!items || items.length <= 1) return items || [];
+  const startFarthest = FARTHEST_FIRST_ZONES.has((zoneName || '').trim().toLowerCase());
   const withCoords = items.map((item, i) => ({ ...item, lat: item.point.lat, lng: item.point.lng, _origIdx: i }));
-  const sorted = solveTSP(withCoords, depot);
+  const sorted = solveTSP(withCoords, depot, { startFarthest });
   return sorted.map(({ _origIdx, lat, lng, ...rest }) => rest);
 }
 

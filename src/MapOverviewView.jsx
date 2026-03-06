@@ -419,7 +419,7 @@ export default function MapOverviewView() {
       const optimizedZones = []; // { zoneName, items[] }
 
       for (const [zoneName, group] of zoneGroups) {
-        const sorted = solveZoneTSP(group, MIDWOOD_DEPOT);
+        const sorted = solveZoneTSP(group, MIDWOOD_DEPOT, zoneName);
         sorted.forEach((r, idx) => {
           numMap[r.loc.id] = idx + 1;
         });

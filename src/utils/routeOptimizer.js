@@ -51,55 +51,34 @@ function getCentroid(locs) {
 }
 
 /**
- * Grid-based spatial clustering. Groups nearby locations so the route
- * finishes one geographic area before moving to the next.
+ * Agglomerative (hierarchical) clustering. Starts with each location as its
+ * own cluster, then repeatedly merges the two closest clusters (by centroid
+ * distance) until reaching the target number. Produces natural geographic
+ * groups regardless of shape or orientation.
  */
-function clusterLocations(locations, targetPerCluster = 5) {
+function clusterLocations(locations, targetPerCluster = 6) {
   const n = locations.length;
-  if (n <= targetPerCluster * 2) return [locations];
+  const targetK = Math.max(2, Math.round(n / targetPerCluster));
+  if (n <= targetPerCluster * 2 || targetK >= n) return [locations];
 
-  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-  for (const l of locations) {
-    if (l.lat < minLat) minLat = l.lat;
-    if (l.lat > maxLat) maxLat = l.lat;
-    if (l.lng < minLng) minLng = l.lng;
-    if (l.lng > maxLng) maxLng = l.lng;
-  }
+  let clusters = locations.map(loc => [loc]);
+  let centroids = clusters.map(c => ({ lat: c[0].lat, lng: c[0].lng }));
 
-  const numClusters = Math.max(2, Math.round(n / targetPerCluster));
-  const gridSize = Math.max(2, Math.ceil(Math.sqrt(numClusters)));
-  const latStep = (maxLat - minLat) / gridSize || 1;
-  const lngStep = (maxLng - minLng) / gridSize || 1;
-
-  const cells = new Map();
-  for (const loc of locations) {
-    const row = Math.min(gridSize - 1, Math.floor((loc.lat - minLat) / latStep));
-    const col = Math.min(gridSize - 1, Math.floor((loc.lng - minLng) / lngStep));
-    const key = `${row},${col}`;
-    if (!cells.has(key)) cells.set(key, []);
-    cells.get(key).push(loc);
-  }
-
-  const big = [];
-  const orphans = [];
-  for (const cluster of cells.values()) {
-    if (cluster.length >= 2) big.push(cluster);
-    else orphans.push(...cluster);
-  }
-
-  if (big.length === 0 && orphans.length > 0) return [orphans];
-
-  for (const loc of orphans) {
-    let bestIdx = 0, bestDist = Infinity;
-    for (let i = 0; i < big.length; i++) {
-      const c = getCentroid(big[i]);
-      const dist = getDistance(loc.lat, loc.lng, c.lat, c.lng);
-      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+  while (clusters.length > targetK) {
+    let bestI = 0, bestJ = 1, bestDist = Infinity;
+    for (let i = 0; i < clusters.length; i++) {
+      for (let j = i + 1; j < clusters.length; j++) {
+        const dist = getDistance(centroids[i].lat, centroids[i].lng, centroids[j].lat, centroids[j].lng);
+        if (dist < bestDist) { bestDist = dist; bestI = i; bestJ = j; }
+      }
     }
-    big[bestIdx].push(loc);
+    clusters[bestI] = [...clusters[bestI], ...clusters[bestJ]];
+    centroids[bestI] = getCentroid(clusters[bestI]);
+    clusters.splice(bestJ, 1);
+    centroids.splice(bestJ, 1);
   }
 
-  return big;
+  return clusters;
 }
 
 /**

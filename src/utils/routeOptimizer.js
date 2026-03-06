@@ -83,6 +83,22 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     route.push(unvisited.splice(nearestIdx, 1)[0].loc);
   }
 
+  // Rotate so both start and end are closest to Midwood
+  if (route.length > 2) {
+    const m = route.length;
+    let bestCut = 0;
+    let bestCost = getDistance(depot.lat, depot.lng, route[0].lat, route[0].lng)
+                 + getDistance(depot.lat, depot.lng, route[m - 1].lat, route[m - 1].lng);
+    for (let k = 1; k < m; k++) {
+      const cost = getDistance(depot.lat, depot.lng, route[k].lat, route[k].lng)
+                 + getDistance(depot.lat, depot.lng, route[k - 1].lat, route[k - 1].lng);
+      if (cost < bestCost) { bestCost = cost; bestCut = k; }
+    }
+    if (bestCut > 0) {
+      return [...route.slice(bestCut), ...route.slice(0, bestCut)];
+    }
+  }
+
   return route;
 }
 

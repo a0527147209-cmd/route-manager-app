@@ -111,7 +111,7 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
   return (
     <div
       data-customer-id={loc?.id}
-      className={`rounded-xl overflow-hidden border border-slate-200/70 dark:border-slate-700/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border-l-4 ${stripe} bg-white dark:bg-slate-900 cursor-pointer transition-all active:scale-[0.99] ${isInactive ? 'opacity-50' : ''} ${isFocused ? 'ring-2 ring-indigo-400/60' : ''}`}
+      className={`w-full rounded-xl overflow-hidden border border-slate-200/70 dark:border-slate-700/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border-l-4 ${stripe} bg-white dark:bg-slate-900 cursor-pointer transition-all active:scale-[0.99] ${isInactive ? 'opacity-50' : ''} ${isFocused ? 'ring-2 ring-indigo-400/60' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {/* Row 1: Header */}
@@ -458,7 +458,7 @@ export default function CustomersView() {
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <main ref={scrollRef} className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="max-w-[520px] mx-auto w-full">
+        <div className="w-full">
           {validLocations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center px-6">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">

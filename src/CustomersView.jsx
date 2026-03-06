@@ -116,12 +116,12 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
     >
       {/* Row 1: Header */}
       <div className={`grid ${ROW1_COLS} items-center bg-slate-100/80 dark:bg-slate-800/60 ${bdb}`}>
-        <span className={`${hCell} text-center py-0.5 ${bdr}`}>#</span>
-        <span className={`${hCell} py-0.5 px-1.5 ${bdr}`}>Name</span>
-        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>Last Visit</span>
-        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>Collection</span>
-        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>User</span>
-        <span className="py-0.5" />
+        <span className={`${hCell} text-center py-px ${bdr}`}>#</span>
+        <span className={`${hCell} py-px px-1.5 ${bdr}`}>Name</span>
+        <span className={`${hCell} py-px px-1 text-center ${bdr}`}>Last Visit</span>
+        <span className={`${hCell} py-px px-1 text-center ${bdr}`}>Collection</span>
+        <span className={`${hCell} py-px px-1 text-center ${bdr}`}>User</span>
+        <span className="py-px" />
       </div>
       {/* Row 1: Data */}
       <div className={`grid ${ROW1_COLS} items-center ${bdb}`}>

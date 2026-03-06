@@ -44,15 +44,70 @@ export function getLocationCoords(loc, geoCache = {}) {
   return null;
 }
 
+function getCentroid(locs) {
+  let sLat = 0, sLng = 0;
+  for (const l of locs) { sLat += l.lat; sLng += l.lng; }
+  return { lat: sLat / locs.length, lng: sLng / locs.length };
+}
+
 /**
- * TSP solver: Nearest Neighbor heuristic + 2-Opt improvement.
- * Starts from a depot and visits all locations with minimal backtracking.
- * Each item must have numeric `lat` and `lng` properties.
- * Returns items reordered in optimized route order.
+ * Grid-based spatial clustering. Groups nearby locations so the route
+ * finishes one geographic area before moving to the next.
  */
-export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
+function clusterLocations(locations, targetPerCluster = 5) {
   const n = locations.length;
-  if (n <= 1) return locations || [];
+  if (n <= targetPerCluster * 2) return [locations];
+
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  for (const l of locations) {
+    if (l.lat < minLat) minLat = l.lat;
+    if (l.lat > maxLat) maxLat = l.lat;
+    if (l.lng < minLng) minLng = l.lng;
+    if (l.lng > maxLng) maxLng = l.lng;
+  }
+
+  const numClusters = Math.max(2, Math.round(n / targetPerCluster));
+  const gridSize = Math.max(2, Math.ceil(Math.sqrt(numClusters)));
+  const latStep = (maxLat - minLat) / gridSize || 1;
+  const lngStep = (maxLng - minLng) / gridSize || 1;
+
+  const cells = new Map();
+  for (const loc of locations) {
+    const row = Math.min(gridSize - 1, Math.floor((loc.lat - minLat) / latStep));
+    const col = Math.min(gridSize - 1, Math.floor((loc.lng - minLng) / lngStep));
+    const key = `${row},${col}`;
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push(loc);
+  }
+
+  const big = [];
+  const orphans = [];
+  for (const cluster of cells.values()) {
+    if (cluster.length >= 2) big.push(cluster);
+    else orphans.push(...cluster);
+  }
+
+  if (big.length === 0 && orphans.length > 0) return [orphans];
+
+  for (const loc of orphans) {
+    let bestIdx = 0, bestDist = Infinity;
+    for (let i = 0; i < big.length; i++) {
+      const c = getCentroid(big[i]);
+      const dist = getDistance(loc.lat, loc.lng, c.lat, c.lng);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    big[bestIdx].push(loc);
+  }
+
+  return big;
+}
+
+/**
+ * Core NN + 2-Opt solver (no rotation). Returns ordered location indices.
+ */
+function solveTSPCore(locations, depot) {
+  const n = locations.length;
+  if (n <= 1) return [...locations];
   if (n === 2) {
     const d0 = getDistance(depot.lat, depot.lng, locations[0].lat, locations[0].lng);
     const d1 = getDistance(depot.lat, depot.lng, locations[1].lat, locations[1].lng);
@@ -70,7 +125,6 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     }
   }
 
-  // Step 1: Nearest Neighbor starting from depot (index 0)
   const visited = new Set([0]);
   const route = [];
   let cur = 0;
@@ -88,7 +142,6 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     cur = best;
   }
 
-  // Step 2: 2-Opt — reverse segments to eliminate crossing edges
   const m = route.length;
   let improved = true;
   let safety = 1000;
@@ -110,28 +163,92 @@ export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
     }
   }
 
-  // Step 3: Find the best rotation so both endpoints are closest to depot.
-  // The tour is circular (depot → route → depot). We find the edge in
-  // the route with the longest distance; cutting there places both ends
-  // closest to the depot side of the loop.
-  if (m > 2) {
-    let bestCut = 0;
-    let bestCost = d[0][route[0]] + d[route[m - 1]][0];
-    for (let k = 1; k < m; k++) {
-      const cost = d[0][route[k]] + d[route[k - 1]][0];
-      if (cost < bestCost) {
-        bestCost = cost;
-        bestCut = k;
-      }
+  return route.map(idx => locations[idx - 1]);
+}
+
+/**
+ * TSP solver with geographic clustering.
+ * For zones with 8+ stops, clusters locations by area, solves each cluster,
+ * then chains them so the route finishes one area before moving to the next.
+ * Start/end points are kept closest to Midwood depot.
+ */
+export function solveTSP(locations, depot = MIDWOOD_DEPOT) {
+  const n = locations.length;
+  if (n <= 1) return locations || [];
+  if (n === 2) {
+    const d0 = getDistance(depot.lat, depot.lng, locations[0].lat, locations[0].lng);
+    const d1 = getDistance(depot.lat, depot.lng, locations[1].lat, locations[1].lng);
+    return d0 <= d1 ? [locations[0], locations[1]] : [locations[1], locations[0]];
+  }
+
+  const clusters = n >= 8 ? clusterLocations(locations) : [locations];
+
+  if (clusters.length <= 1) {
+    const simple = solveTSPCore(locations, depot);
+    return applyDepotRotation(simple, depot);
+  }
+
+  // Order clusters: greedy nearest-centroid starting from depot
+  const centroids = clusters.map(c => getCentroid(c));
+  const ordered = [];
+  const used = new Set();
+  let curPos = depot;
+  for (let s = 0; s < clusters.length; s++) {
+    let bestIdx = -1, bestDist = Infinity;
+    for (let i = 0; i < clusters.length; i++) {
+      if (used.has(i)) continue;
+      const dist = getDistance(curPos.lat, curPos.lng, centroids[i].lat, centroids[i].lng);
+      if (dist < bestDist) { bestDist = dist; bestIdx = i; }
     }
-    if (bestCut > 0) {
-      const rotated = [...route.slice(bestCut), ...route.slice(0, bestCut)];
-      route.length = 0;
-      route.push(...rotated);
+    used.add(bestIdx);
+    ordered.push(clusters[bestIdx]);
+    curPos = centroids[bestIdx];
+  }
+
+  // Solve TSP within each cluster
+  const clusterRoutes = ordered.map(cl => cl.length <= 1 ? [...cl] : solveTSPCore(cl, depot));
+
+  // Chain clusters, flipping direction when it shortens the inter-cluster gap
+  const chained = [];
+  let lastPoint = depot;
+  for (const route of clusterRoutes) {
+    if (route.length === 0) continue;
+    const first = route[0];
+    const last = route[route.length - 1];
+    const distNormal = getDistance(lastPoint.lat, lastPoint.lng, first.lat, first.lng);
+    const distFlipped = getDistance(lastPoint.lat, lastPoint.lng, last.lat, last.lng);
+    if (distFlipped < distNormal) route.reverse();
+    chained.push(...route);
+    lastPoint = chained[chained.length - 1];
+  }
+
+  return applyDepotRotation(chained, depot);
+}
+
+/**
+ * Rotate the route so start and end are closest to depot.
+ */
+function applyDepotRotation(route, depot) {
+  const m = route.length;
+  if (m <= 2) return route;
+
+  let bestCut = 0;
+  let bestCost = getDistance(depot.lat, depot.lng, route[0].lat, route[0].lng)
+               + getDistance(depot.lat, depot.lng, route[m - 1].lat, route[m - 1].lng);
+
+  for (let k = 1; k < m; k++) {
+    const cost = getDistance(depot.lat, depot.lng, route[k].lat, route[k].lng)
+               + getDistance(depot.lat, depot.lng, route[k - 1].lat, route[k - 1].lng);
+    if (cost < bestCost) {
+      bestCost = cost;
+      bestCut = k;
     }
   }
 
-  return route.map(idx => locations[idx - 1]);
+  if (bestCut > 0) {
+    return [...route.slice(bestCut), ...route.slice(0, bestCut)];
+  }
+  return route;
 }
 
 /**

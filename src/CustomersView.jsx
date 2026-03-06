@@ -458,7 +458,7 @@ export default function CustomersView() {
       <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <main ref={scrollRef} className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <div className="w-full">
+        <div className="max-w-[640px] mx-auto w-full">
           {validLocations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center px-6">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">

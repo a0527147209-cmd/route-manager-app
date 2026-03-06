@@ -42,11 +42,13 @@ function formatDate(isoStr) {
   try {
     const [y, m, d] = isoStr.slice(0, 10).split('-').map(Number);
     if (!y || !m || !d) return null;
-    return `${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}/${y}`;
+    return `${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}/${String(y).slice(-2)}`;
   } catch {
     return null;
   }
 }
+
+const TABLE_COLS = 'grid-cols-[22px_1fr_58px_46px_40px_26px]';
 
 function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   const [open, setOpen] = useState(false);
@@ -90,77 +92,74 @@ function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   );
 }
 
-function StatBox({ loc, t }) {
+function TableHeader() {
+  const hCell = 'text-[8px] uppercase tracking-wide font-semibold text-slate-400 dark:text-slate-500 truncate';
   return (
-    <div className="flex flex-col gap-0.5 px-2.5 py-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60 bg-slate-50/80 dark:bg-slate-800/50 min-w-[135px] ring-1 ring-black/[0.02] dark:ring-white/[0.04]">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">LAST VISIT</span>
-        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}</span>
-      </div>
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">COLLECTION</span>
-        <span className={`text-[11px] font-semibold whitespace-nowrap ${(!loc?.lastCollection || loc.lastCollection === '0') ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>{(!loc?.lastCollection || loc.lastCollection === '0') ? 'No Money' : loc.lastCollection}</span>
-      </div>
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">USER</span>
-        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">{loc?.logs?.[0]?.user || '—'}</span>
-      </div>
+    <div className={`grid ${TABLE_COLS} items-center bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700`}>
+      <span className={`${hCell} text-center py-1 border-r border-slate-200/60 dark:border-slate-700/40`}>#</span>
+      <span className={`${hCell} py-1 px-1.5 border-r border-slate-200/60 dark:border-slate-700/40`}>Name</span>
+      <span className={`${hCell} py-1 px-1 text-center border-r border-slate-200/60 dark:border-slate-700/40`}>Visit</span>
+      <span className={`${hCell} py-1 px-1 text-center border-r border-slate-200/60 dark:border-slate-700/40`}>Collect</span>
+      <span className={`${hCell} py-1 px-1 text-center border-r border-slate-200/60 dark:border-slate-700/40`}>User</span>
+      <span className={`${hCell} py-1 text-center`} />
     </div>
   );
 }
 
 function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visitStatus = 'normal', showIndex, isFocused }) {
   const isInactive = !!loc?.inactive;
-  const statusBg = isInactive ? '' : visitStatus === 'recent' ? 'bg-slate-200/60 dark:bg-slate-700/40' : visitStatus === 'overdue' ? 'bg-red-100/80 dark:bg-red-900/30' : '';
+  const stripe = isInactive ? 'border-l-slate-300 dark:border-l-slate-600'
+    : visitStatus === 'recent' ? 'border-l-emerald-500'
+    : visitStatus === 'overdue' ? 'border-l-red-500'
+    : 'border-l-slate-300 dark:border-l-slate-600';
+  const noMoney = !loc?.lastCollection || loc.lastCollection === '0';
+  const cell = 'border-r border-slate-200/60 dark:border-slate-700/40';
+
   return (
     <div
       data-customer-id={loc?.id}
-      className={`flex items-center gap-2.5 px-4 py-2.5 cursor-pointer transition-colors duration-150 ${isInactive ? 'opacity-50' : ''} ${statusBg || 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'} ${isFocused ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
+      className={`rounded-xl overflow-hidden border border-slate-200/70 dark:border-slate-700/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border-l-4 ${stripe} bg-white dark:bg-slate-900 cursor-pointer transition-all active:scale-[0.99] ${isInactive ? 'opacity-50' : ''} ${isFocused ? 'ring-2 ring-indigo-400/60' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
-      {showIndex && (
-        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tabular-nums w-5 text-center shrink-0">
-          {index + 1}
+      <TableHeader />
+      <div className={`grid ${TABLE_COLS} items-center`}>
+        <span className={`${cell} text-[10px] font-bold text-slate-400 dark:text-slate-500 tabular-nums text-center py-1.5`}>
+          {showIndex ? index + 1 : ''}
         </span>
-      )}
-
-      <div className={`flex-1 min-w-0 ${isInactive ? 'line-through decoration-slate-400 dark:decoration-slate-500' : ''}`}>
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[13px] font-semibold truncate ${isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
-            {loc?.name ?? '—'}
-          </span>
-          {isInactive && (
-            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0 no-underline">
-              {t('inactive')}
+        <div className={`${cell} py-1.5 px-1.5 min-w-0`}>
+          <div className="flex items-center gap-1 min-w-0">
+            <span className={`text-[11px] font-semibold truncate ${isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
+              {loc?.name ?? '—'}
             </span>
-          )}
-          {!isInactive && (
-            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
-              {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-            </span>
-          )}
-          {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-            <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
-              x{loc.changeMachineCount || 1}
-            </span>
-          )}
+            {isInactive ? (
+              <span className="px-1 py-px rounded text-[7px] font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 shrink-0">OFF</span>
+            ) : (
+              <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 shrink-0">{Math.round((loc?.commissionRate ?? 0.4) * 100)}%</span>
+            )}
+            {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
+              <span className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">x{loc.changeMachineCount || 1}</span>
+            )}
+          </div>
+          {loc?.address && <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate leading-tight">{loc.address}</p>}
         </div>
-
-        {loc?.address && (
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
-            {loc.address}
-          </p>
-        )}
-
-        {loc?.subtitle && (
-          <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />
-        )}
+        <span className={`${cell} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 tabular-nums`}>
+          {loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}
+        </span>
+        <span className={`${cell} text-[10px] font-semibold text-center py-1.5 tabular-nums ${noMoney ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
+          {noMoney ? 'No $' : loc.lastCollection}
+        </span>
+        <span className={`${cell} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 truncate px-0.5`}>
+          {loc?.logs?.[0]?.user || '—'}
+        </span>
+        <div className="flex items-center justify-center py-1.5" onClick={(e) => e.stopPropagation()}>
+          <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
+        </div>
       </div>
-
-      <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-        <StatBox loc={loc} t={t} />
-        <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
-      </div>
+      {loc?.subtitle && (
+        <div className="border-t border-slate-200/60 dark:border-slate-700/40 px-2 py-1">
+          <LinkifyText text={loc.subtitle} className="text-[10px] font-medium text-red-500 dark:text-red-400 block truncate" />
+        </div>
+      )}
     </div>
   );
 }
@@ -457,56 +456,24 @@ export default function CustomersView() {
                 </button>
               </div>
             ) : isAdmin ? (
-              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
+              <div className="px-3 py-2 space-y-2.5">
                 <Reorder.Group
                   axis="y"
                   values={areaLocations}
                   onReorder={(newOrder) => reorderLocations(newOrder.map(loc => loc.id))}
+                  className="space-y-2.5"
                 >
                   {areaLocations.map((loc, index) => (
                     <DraggableCard key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)}>
-                      <div
-                        data-customer-id={loc?.id}
-                        className={`flex-1 min-w-0 flex items-center gap-2.5 ${loc?.inactive ? 'opacity-50' : ''} ${focusedCustomerId === loc?.id ? 'ring-2 ring-indigo-400/60 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/15' : ''}`}
-                        onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
-                      >
-                        <div className={`flex-1 min-w-0 cursor-pointer ${loc?.inactive ? 'line-through decoration-slate-400 dark:decoration-slate-500' : ''}`}>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-[13px] font-semibold truncate ${loc?.inactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>{loc?.name ?? '—'}</span>
-                            {loc?.inactive ? (
-                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-800/30 shrink-0 no-underline">
-                                {t('inactive')}
-                              </span>
-                            ) : (
-                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shrink-0">
-                                {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
-                              </span>
-                            )}
-                            {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-                              <span className="px-1.5 py-px rounded-md text-[9px] font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-800/30 shrink-0">
-                                x{loc.changeMachineCount || 1}
-                              </span>
-                            )}
-                          </div>
-                          {loc?.address && <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">{loc.address}</p>}
-                          {loc?.city && <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 truncate mt-1">{loc.city}</p>}
-                          {loc?.subtitle && <LinkifyText text={loc.subtitle} className="text-[11px] font-medium text-red-500 dark:text-red-400 mt-0.5 block truncate" />}
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <StatBox loc={loc} t={t} />
-                          <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
-                        </div>
-                      </div>
+                      <CustomerRow loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                     </DraggableCard>
                   ))}
                 </Reorder.Group>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
+              <div className="px-3 py-2 space-y-2.5">
                 {areaLocations.map((loc, index) => (
-                    <div key={loc?.id} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
-                    <CustomerRow loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
-                  </div>
+                  <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}
               </div>
             )}
@@ -518,11 +485,9 @@ export default function CustomersView() {
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 overflow-hidden border-y border-slate-200/40 dark:border-slate-800/60">
+              <div className="px-3 py-2 space-y-2.5">
                 {filteredLocations.map((loc, index) => (
-                  <div key={loc?.id ?? index} className="border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
-                    <CustomerRow loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
-                  </div>
+                  <CustomerRow key={loc?.id ?? index} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}
               </div>
             )

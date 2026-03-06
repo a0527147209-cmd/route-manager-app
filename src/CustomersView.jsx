@@ -48,7 +48,8 @@ function formatDate(isoStr) {
   }
 }
 
-const TABLE_COLS = 'grid-cols-[22px_1fr_58px_46px_40px_26px]';
+const ROW1_COLS = 'grid-cols-[22px_1fr_58px_46px_40px_28px]';
+const ROW2_COLS = 'grid-cols-[1fr_1fr_36px_34px_1fr]';
 
 function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   const [open, setOpen] = useState(false);
@@ -92,19 +93,9 @@ function NavMenuButton({ wazeUrl, mapsUrl, t, isRtl }) {
   );
 }
 
-function TableHeader() {
-  const hCell = 'text-[8px] uppercase tracking-wide font-semibold text-slate-400 dark:text-slate-500 truncate';
-  return (
-    <div className={`grid ${TABLE_COLS} items-center bg-slate-100/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700`}>
-      <span className={`${hCell} text-center py-1 border-r border-slate-200/60 dark:border-slate-700/40`}>#</span>
-      <span className={`${hCell} py-1 px-1.5 border-r border-slate-200/60 dark:border-slate-700/40`}>Name</span>
-      <span className={`${hCell} py-1 px-1 text-center border-r border-slate-200/60 dark:border-slate-700/40`}>Visit</span>
-      <span className={`${hCell} py-1 px-1 text-center border-r border-slate-200/60 dark:border-slate-700/40`}>Collect</span>
-      <span className={`${hCell} py-1 px-1 text-center border-r border-slate-200/60 dark:border-slate-700/40`}>User</span>
-      <span className={`${hCell} py-1 text-center`} />
-    </div>
-  );
-}
+const hCell = 'text-[7px] uppercase tracking-wide font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap';
+const bdr = 'border-r border-slate-200/60 dark:border-slate-700/40';
+const bdb = 'border-b border-slate-200/60 dark:border-slate-700/40';
 
 function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl, getMapsUrl, visitStatus = 'normal', showIndex, isFocused }) {
   const isInactive = !!loc?.inactive;
@@ -113,7 +104,9 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
     : visitStatus === 'overdue' ? 'border-l-red-500'
     : 'border-l-slate-300 dark:border-l-slate-600';
   const noMoney = !loc?.lastCollection || loc.lastCollection === '0';
-  const cell = 'border-r border-slate-200/60 dark:border-slate-700/40';
+  const hasCM = loc?.changeMachineCount > 0 || loc?.hasChangeMachine;
+  const cmCount = loc?.changeMachineCount || 1;
+  const notes = loc?.subtitle || loc?.notes || '';
 
   return (
     <div
@@ -121,43 +114,72 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
       className={`rounded-xl overflow-hidden border border-slate-200/70 dark:border-slate-700/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border-l-4 ${stripe} bg-white dark:bg-slate-900 cursor-pointer transition-all active:scale-[0.99] ${isInactive ? 'opacity-50' : ''} ${isFocused ? 'ring-2 ring-indigo-400/60' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
-      <TableHeader />
-      <div className={`grid ${TABLE_COLS} items-center`}>
-        <span className={`${cell} text-[10px] font-bold text-slate-400 dark:text-slate-500 tabular-nums text-center py-1.5`}>
+      {/* Row 1: Header */}
+      <div className={`grid ${ROW1_COLS} items-center bg-slate-100/80 dark:bg-slate-800/60 ${bdb}`}>
+        <span className={`${hCell} text-center py-0.5 ${bdr}`}>#</span>
+        <span className={`${hCell} py-0.5 px-1.5 ${bdr}`}>Name</span>
+        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>Last Visit</span>
+        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>Collection</span>
+        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>User</span>
+        <span className="py-0.5" />
+      </div>
+      {/* Row 1: Data */}
+      <div className={`grid ${ROW1_COLS} items-center ${bdb}`}>
+        <span className={`${bdr} text-[10px] font-bold text-slate-400 dark:text-slate-500 tabular-nums text-center py-1.5`}>
           {showIndex ? index + 1 : ''}
         </span>
-        <div className={`${cell} py-1.5 px-1.5 min-w-0`}>
-          <div className="flex items-center gap-1 min-w-0">
-            <span className={`text-[11px] font-semibold truncate ${isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
-              {loc?.name ?? '—'}
-            </span>
-            {isInactive ? (
-              <span className="px-1 py-px rounded text-[7px] font-bold bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 shrink-0">OFF</span>
-            ) : (
-              <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 shrink-0">{Math.round((loc?.commissionRate ?? 0.4) * 100)}%</span>
-            )}
-            {(loc?.changeMachineCount > 0 || loc?.hasChangeMachine) && (
-              <span className="text-[7px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">x{loc.changeMachineCount || 1}</span>
-            )}
-          </div>
-          {loc?.address && <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate leading-tight">{loc.address}</p>}
+        <div className={`${bdr} py-1.5 px-1.5 min-w-0`}>
+          <span className={`text-[11px] font-semibold truncate block ${isInactive ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
+            {loc?.name ?? '—'}
+          </span>
         </div>
-        <span className={`${cell} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 tabular-nums`}>
+        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 tabular-nums`}>
           {loc?.lastVisited ? formatDate(loc.lastVisited) : '—'}
         </span>
-        <span className={`${cell} text-[10px] font-semibold text-center py-1.5 tabular-nums ${noMoney ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
+        <span className={`${bdr} text-[10px] font-semibold text-center py-1.5 tabular-nums ${noMoney ? 'text-red-500 dark:text-red-400' : 'text-slate-700 dark:text-slate-200'}`}>
           {noMoney ? 'No $' : loc.lastCollection}
         </span>
-        <span className={`${cell} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 truncate px-0.5`}>
+        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5 truncate px-0.5`}>
           {loc?.logs?.[0]?.user || '—'}
         </span>
-        <div className="flex items-center justify-center py-1.5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-center py-1.5 relative" onClick={(e) => e.stopPropagation()}>
           <NavMenuButton wazeUrl={getWazeUrl(loc)} mapsUrl={getMapsUrl(loc)} t={t} isRtl={isRtl} />
         </div>
       </div>
-      {loc?.subtitle && (
-        <div className="border-t border-slate-200/60 dark:border-slate-700/40 px-2 py-1">
-          <LinkifyText text={loc.subtitle} className="text-[10px] font-medium text-red-500 dark:text-red-400 block truncate" />
+      {/* Row 2: Header */}
+      <div className={`grid ${ROW2_COLS} items-center bg-slate-100/80 dark:bg-slate-800/60 ${bdb}`}>
+        <span className={`${hCell} py-0.5 px-1.5 ${bdr}`}>Address</span>
+        <span className={`${hCell} py-0.5 px-1 ${bdr}`}>City</span>
+        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>State</span>
+        <span className={`${hCell} py-0.5 px-1 text-center ${bdr}`}>%</span>
+        <span className={`${hCell} py-0.5 px-1`}>Change Machine</span>
+      </div>
+      {/* Row 2: Data */}
+      <div className={`grid ${ROW2_COLS} items-center ${notes ? bdb : ''}`}>
+        <span className={`${bdr} text-[10px] text-slate-600 dark:text-slate-300 py-1.5 px-1.5 truncate`}>
+          {loc?.address || '—'}
+        </span>
+        <span className={`${bdr} text-[10px] text-slate-600 dark:text-slate-300 py-1.5 px-1 truncate`}>
+          {loc?.city || '—'}
+        </span>
+        <span className={`${bdr} text-[10px] text-slate-600 dark:text-slate-300 text-center py-1.5`}>
+          {loc?.state || '—'}
+        </span>
+        <span className={`${bdr} text-[10px] font-semibold text-slate-700 dark:text-slate-200 text-center py-1.5`}>
+          {Math.round((loc?.commissionRate ?? 0.4) * 100)}%
+        </span>
+        <span className="text-[9px] font-semibold py-1.5 px-1 truncate">
+          {hasCM ? (
+            <span className="text-emerald-600 dark:text-emerald-400">Has {cmCount}x machines</span>
+          ) : (
+            <span className="text-slate-400 dark:text-slate-500">—</span>
+          )}
+        </span>
+      </div>
+      {/* Notes row */}
+      {notes && (
+        <div className="px-2 py-1">
+          <LinkifyText text={notes} className="text-[10px] font-medium text-red-500 dark:text-red-400 block" />
         </div>
       )}
     </div>
@@ -456,7 +478,7 @@ export default function CustomersView() {
                 </button>
               </div>
             ) : isAdmin ? (
-              <div className="px-3 py-2 space-y-2.5">
+              <div className="px-2 py-2 space-y-2.5">
                 <Reorder.Group
                   axis="y"
                   values={areaLocations}
@@ -471,7 +493,7 @@ export default function CustomersView() {
                 </Reorder.Group>
               </div>
             ) : (
-              <div className="px-3 py-2 space-y-2.5">
+              <div className="px-2 py-2 space-y-2.5">
                 {areaLocations.map((loc, index) => (
                   <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}
@@ -485,7 +507,7 @@ export default function CustomersView() {
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
               </div>
             ) : (
-              <div className="px-3 py-2 space-y-2.5">
+              <div className="px-2 py-2 space-y-2.5">
                 {filteredLocations.map((loc, index) => (
                   <CustomerRow key={loc?.id ?? index} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}

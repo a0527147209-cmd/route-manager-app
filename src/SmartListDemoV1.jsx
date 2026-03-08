@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocations } from './LocationsContext';
 import { LinkifyText } from './utils/textUtils';
@@ -49,9 +49,10 @@ function CustomerCard({ loc, index, navigate, routeLocation }) {
     moderate: 'bg-gray-300 dark:bg-slate-600',
   };
 
-  const goToDetail = (e) => {
-    e.stopPropagation();
-    if (loc?.id != null) navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } });
+  const handleDragEnd = (_, info) => {
+    if (info.offset.x > 80) {
+      if (loc?.id != null) navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } });
+    }
   };
 
   return (
@@ -62,104 +63,104 @@ function CustomerCard({ loc, index, navigate, routeLocation }) {
         <div className={`w-1 flex-1 rounded-full ${statusColors[status]}`} />
       </div>
 
-      {/* Card */}
-      <div
-        className={`flex-1 rounded-xl border border-gray-100 dark:border-slate-700/50 bg-white dark:bg-slate-900 shadow-sm transition-all ${isInactive ? 'opacity-50' : ''}`}
-      >
-        {/* ── ROW 1 (always visible): #, Name, Last Visit, Collection, User ── */}
-        <div
-          className="p-4 pb-3 cursor-pointer active:bg-gray-50 dark:active:bg-slate-800/50 transition-colors rounded-xl"
-          onClick={goToDetail}
-        >
-          <div className="grid grid-cols-12 items-start gap-2">
-            <div className="col-span-1">
-              <p className={hCell}>#</p>
-              <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 tabular-nums">{index + 1}</p>
-            </div>
-            <div className="col-span-5 min-w-0">
-              <p className={hCell}>Name</p>
-              <p className="text-base font-bold text-gray-900 dark:text-slate-100 truncate" style={{ fontFamily: "'Nunito', sans-serif" }}>
-                {loc?.name ?? '—'}
-              </p>
-            </div>
-            <div className="col-span-2">
-              <p className={hCell}>Last Visit</p>
-              <p className="text-sm font-medium text-gray-800 dark:text-slate-200 tabular-nums">{formatDate(loc?.lastVisited)}</p>
-            </div>
-            <div className="col-span-2">
-              <p className={hCell}>Collection</p>
-              <p className={`text-sm font-semibold tabular-nums ${noMoney ? 'text-gray-400 dark:text-slate-500' : 'text-gray-800 dark:text-slate-200'}`}>
-                {collection}
-              </p>
-            </div>
-            <div className="col-span-2">
-              <p className={hCell}>User</p>
-              <p className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{lastUser}</p>
-            </div>
+      {/* Swipeable card wrapper */}
+      <div className={`flex-1 relative overflow-hidden rounded-xl ${isInactive ? 'opacity-50' : ''}`}>
+        {/* Swipe hint background */}
+        <div className="absolute inset-0 bg-indigo-500 dark:bg-indigo-600 rounded-xl flex items-center pl-4">
+          <div className="flex items-center gap-1.5 text-white">
+            <ChevronRight size={18} strokeWidth={2.5} />
+            <span className="text-xs font-semibold">Open</span>
           </div>
         </div>
 
-        {/* Expand toggle */}
-        {hasDetails && (
-          <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
-            className="w-full flex items-center justify-center gap-1 py-1.5 border-t border-gray-100 dark:border-slate-700/40 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors rounded-b-xl"
+        {/* Draggable card */}
+        <motion.div
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.3}
+          onDragEnd={handleDragEnd}
+          className="relative rounded-xl border border-gray-100 dark:border-slate-700/50 bg-white dark:bg-slate-900 shadow-sm cursor-grab active:cursor-grabbing"
+          style={{ touchAction: 'pan-y' }}
+        >
+          {/* ── ROW 1 (always visible): tap to expand ── */}
+          <div
+            className="p-4 pb-3 cursor-pointer select-none active:bg-gray-50 dark:active:bg-slate-800/50 transition-colors rounded-t-xl"
+            onClick={() => setExpanded(v => !v)}
           >
-            <motion.div
-              animate={{ rotate: expanded ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDown size={16} strokeWidth={2} />
-            </motion.div>
-            <span className="text-[10px] font-medium">{expanded ? 'Less' : 'More'}</span>
-          </button>
-        )}
-
-        {/* ── ROW 2 (slide open): Address, City, State, %, Change Machine + Notes ── */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="overflow-hidden"
-            >
-              <div className="px-4 pt-3 pb-4 border-t border-gray-100 dark:border-slate-700/40">
-                <div className="grid grid-cols-12 gap-2">
-                  <div className="col-span-4 min-w-0">
-                    <p className={hCell}>Address</p>
-                    <p className="truncate text-sm text-gray-800 dark:text-slate-200">{loc?.address || '—'}</p>
-                  </div>
-                  <div className="col-span-2 min-w-0">
-                    <p className={hCell}>City</p>
-                    <p className="text-sm text-gray-800 dark:text-slate-200 truncate">{loc?.city || '—'}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className={hCell}>State</p>
-                    <p className="text-sm text-gray-800 dark:text-slate-200">{loc?.state || '—'}</p>
-                  </div>
-                  <div className="col-span-1">
-                    <p className={hCell}>%</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-slate-200">{commPct}</p>
-                  </div>
-                  <div className="col-span-3 min-w-0">
-                    <p className={hCell}>Change Machine</p>
-                    <p className={`text-sm truncate ${hasCM ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-gray-400 dark:text-slate-500'}`}>
-                      {cmText}
-                    </p>
-                  </div>
-                </div>
-
-                {notes && (
-                  <div className="mt-3 rounded-lg p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30">
-                    <LinkifyText text={notes} className="text-sm font-medium text-red-700 dark:text-red-400 leading-snug" />
-                  </div>
-                )}
+            <div className="grid grid-cols-12 items-start gap-2">
+              <div className="col-span-1">
+                <p className={hCell}>#</p>
+                <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 tabular-nums">{index + 1}</p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="col-span-5 min-w-0">
+                <p className={hCell}>Name</p>
+                <p className="text-base font-bold text-gray-900 dark:text-slate-100 truncate" style={{ fontFamily: "'Nunito', sans-serif" }}>
+                  {loc?.name ?? '—'}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className={hCell}>Last Visit</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-slate-200 tabular-nums">{formatDate(loc?.lastVisited)}</p>
+              </div>
+              <div className="col-span-2">
+                <p className={hCell}>Collection</p>
+                <p className={`text-sm font-semibold tabular-nums ${noMoney ? 'text-gray-400 dark:text-slate-500' : 'text-gray-800 dark:text-slate-200'}`}>
+                  {collection}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className={hCell}>User</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{lastUser}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── ROW 2 (slide open on tap): Address, City, State, %, Change Machine + Notes ── */}
+          <AnimatePresence>
+            {expanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pt-3 pb-4 border-t border-gray-100 dark:border-slate-700/40">
+                  <div className="grid grid-cols-12 gap-2">
+                    <div className="col-span-4 min-w-0">
+                      <p className={hCell}>Address</p>
+                      <p className="truncate text-sm text-gray-800 dark:text-slate-200">{loc?.address || '—'}</p>
+                    </div>
+                    <div className="col-span-2 min-w-0">
+                      <p className={hCell}>City</p>
+                      <p className="text-sm text-gray-800 dark:text-slate-200 truncate">{loc?.city || '—'}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className={hCell}>State</p>
+                      <p className="text-sm text-gray-800 dark:text-slate-200">{loc?.state || '—'}</p>
+                    </div>
+                    <div className="col-span-1">
+                      <p className={hCell}>%</p>
+                      <p className="text-sm font-medium text-gray-800 dark:text-slate-200">{commPct}</p>
+                    </div>
+                    <div className="col-span-3 min-w-0">
+                      <p className={hCell}>Change Machine</p>
+                      <p className={`text-sm truncate ${hasCM ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-gray-400 dark:text-slate-500'}`}>
+                        {cmText}
+                      </p>
+                    </div>
+                  </div>
+
+                  {notes && (
+                    <div className="mt-3 rounded-lg p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30">
+                      <LinkifyText text={notes} className="text-sm font-medium text-red-700 dark:text-red-400 leading-snug" />
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );

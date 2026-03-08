@@ -4,10 +4,11 @@ import {
   Menu, FileDown, TrendingUp, TrendingDown,
   DollarSign, CalendarDays, MapPin, ChevronDown,
   ChevronRight, AlertTriangle, Crown, BarChart3,
+  Users, Sparkles, Download,
 } from 'lucide-react';
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line,
 } from 'recharts';
 import jsPDF from 'jspdf';
 import { useLocations } from './LocationsContext';
@@ -22,6 +23,7 @@ const COLORS = {
   orange: '#f59e0b',
   red: '#ef4444',
   violet: '#8b5cf6',
+  gray: '#94a3b8',
   pie: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#64748b', '#14b8a6', '#a855f7'],
 };
 
@@ -65,7 +67,7 @@ function getPreviousPeriod(from, to) {
   return { from: localISO(prevFrom), to: localISO(prevTo) };
 }
 
-function getGranularity(logs) {
+function autoGranularity(logs) {
   if (!logs.length) return 'monthly';
   const dates = logs.map(l => new Date(l.date).getTime()).filter(Boolean);
   const days = (Math.max(...dates) - Math.min(...dates)) / 86400000;
@@ -106,8 +108,10 @@ export default function ReportsView() {
   const [dateFrom, setDateFrom] = useState(() => localISO(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [dateTo, setDateTo] = useState(() => localISO(new Date()));
   const [selectedZone, setSelectedZone] = useState('all');
+  const [selectedCollector, setSelectedCollector] = useState('all');
   const [showDeclining, setShowDeclining] = useState(false);
   const [activeChart, setActiveChart] = useState('trend');
+  const [granOverride, setGranOverride] = useState('auto');
 
   const allLogs = useMemo(() => getAllLogs(locations), [locations]);
   const range = useMemo(() => getDateRange(period, dateFrom, dateTo), [period, dateFrom, dateTo]);
@@ -119,25 +123,36 @@ export default function ReportsView() {
     return Array.from(set).sort();
   }, [allLogs]);
 
+  const collectors = useMemo(() => {
+    const set = new Set();
+    for (const log of allLogs) { const u = log.user; if (u) set.add(u); }
+    return Array.from(set).sort();
+  }, [allLogs]);
+
   const currentLogs = useMemo(() => {
     return allLogs.filter(log => {
       const d = (log.date || '').slice(0, 10);
       if (d < range.from || d > range.to) return false;
       if (selectedZone !== 'all' && log.zone !== selectedZone) return false;
+      if (selectedCollector !== 'all' && log.user !== selectedCollector) return false;
       return true;
     });
-  }, [allLogs, range, selectedZone]);
+  }, [allLogs, range, selectedZone, selectedCollector]);
 
   const previousLogs = useMemo(() => {
     return allLogs.filter(log => {
       const d = (log.date || '').slice(0, 10);
       if (d < prevRange.from || d > prevRange.to) return false;
       if (selectedZone !== 'all' && log.zone !== selectedZone) return false;
+      if (selectedCollector !== 'all' && log.user !== selectedCollector) return false;
       return true;
     });
-  }, [allLogs, prevRange, selectedZone]);
+  }, [allLogs, prevRange, selectedZone, selectedCollector]);
 
-  const granularity = useMemo(() => getGranularity(currentLogs), [currentLogs]);
+  const granularity = useMemo(() => {
+    if (granOverride !== 'auto') return granOverride;
+    return autoGranularity(currentLogs);
+  }, [currentLogs, granOverride]);
 
   const summary = useMemo(() => {
     let total = 0, half = 0, custCut = 0;
@@ -148,29 +163,74 @@ export default function ReportsView() {
       total += c; half += c * (1 - r); custCut += c * r;
       custSet.add(log.locationId);
     }
-    let prevTotal = 0;
-    for (const log of previousLogs) prevTotal += parseFloat(log.collection) || 0;
+    let prevTotal = 0, prevHalf = 0;
+    for (const log of previousLogs) {
+      const c = parseFloat(log.collection) || 0;
+      const r = parseFloat(log.commissionRate) || 0.4;
+      prevTotal += c; prevHalf += c * (1 - r);
+    }
     const change = prevTotal > 0 ? ((total - prevTotal) / prevTotal * 100) : 0;
-    return { total, half, custCut, visits: currentLogs.length, customers: custSet.size, change, prevTotal };
+    const halfChange = prevHalf > 0 ? ((half - prevHalf) / prevHalf * 100) : 0;
+    const visitsChange = previousLogs.length > 0 ? ((currentLogs.length - previousLogs.length) / previousLogs.length * 100) : 0;
+    return { total, half, custCut, visits: currentLogs.length, customers: custSet.size, change, prevTotal, halfChange, visitsChange };
   }, [currentLogs, previousLogs]);
 
-  const trendData = useMemo(() => {
+  // Sparkline data: last N data points for each KPI
+  const sparkData = useMemo(() => {
     const groups = groupByTime(currentLogs, granularity);
-    return Object.keys(groups).sort().map(key => {
-      let rev = 0, myShare = 0;
+    const keys = Object.keys(groups).sort();
+    const points = keys.map(key => {
+      let rev = 0, myShare = 0, vis = 0, custs = new Set();
       for (const log of groups[key]) {
+        const c = parseFloat(log.collection) || 0;
+        const r = parseFloat(log.commissionRate) || 0.4;
+        rev += c; myShare += c * (1 - r); vis++;
+        custs.add(log.locationId);
+      }
+      return { rev: +rev.toFixed(2), share: +myShare.toFixed(2), vis, custs: custs.size };
+    });
+    const last = points.slice(-8);
+    return {
+      total: last.map(p => ({ v: p.rev })),
+      half: last.map(p => ({ v: p.share })),
+      visits: last.map(p => ({ v: p.vis })),
+      customers: last.map(p => ({ v: p.custs })),
+    };
+  }, [currentLogs, granularity]);
+
+  // Trend data with previous period overlay
+  const trendData = useMemo(() => {
+    const curGroups = groupByTime(currentLogs, granularity);
+    const prevGroups = groupByTime(previousLogs, granularity);
+    const curKeys = Object.keys(curGroups).sort();
+    const prevKeys = Object.keys(prevGroups).sort();
+    const maxLen = Math.max(curKeys.length, prevKeys.length);
+    const data = [];
+    for (let i = 0; i < maxLen; i++) {
+      const cKey = curKeys[i], pKey = prevKeys[i];
+      let rev = 0, myShare = 0, prevRev = 0;
+      for (const log of (cKey ? curGroups[cKey] : [])) {
         const c = parseFloat(log.collection) || 0;
         const r = parseFloat(log.commissionRate) || 0.4;
         rev += c; myShare += c * (1 - r);
       }
-      return { label: formatLabel(key, granularity), revenue: +rev.toFixed(2), myShare: +myShare.toFixed(2) };
-    });
-  }, [currentLogs, granularity]);
+      for (const log of (pKey ? prevGroups[pKey] : [])) {
+        prevRev += parseFloat(log.collection) || 0;
+      }
+      data.push({
+        label: cKey ? formatLabel(cKey, granularity) : (pKey ? formatLabel(pKey, granularity) : ''),
+        revenue: +rev.toFixed(2),
+        myShare: +myShare.toFixed(2),
+        prevRevenue: +prevRev.toFixed(2),
+      });
+    }
+    return data;
+  }, [currentLogs, previousLogs, granularity]);
 
   const topCustomers = useMemo(() => {
     const map = {};
     for (const log of currentLogs) {
-      if (!map[log.locationId]) map[log.locationId] = { name: log.locationName, total: 0, visits: 0, zone: log.zone };
+      if (!map[log.locationId]) map[log.locationId] = { id: log.locationId, name: log.locationName, total: 0, visits: 0, zone: log.zone };
       map[log.locationId].total += parseFloat(log.collection) || 0;
       map[log.locationId].visits++;
     }
@@ -196,6 +256,26 @@ export default function ReportsView() {
       id: loc.id, name: loc.name, lastVisit: loc.lastVisited, zone: loc.zone || loc.region || loc.city || '',
     }));
   }, [locations, currentLogs]);
+
+  // AI Insights - auto-generated text summary
+  const insights = useMemo(() => {
+    if (currentLogs.length === 0) return null;
+    const lines = [];
+    if (summary.prevTotal > 0) {
+      const dir = summary.change >= 0 ? 'up' : 'down';
+      lines.push(`Revenue is ${dir} ${Math.abs(summary.change).toFixed(1)}% compared to the previous period.`);
+    }
+    if (pieData.length > 0) {
+      lines.push(`${pieData[0].name} is your top zone with ${pieData[0].pct}% of total collections.`);
+    }
+    if (topCustomers.length > 0) {
+      lines.push(`Top earner: ${topCustomers[0].name} (${topCustomers[0].total.toFixed(1)}).`);
+    }
+    if (declining.length > 0) {
+      lines.push(`${declining.length} location${declining.length > 1 ? 's' : ''} had no visits this period.`);
+    }
+    return lines.length > 0 ? lines : null;
+  }, [currentLogs, summary, pieData, topCustomers, declining]);
 
   const handleExportPdf = useCallback(() => {
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -232,6 +312,32 @@ export default function ReportsView() {
     pdf.save(`report_${range.from}_${range.to}.pdf`);
   }, [t, range, summary, topCustomers, declining]);
 
+  const handleExportCsv = useCallback(() => {
+    const header = ['Date', 'Location', 'Zone', 'Collection', 'Commission Rate', 'Half Weight', 'Customer Cut', 'User'];
+    const rows = currentLogs.map(log => {
+      const c = parseFloat(log.collection) || 0;
+      const r = parseFloat(log.commissionRate) || 0.4;
+      return [
+        (log.date || '').slice(0, 10),
+        `"${(log.locationName || '').replace(/"/g, '""')}"`,
+        `"${(log.zone || '').replace(/"/g, '""')}"`,
+        c.toFixed(2),
+        (r * 100).toFixed(0) + '%',
+        (c * (1 - r)).toFixed(2),
+        (c * r).toFixed(2),
+        log.user || '',
+      ].join(',');
+    });
+    const csv = [header.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report_${range.from}_${range.to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [currentLogs, range]);
+
   const periodTabs = [
     { key: '7d', label: '7D' },
     { key: '30d', label: '30D' },
@@ -239,6 +345,13 @@ export default function ReportsView() {
     { key: '6mo', label: '6M' },
     { key: 'year', label: '1Y' },
     { key: 'all', label: t('allTime') },
+  ];
+
+  const granTabs = [
+    { key: 'auto', label: 'Auto' },
+    { key: 'daily', label: 'D' },
+    { key: 'weekly', label: 'W' },
+    { key: 'monthly', label: 'M' },
   ];
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -255,7 +368,6 @@ export default function ReportsView() {
 
   return (
     <div className="h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden">
-      {/* Header */}
       <header className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-[520px] mx-auto w-full px-4 py-3 flex items-center justify-between">
           <BackButton onClick={() => navigate(-1)} />
@@ -284,6 +396,19 @@ export default function ReportsView() {
             ))}
           </div>
 
+          {/* Custom Date Picker */}
+          {period === 'custom' && (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 space-y-3">
+              <p className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">{t('custom')} {t('period')}</p>
+              <div className="flex gap-3">
+                <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                  className="flex-1 py-2 px-3 text-[13px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" />
+                <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                  className="flex-1 py-2 px-3 text-[13px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" />
+              </div>
+            </div>
+          )}
+
           {/* Zone Filter */}
           {zones.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
@@ -308,38 +433,66 @@ export default function ReportsView() {
             </div>
           )}
 
-          {/* Summary Cards */}
+          {/* Collector Filter */}
+          {collectors.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+              <div className="shrink-0 flex items-center gap-1 mr-1">
+                <Users size={13} className="text-slate-400" />
+              </div>
+              <button onClick={() => setSelectedCollector('all')}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${
+                  selectedCollector === 'all'
+                    ? 'bg-violet-600 text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                }`}>
+                {t('allCollectors')}
+              </button>
+              {collectors.map(u => (
+                <button key={u} onClick={() => setSelectedCollector(u)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all ${
+                    selectedCollector === u
+                      ? 'bg-violet-600 text-white shadow-sm'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                  }`}>
+                  {u}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Summary Cards with Sparklines */}
           <div className="grid grid-cols-2 gap-3">
-            <SummaryCard
-              icon={DollarSign}
-              label={t('totalWeight')}
-              value={summary.total.toFixed(1)}
-              dollar={summary.total * 20}
-              color="blue"
-              change={summary.change}
-            />
-            <SummaryCard
-              icon={TrendingUp}
-              label={t('halfWeight')}
-              value={summary.half.toFixed(1)}
-              dollar={summary.half * 20}
-              color="green"
-            />
-            <SummaryCard
-              icon={CalendarDays}
-              label={t('totalVisits')}
-              value={summary.visits}
-              color="orange"
-            />
-            <SummaryCard
-              icon={MapPin}
-              label={t('totalCustomers')}
-              value={summary.customers}
-              color="violet"
-            />
+            <SummaryCard icon={DollarSign} label={t('totalWeight')} value={summary.total.toFixed(1)}
+              dollar={summary.total * 20} color="blue" change={summary.change} sparkData={sparkData.total} />
+            <SummaryCard icon={TrendingUp} label={t('halfWeight')} value={summary.half.toFixed(1)}
+              dollar={summary.half * 20} color="green" change={summary.halfChange} sparkData={sparkData.half} />
+            <SummaryCard icon={CalendarDays} label={t('totalVisits')} value={summary.visits}
+              color="orange" change={summary.visitsChange} sparkData={sparkData.visits} />
+            <SummaryCard icon={MapPin} label={t('totalCustomers')} value={summary.customers}
+              color="violet" sparkData={sparkData.customers} />
           </div>
 
-          {/* Period Comparison */}
+          {/* AI Insights */}
+          {insights && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-2xl p-4 border border-blue-200/40 dark:border-blue-800/30">
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                  <Sparkles size={14} className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <span className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Insights</span>
+              </div>
+              <div className="space-y-1.5">
+                {insights.map((line, i) => (
+                  <p key={i} className="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 dark:bg-blue-500 mr-2 relative top-[-1px]" />
+                    {line}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Period Comparison Banner */}
           {summary.prevTotal > 0 && (
             <div className={`flex items-center gap-3 p-3.5 rounded-2xl ${
               summary.change >= 0
@@ -368,25 +521,41 @@ export default function ReportsView() {
             </div>
           )}
 
-          {/* Chart Toggle */}
-          <div className="flex gap-1 p-1 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            {[
-              { key: 'trend', label: t('incomeOverTime'), icon: BarChart3 },
-              { key: 'zones', label: t('distributionByZone'), icon: MapPin },
-            ].map(tab => (
-              <button key={tab.key} onClick={() => setActiveChart(tab.key)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold transition-all ${
-                  activeChart === tab.key
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
-                    : 'text-slate-500 dark:text-slate-400'
-                }`}>
-                <tab.icon size={14} />
-                {tab.label}
-              </button>
-            ))}
+          {/* Chart Toggle + Granularity */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex gap-1 p-1 bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+              {[
+                { key: 'trend', label: t('incomeOverTime'), icon: BarChart3 },
+                { key: 'zones', label: t('distributionByZone'), icon: MapPin },
+              ].map(tab => (
+                <button key={tab.key} onClick={() => setActiveChart(tab.key)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold transition-all ${
+                    activeChart === tab.key
+                      ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }`}>
+                  <tab.icon size={14} />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {activeChart === 'trend' && (
+              <div className="flex gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                {granTabs.map(g => (
+                  <button key={g.key} onClick={() => setGranOverride(g.key)}
+                    className={`px-2 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                      (granOverride === g.key || (granOverride === 'auto' && g.key === 'auto'))
+                        ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                        : 'text-slate-500 dark:text-slate-400'
+                    }`}>
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Revenue Trend Chart */}
+          {/* Revenue Trend Chart with Previous Period Overlay */}
           {activeChart === 'trend' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               {trendData.length > 0 ? (
@@ -408,13 +577,14 @@ export default function ReportsView() {
                     <Tooltip content={<CustomTooltip />} />
                     <Area type="monotone" dataKey="revenue" name={t('totalWeight')} stroke={COLORS.primary} strokeWidth={2.5} fill="url(#gradRevenue)" dot={false} activeDot={{ r: 5, strokeWidth: 2, fill: '#fff' }} />
                     <Area type="monotone" dataKey="myShare" name={t('halfWeight')} stroke={COLORS.green} strokeWidth={2} fill="url(#gradShare)" dot={false} activeDot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
+                    <Line type="monotone" dataKey="prevRevenue" name={t('previousPeriod')} stroke={COLORS.gray} strokeWidth={1.5} strokeDasharray="6 3" dot={false} activeDot={{ r: 3 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : <EmptyState message={t('noDataAvailable')} />}
             </div>
           )}
 
-          {/* Zone Distribution */}
+          {/* Zone Distribution with Drill-Down */}
           {activeChart === 'zones' && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
               {pieData.length > 0 ? (
@@ -422,7 +592,12 @@ export default function ReportsView() {
                   <div className="flex justify-center mb-3">
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
-                        <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={45} paddingAngle={2} stroke="none">
+                        <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={45} paddingAngle={2} stroke="none"
+                          onClick={(_, idx) => {
+                            const zone = pieData[idx]?.name;
+                            if (zone && zone !== 'Other') navigate(`/customers/area/${encodeURIComponent(zone)}`);
+                          }}
+                          className="cursor-pointer">
                           {pieData.map((_, i) => <Cell key={i} fill={COLORS.pie[i % COLORS.pie.length]} />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
@@ -431,12 +606,13 @@ export default function ReportsView() {
                   </div>
                   <div className="space-y-2">
                     {pieData.map((entry, i) => (
-                      <div key={entry.name} className="flex items-center gap-2.5">
+                      <button key={entry.name} onClick={() => entry.name !== 'Other' && navigate(`/customers/area/${encodeURIComponent(entry.name)}`)}
+                        className="w-full flex items-center gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg px-1 py-0.5 -mx-1 transition-colors">
                         <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: COLORS.pie[i % COLORS.pie.length] }} />
-                        <span className="flex-1 text-[12px] text-slate-700 dark:text-slate-300 truncate">{entry.name}</span>
+                        <span className="flex-1 text-[12px] text-slate-700 dark:text-slate-300 truncate text-left">{entry.name}</span>
                         <span className="text-[12px] font-bold text-slate-800 dark:text-slate-100 tabular-nums">{entry.value.toFixed(1)}</span>
                         <span className="text-[10px] text-slate-400 dark:text-slate-500 w-10 text-right tabular-nums">{entry.pct}%</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -444,7 +620,7 @@ export default function ReportsView() {
             </div>
           )}
 
-          {/* Top Customers */}
+          {/* Top Customers with Drill-Down */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
             <div className="px-4 pt-4 pb-2 flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center">
@@ -455,8 +631,8 @@ export default function ReportsView() {
             {topCustomers.length > 0 ? (
               <div className="px-4 pb-3 space-y-2.5">
                 {topCustomers.map((c, i) => (
-                  <button key={i} onClick={() => navigate(`/customer/${c.name}`)}
-                    className="w-full flex items-center gap-3 group text-left">
+                  <button key={c.id} onClick={() => navigate(`/customer/${c.id}`)}
+                    className="w-full flex items-center gap-3 group text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg p-1 -mx-1 transition-colors">
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
                       i === 0 ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' :
                       i === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300' :
@@ -507,25 +683,19 @@ export default function ReportsView() {
             </div>
           )}
 
-          {/* Export PDF */}
+          {/* Export Buttons */}
           {isAdmin && (
-            <button onClick={handleExportPdf}
-              className="w-full py-3.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-[14px] shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:bg-slate-800 dark:hover:bg-slate-100">
-              <FileDown size={18} />
-              {t('exportPdf')}
-            </button>
-          )}
-
-          {/* Custom Date Picker (shown when period is custom) */}
-          {period === 'custom' && (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 space-y-3">
-              <p className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">{t('custom')} {t('period')}</p>
-              <div className="flex gap-3">
-                <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-                  className="flex-1 py-2 px-3 text-[13px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" />
-                <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-                  className="flex-1 py-2 px-3 text-[13px] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" />
-              </div>
+            <div className="flex gap-3">
+              <button onClick={handleExportPdf}
+                className="flex-1 py-3.5 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold text-[13px] shadow-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:bg-slate-800 dark:hover:bg-slate-100">
+                <FileDown size={16} />
+                {t('exportPdf')}
+              </button>
+              <button onClick={handleExportCsv}
+                className="flex-1 py-3.5 rounded-2xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-[13px] shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 active:scale-[0.98] transition-all hover:bg-slate-50 dark:hover:bg-slate-700">
+                <Download size={16} />
+                {t('exportCsv')}
+              </button>
             </div>
           )}
 
@@ -535,6 +705,8 @@ export default function ReportsView() {
   );
 }
 
+const SPARK_COLORS = { blue: '#3b82f6', green: '#10b981', orange: '#f59e0b', violet: '#8b5cf6' };
+
 const colorMap = {
   blue: { bg: 'bg-blue-50 dark:bg-blue-950/30', iconBg: 'bg-blue-100 dark:bg-blue-900/40', text: 'text-blue-600 dark:text-blue-400', dollar: 'text-blue-700 dark:text-blue-300' },
   green: { bg: 'bg-emerald-50 dark:bg-emerald-950/30', iconBg: 'bg-emerald-100 dark:bg-emerald-900/40', text: 'text-emerald-600 dark:text-emerald-400', dollar: 'text-emerald-700 dark:text-emerald-300' },
@@ -542,15 +714,16 @@ const colorMap = {
   violet: { bg: 'bg-violet-50 dark:bg-violet-950/30', iconBg: 'bg-violet-100 dark:bg-violet-900/40', text: 'text-violet-600 dark:text-violet-400', dollar: 'text-violet-700 dark:text-violet-300' },
 };
 
-function SummaryCard({ icon: Icon, label, value, dollar, color, change }) {
+function SummaryCard({ icon: Icon, label, value, dollar, color, change, sparkData }) {
   const c = colorMap[color];
+  const sparkColor = SPARK_COLORS[color];
   return (
-    <div className={`${c.bg} p-3.5 rounded-2xl border border-slate-200/40 dark:border-slate-800/40`}>
+    <div className={`${c.bg} p-3.5 rounded-2xl border border-slate-200/40 dark:border-slate-800/40 relative overflow-hidden`}>
       <div className="flex items-center justify-between mb-2">
         <div className={`w-8 h-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
           <Icon size={16} className={c.text} />
         </div>
-        {change !== undefined && (
+        {change !== undefined && change !== 0 && (
           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
             change >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'
           }`}>
@@ -562,6 +735,22 @@ function SummaryCard({ icon: Icon, label, value, dollar, color, change }) {
       <p className={`text-xl font-bold ${c.text} tabular-nums`}>{value}</p>
       {dollar !== undefined && (
         <p className={`text-[12px] font-bold ${c.dollar} mt-0.5 tabular-nums`}>${Math.round(dollar).toLocaleString()}</p>
+      )}
+      {/* Mini Sparkline */}
+      {sparkData && sparkData.length > 1 && (
+        <div className="absolute bottom-0 right-0 w-[55%] h-[40px] opacity-40">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={sparkData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={sparkColor} stopOpacity={0.4} />
+                  <stop offset="100%" stopColor={sparkColor} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area type="monotone" dataKey="v" stroke={sparkColor} strokeWidth={1.5} fill={`url(#spark-${color})`} dot={false} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

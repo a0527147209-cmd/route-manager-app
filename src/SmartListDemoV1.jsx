@@ -1,112 +1,11 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Navigation, Map as MapIcon, AlertTriangle, ArrowLeft, Clock, User, Percent, Cpu } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { AlertTriangle, ArrowLeft, Clock, User, Percent, Cpu, MapPin } from 'lucide-react';
 import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
+import { useLocations } from './LocationsContext';
+import { LinkifyText } from './utils/textUtils';
 
-const DEMO_LOCATIONS = [
-  {
-    id: '1',
-    name: '859 Intervale Ave (Laundromat)',
-    address: '859 Intervale Ave, Bronx, NY',
-    lastCollection: '11.20',
-    lastVisited: daysAgo(34),
-    commissionRate: 0.5,
-    hasChangeMachine: true,
-    changeMachineCount: 1,
-    lastUser: 'pj',
-    notes: 'Close 9:15 Changed alarm code',
-  },
-  {
-    id: '2',
-    name: '262 Newark Ave (Deli)',
-    address: '262 Newark Ave, Jersey City, NJ',
-    lastCollection: '87.50',
-    lastVisited: daysAgo(3),
-    commissionRate: 0.4,
-    hasChangeMachine: false,
-    changeMachineCount: 0,
-    lastUser: 'mardi',
-    notes: '',
-  },
-  {
-    id: '3',
-    name: '706 Communipaw Ave',
-    address: '706 Communipaw Ave, Jersey City, NJ',
-    lastCollection: '156.00',
-    lastVisited: daysAgo(12),
-    commissionRate: 0.45,
-    hasChangeMachine: true,
-    changeMachineCount: 2,
-    lastUser: 'pj',
-    notes: '',
-  },
-  {
-    id: '4',
-    name: '1520 Grand Concourse (Barbershop)',
-    address: '1520 Grand Concourse, Bronx, NY',
-    lastCollection: '0',
-    lastVisited: daysAgo(62),
-    commissionRate: 0.4,
-    hasChangeMachine: false,
-    changeMachineCount: 0,
-    lastUser: 'alex',
-    notes: 'Owner/9178159292 — recommend removing. Put 50 every other collection',
-  },
-  {
-    id: '5',
-    name: '356 West Side Ave (Grocery)',
-    address: '356 West Side Ave, Jersey City, NJ',
-    lastCollection: '42.75',
-    lastVisited: daysAgo(7),
-    commissionRate: 0.35,
-    hasChangeMachine: true,
-    changeMachineCount: 1,
-    lastUser: 'mardi',
-    notes: '',
-  },
-  {
-    id: '6',
-    name: '237 Martin Luther King Dr',
-    address: '237 MLK Dr, Jersey City, NJ',
-    lastCollection: '210.00',
-    lastVisited: daysAgo(1),
-    commissionRate: 0.5,
-    hasChangeMachine: true,
-    changeMachineCount: 3,
-    lastUser: 'pj',
-    notes: '',
-  },
-  {
-    id: '7',
-    name: '493 E 169th St (Bodega)',
-    address: '493 E 169th St, Bronx, NY',
-    lastCollection: '18.00',
-    lastVisited: daysAgo(45),
-    commissionRate: 0.4,
-    hasChangeMachine: false,
-    changeMachineCount: 0,
-    lastUser: 'alex',
-    notes: 'Door code: 4589# Ring bell twice',
-  },
-  {
-    id: '8',
-    name: '2098 Amsterdam Ave (Laundromat)',
-    address: '2098 Amsterdam Ave, New York, NY',
-    lastCollection: '320.50',
-    lastVisited: daysAgo(5),
-    commissionRate: 0.5,
-    hasChangeMachine: true,
-    changeMachineCount: 4,
-    lastUser: 'mardi',
-    notes: '',
-  },
-];
-
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-}
+// ── Helpers ──────────────────────────────────────────────
 
 function getRelativeDays(isoStr) {
   if (!isoStr) return null;
@@ -117,30 +16,51 @@ function getRelativeDays(isoStr) {
   return Math.floor((now - visitDate) / (1000 * 60 * 60 * 24));
 }
 
+function formatDate(isoStr) {
+  if (!isoStr) return null;
+  try {
+    const [y, m, d] = isoStr.slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return null;
+    return `${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}/${String(y).slice(-2)}`;
+  } catch { return null; }
+}
+
+function formatMoney(val) {
+  const n = parseFloat(val);
+  if (!n || isNaN(n)) return null;
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function getVisitStatus(loc) {
+  if (!loc?.lastVisited) return 'overdue';
+  const [y, m, d] = loc.lastVisited.slice(0, 10).split('-').map(Number);
+  const daysSince = (Date.now() - new Date(y, m - 1, d).getTime()) / (24 * 60 * 60 * 1000);
+  if (daysSince <= 10) return 'recent';
+  if (daysSince >= 40) return 'overdue';
+  return 'normal';
+}
+
+// ── Components ───────────────────────────────────────────
+
 function RelativeTimeBadge({ isoDate }) {
   const days = getRelativeDays(isoDate);
-  if (days === null) return <span className="text-xs text-slate-400">—</span>;
+  if (days === null) return <span className="text-[10px] text-slate-400">—</span>;
 
-  let label, bgClass;
+  let label, cls;
   if (days === 0) {
-    label = 'Today';
-    bgClass = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+    label = 'Today'; cls = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
   } else if (days === 1) {
-    label = 'Yesterday';
-    bgClass = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
+    label = '1d ago'; cls = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
   } else if (days <= 14) {
-    label = `${days}d ago`;
-    bgClass = 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300';
+    label = `${days}d ago`; cls = 'bg-slate-100 text-slate-600 dark:bg-slate-700/60 dark:text-slate-300';
   } else if (days <= 30) {
-    label = `${days}d ago`;
-    bgClass = 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+    label = `${days}d ago`; cls = 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
   } else {
-    label = `${days}d ago`;
-    bgClass = 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400';
+    label = `${days}d ago`; cls = 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400';
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold tabular-nums ${bgClass}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold tabular-nums ${cls}`}>
       <Clock size={10} strokeWidth={2.5} />
       {label}
     </span>
@@ -153,6 +73,7 @@ function PillBadge({ icon: Icon, label, color = 'slate' }) {
     indigo: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300',
     emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300',
     violet: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300',
+    amber: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   };
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${colorMap[color] || colorMap.slate}`}>
@@ -162,54 +83,90 @@ function PillBadge({ icon: Icon, label, color = 'slate' }) {
   );
 }
 
-function SmartCard({ loc }) {
-  const noMoney = !loc.lastCollection || loc.lastCollection === '0';
-  const collection = noMoney ? '$0' : `$${parseFloat(loc.lastCollection).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const commPct = `${Math.round((loc.commissionRate ?? 0.4) * 100)}%`;
-  const hasCM = loc.changeMachineCount > 0 || loc.hasChangeMachine;
-  const cmLabel = hasCM ? `${loc.changeMachineCount || 1}x Machine` : null;
-  const days = getRelativeDays(loc.lastVisited);
+function SmartCard({ loc, index, navigate, routeLocation }) {
+  const isInactive = !!loc?.inactive;
+  const visitStatus = getVisitStatus(loc);
+  const noMoney = !loc?.lastCollection || loc.lastCollection === '0' || loc.lastCollection === '0.00';
+  const money = formatMoney(loc?.lastCollection);
+  const commPct = `${Math.round((loc?.commissionRate ?? 0.4) * 100)}%`;
+  const hasCM = (loc?.changeMachineCount > 0) || loc?.hasChangeMachine;
+  const cmCount = loc?.changeMachineCount || (loc?.hasChangeMachine ? 1 : 0);
+  const lastUser = loc?.logs?.[0]?.user || '';
+  const notes = loc?.subtitle || loc?.notes || '';
+  const lastVisitDate = formatDate(loc?.lastVisited);
+  const cityState = [loc?.city, loc?.state].filter(Boolean).join(', ');
 
-  const stripe = days === null || days > 30
-    ? 'border-l-red-400'
-    : days <= 10
-      ? 'border-l-emerald-400'
-      : 'border-l-slate-300 dark:border-l-slate-600';
+  const stripe = isInactive ? 'border-l-slate-300 dark:border-l-slate-600'
+    : visitStatus === 'recent' ? 'border-l-emerald-500'
+    : visitStatus === 'overdue' ? 'border-l-red-500'
+    : 'border-l-slate-300 dark:border-l-slate-600';
 
-  const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(loc.address)}&navigate=yes`;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`;
+  const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}&navigate=yes`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}`;
 
   return (
-    <div className={`w-full rounded-2xl border border-slate-200/70 dark:border-slate-700/50 border-l-4 ${stripe} bg-white dark:bg-slate-900 shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-all active:scale-[0.995] cursor-pointer`}>
-      <div className="px-4 pt-3.5 pb-2">
-        <div className="flex items-start justify-between gap-3">
+    <div
+      data-customer-id={loc?.id}
+      className={`w-full rounded-2xl border border-slate-200/70 dark:border-slate-700/50 border-l-4 ${stripe} bg-white dark:bg-slate-900 shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-all active:scale-[0.995] cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
+      onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
+    >
+      <div className="px-3.5 pt-3 pb-1.5">
+        {/* Row 1: Index + Name + Money */}
+        <div className="flex items-start gap-2.5">
+          <span className="shrink-0 w-5 text-center text-[11px] font-bold text-slate-400 dark:text-slate-500 tabular-nums pt-0.5">
+            {index + 1}
+          </span>
           <div className="flex-1 min-w-0">
             <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100 leading-snug truncate" style={{ fontFamily: "'Nunito', sans-serif" }}>
-              {loc.name}
+              {loc?.name ?? '—'}
             </h3>
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <PillBadge icon={Percent} label={commPct} color="indigo" />
-              <PillBadge icon={User} label={loc.lastUser || '—'} color="violet" />
-              {cmLabel && <PillBadge icon={Cpu} label={cmLabel} color="emerald" />}
-            </div>
+            {/* Address line */}
+            {(loc?.address || cityState) && (
+              <div className="flex items-center gap-1 mt-0.5">
+                <MapPin size={10} className="text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={2} />
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                  {loc?.address}{cityState ? ` · ${cityState}` : ''}
+                </span>
+              </div>
+            )}
           </div>
-
-          <div className="shrink-0 flex flex-col items-end gap-1.5">
-            <span className={`text-2xl font-extrabold tabular-nums leading-none ${noMoney ? 'text-slate-300 dark:text-slate-600' : 'text-emerald-600 dark:text-emerald-400'}`} style={{ fontFamily: "'Nunito', sans-serif" }}>
-              {collection}
-            </span>
-            <RelativeTimeBadge isoDate={loc.lastVisited} />
+          <div className="shrink-0 flex flex-col items-end gap-1">
+            {isInactive ? (
+              <span className="text-[13px] font-bold text-slate-400 dark:text-slate-600 uppercase">Closed</span>
+            ) : noMoney ? (
+              <span className="text-lg font-extrabold text-slate-300 dark:text-slate-600 tabular-nums leading-none" style={{ fontFamily: "'Nunito', sans-serif" }}>
+                No $
+              </span>
+            ) : (
+              <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums leading-none" style={{ fontFamily: "'Nunito', sans-serif" }}>
+                {money}
+              </span>
+            )}
+            <RelativeTimeBadge isoDate={loc?.lastVisited} />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 mt-2.5 pb-0.5">
+        {/* Row 2: Pill badges */}
+        <div className="flex flex-wrap items-center gap-1.5 mt-2 ml-7">
+          <PillBadge icon={Percent} label={commPct} color="indigo" />
+          {lastUser && <PillBadge icon={User} label={lastUser} color="violet" />}
+          {hasCM && <PillBadge icon={Cpu} label={`${cmCount}x Machine`} color="emerald" />}
+          {isInactive && <PillBadge label="Inactive" color="slate" />}
+          {lastVisitDate && (
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+              {lastVisitDate}
+            </span>
+          )}
+        </div>
+
+        {/* Row 3: Nav buttons */}
+        <div className="flex items-center justify-end gap-2 mt-2 pb-0.5" onClick={(e) => e.stopPropagation()}>
           <a
             href={wazeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
             className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-90"
-            title="Open in Waze"
+            title="Waze"
           >
             <WazeLogo size={16} />
           </a>
@@ -217,22 +174,20 @@ function SmartCard({ loc }) {
             href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
             className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-center hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-200 dark:hover:border-green-800 transition-all active:scale-90"
-            title="Open in Google Maps"
+            title="Google Maps"
           >
             <GoogleMapsLogo size={16} />
           </a>
         </div>
       </div>
 
-      {loc.notes && (
-        <div className="px-3 pb-3">
+      {/* Warning note */}
+      {notes && (
+        <div className="px-3 pb-2.5">
           <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/40">
             <AlertTriangle size={14} className="text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" strokeWidth={2.5} />
-            <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300 leading-snug">
-              {loc.notes}
-            </span>
+            <LinkifyText text={notes} className="text-[11px] font-medium text-amber-700 dark:text-amber-300 leading-snug" />
           </div>
         </div>
       )}
@@ -240,17 +195,33 @@ function SmartCard({ loc }) {
   );
 }
 
+// ── Main ─────────────────────────────────────────────────
+
 export default function SmartListDemoV1() {
   const navigate = useNavigate();
+  const routeLocation = useLocation();
+  const { locations } = useLocations();
   const [filter, setFilter] = useState('all');
 
-  const filtered = filter === 'all'
-    ? DEMO_LOCATIONS
-    : filter === 'overdue'
-      ? DEMO_LOCATIONS.filter(l => getRelativeDays(l.lastVisited) > 30)
-      : filter === 'recent'
-        ? DEMO_LOCATIONS.filter(l => getRelativeDays(l.lastVisited) <= 10)
-        : DEMO_LOCATIONS;
+  const validLocations = useMemo(() => {
+    const locs = Array.isArray(locations) ? locations.filter(l => l != null) : [];
+    return locs;
+  }, [locations]);
+
+  const counts = useMemo(() => ({
+    all: validLocations.filter(l => !l.inactive).length,
+    recent: validLocations.filter(l => !l.inactive && getVisitStatus(l) === 'recent').length,
+    overdue: validLocations.filter(l => !l.inactive && getVisitStatus(l) === 'overdue').length,
+    inactive: validLocations.filter(l => l.inactive).length,
+  }), [validLocations]);
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return validLocations.filter(l => !l.inactive);
+    if (filter === 'recent') return validLocations.filter(l => !l.inactive && getVisitStatus(l) === 'recent');
+    if (filter === 'overdue') return validLocations.filter(l => !l.inactive && getVisitStatus(l) === 'overdue');
+    if (filter === 'closed') return validLocations.filter(l => l.inactive);
+    return validLocations;
+  }, [validLocations, filter]);
 
   return (
     <div className="h-full flex flex-col bg-slate-50/80 dark:bg-slate-950 overflow-hidden">
@@ -271,22 +242,40 @@ export default function SmartListDemoV1() {
                 Smart List v1
               </h1>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                Big cards · Pill badges · Bottom alerts
+                {validLocations.length} locations · Live data
               </p>
             </div>
             <div className="w-9 shrink-0" />
           </div>
 
-          <div className="flex items-center gap-2 mt-2.5">
+          {/* Legend */}
+          <div className="flex items-center gap-3 mt-2 px-1">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-[9px] text-slate-500 dark:text-slate-400">≤10d</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" />
+              <span className="text-[9px] text-slate-500 dark:text-slate-400">10–40d</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-[9px] text-slate-500 dark:text-slate-400">40d+</span>
+            </span>
+          </div>
+
+          {/* Filter pills */}
+          <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-none">
             {[
-              { key: 'all', label: 'All', count: DEMO_LOCATIONS.length },
-              { key: 'recent', label: 'Recent', count: DEMO_LOCATIONS.filter(l => getRelativeDays(l.lastVisited) <= 10).length },
-              { key: 'overdue', label: 'Overdue 30d+', count: DEMO_LOCATIONS.filter(l => getRelativeDays(l.lastVisited) > 30).length },
+              { key: 'all', label: 'All', count: counts.all },
+              { key: 'recent', label: 'Recent', count: counts.recent },
+              { key: 'overdue', label: 'Overdue', count: counts.overdue },
+              ...(counts.inactive > 0 ? [{ key: 'closed', label: 'Closed', count: counts.inactive }] : []),
             ].map((f) => (
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all active:scale-95 shrink-0 ${
                   filter === f.key
                     ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -307,22 +296,23 @@ export default function SmartListDemoV1() {
       </header>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-[520px] mx-auto w-full px-3 py-3 space-y-2.5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
-          {filtered.map((loc, i) => (
-            <div key={loc.id} className="flex items-start gap-2">
-              <span className="shrink-0 w-6 pt-4 text-center text-[11px] font-bold text-slate-300 dark:text-slate-600 tabular-nums">
-                {i + 1}
-              </span>
-              <div className="flex-1 min-w-0">
-                <SmartCard loc={loc} />
-              </div>
-            </div>
-          ))}
-
-          {filtered.length === 0 && (
+        <div className="max-w-[520px] mx-auto w-full px-2.5 py-2.5 space-y-2 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+          {filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">No locations match this filter</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm font-medium">
+                {validLocations.length === 0 ? 'No locations yet — add customers first' : 'No locations match this filter'}
+              </p>
             </div>
+          ) : (
+            filtered.map((loc, i) => (
+              <SmartCard
+                key={loc.id ?? i}
+                loc={loc}
+                index={i}
+                navigate={navigate}
+                routeLocation={routeLocation}
+              />
+            ))
           )}
         </div>
       </main>

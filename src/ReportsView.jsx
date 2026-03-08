@@ -39,7 +39,7 @@ const USER_MAP = {
   payam: 'Payam', pj: 'Payam', pay: 'Payam', '0j': 'Payam',
 };
 
-const IGNORE_USERS = ['to collect', 'collect', 'tocollect', 'tocolect', 'no', 'none', 'n/a', '-', ''];
+const IGNORE_USERS = ['to collect', 'toy collect', 'collect', 'tocollect', 'tocolect', 'toycollect', 'mordi', 'no', 'none', 'n/a', '-', ''];
 
 function normalizeUser(raw) {
   if (!raw) return '';

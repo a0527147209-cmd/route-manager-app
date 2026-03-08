@@ -162,6 +162,7 @@ export default function AddLocationView() {
                   <input
                     type="text"
                     name="city"
+                    required
                     value={formData.city}
                     onChange={handleChange}
                     className={inputStyle}
@@ -172,6 +173,7 @@ export default function AddLocationView() {
                   <input
                     type="text"
                     name="state"
+                    required
                     value={formData.state}
                     onChange={handleChange}
                     className={inputStyle}
@@ -183,6 +185,7 @@ export default function AddLocationView() {
                 <label className={labelStyle}>{t('zone')}</label>
                 <select
                   name="zone"
+                  required
                   value={formData.zone}
                   onChange={handleChange}
                   className={inputStyle}
@@ -200,6 +203,7 @@ export default function AddLocationView() {
                   type="text"
                   inputMode="numeric"
                   name="zipCode"
+                  required
                   value={formData.zipCode}
                   onChange={handleChange}
                   className={inputStyle}
@@ -211,6 +215,7 @@ export default function AddLocationView() {
                 <input
                   type="text"
                   name="type"
+                  required
                   value={formData.type}
                   onChange={handleChange}
                   placeholder="e.g. Deli, Laundromat"
@@ -238,6 +243,7 @@ export default function AddLocationView() {
                   min="0"
                   max="1"
                   name="commissionRate"
+                  required
                   value={formData.commissionRate}
                   onChange={handleChange}
                   placeholder="0.40"

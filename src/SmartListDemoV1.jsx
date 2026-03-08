@@ -26,7 +26,7 @@ function getVisitStatus(loc) {
 
 // ── Card ─────────────────────────────────────────────────
 
-const hCell = 'text-[8px] font-medium uppercase tracking-wide text-gray-400 dark:text-slate-500';
+const hCell = 'text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-slate-500';
 
 function CustomerCard({ loc, index, navigate, routeLocation }) {
   const isInactive = !!loc?.inactive;
@@ -36,7 +36,7 @@ function CustomerCard({ loc, index, navigate, routeLocation }) {
   const commPct = `${Math.round((loc?.commissionRate ?? 0.4) * 100)}%`;
   const hasCM = (loc?.changeMachineCount > 0) || loc?.hasChangeMachine;
   const cmCount = loc?.changeMachineCount || (loc?.hasChangeMachine ? 1 : 0);
-  const cmText = hasCM ? `${cmCount}x machines` : '—';
+  const cmText = hasCM ? `Has ${cmCount}x machines` : '—';
   const lastUser = loc?.logs?.[0]?.user || '—';
   const notes = loc?.subtitle || loc?.notes || '';
 
@@ -47,75 +47,79 @@ function CustomerCard({ loc, index, navigate, routeLocation }) {
   };
 
   return (
-    <div className="flex gap-2.5">
+    <div className="flex gap-3">
       {/* Left: index + status bar */}
-      <div className="flex flex-col items-center gap-1.5 pt-4 shrink-0 w-5">
-        <span className="text-[11px] font-semibold text-gray-500 dark:text-slate-400 tabular-nums">{index + 1}</span>
+      <div className="flex flex-col items-center gap-2 pt-5 shrink-0">
+        <span className="text-sm font-medium text-gray-500 dark:text-slate-400 tabular-nums">{index + 1}</span>
         <div className={`w-1 flex-1 rounded-full ${statusColors[status]}`} />
       </div>
 
       {/* Card */}
       <div
-        className={`flex-1 rounded-xl border border-gray-100 dark:border-slate-700/50 bg-white dark:bg-slate-900 p-3.5 shadow-sm transition-all active:scale-[0.995] cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
+        className={`flex-1 rounded-xl border border-gray-100 dark:border-slate-700/50 bg-white dark:bg-slate-900 p-5 shadow-sm transition-all active:scale-[0.995] cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
         onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
       >
-        {/* ── ROW 1: Address, City, State, %, Change Machine ── */}
-        <div className="grid grid-cols-[1fr_60px_32px_36px_1fr] gap-x-2 items-start">
-          <div className="min-w-0">
+        {/* ── ROW 1: #, Name, Last Visit, Collection, User ── */}
+        <div className="mb-4 grid grid-cols-12 items-start gap-2">
+          <div className="col-span-1">
+            <p className={hCell}>#</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 tabular-nums">{index + 1}</p>
+          </div>
+          <div className="col-span-5 min-w-0">
+            <p className={hCell}>Name</p>
+            <p className="text-base font-bold text-gray-900 dark:text-slate-100 truncate" style={{ fontFamily: "'Nunito', sans-serif" }}>
+              {loc?.name ?? '—'}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <p className={hCell}>Last Visit</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-slate-200 tabular-nums">{formatDate(loc?.lastVisited)}</p>
+          </div>
+          <div className="col-span-2">
+            <p className={hCell}>Collection</p>
+            <p className={`text-sm font-semibold tabular-nums ${noMoney ? 'text-gray-400 dark:text-slate-500' : 'text-gray-800 dark:text-slate-200'}`}>
+              {collection}
+            </p>
+          </div>
+          <div className="col-span-2">
+            <p className={hCell}>User</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-slate-200 truncate">{lastUser}</p>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="mb-4 border-t border-gray-100 dark:border-slate-700/40" />
+
+        {/* ── ROW 2: Address, City, State, %, Change Machine ── */}
+        <div className="grid grid-cols-12 gap-2">
+          <div className="col-span-4 min-w-0">
             <p className={hCell}>Address</p>
-            <p className="text-[11px] font-medium text-gray-700 dark:text-slate-200 truncate">{loc?.address || '—'}</p>
+            <p className="truncate text-sm text-gray-800 dark:text-slate-200">{loc?.address || '—'}</p>
           </div>
-          <div className="min-w-0">
+          <div className="col-span-2 min-w-0">
             <p className={hCell}>City</p>
-            <p className="text-[11px] font-medium text-gray-700 dark:text-slate-200 truncate">{loc?.city || '—'}</p>
+            <p className="text-sm text-gray-800 dark:text-slate-200 truncate">{loc?.city || '—'}</p>
           </div>
-          <div>
+          <div className="col-span-2">
             <p className={hCell}>State</p>
-            <p className="text-[11px] font-medium text-gray-700 dark:text-slate-200">{loc?.state || '—'}</p>
+            <p className="text-sm text-gray-800 dark:text-slate-200">{loc?.state || '—'}</p>
           </div>
-          <div>
+          <div className="col-span-1">
             <p className={hCell}>%</p>
-            <p className="text-[11px] font-semibold text-gray-800 dark:text-slate-100">{commPct}</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-slate-200">{commPct}</p>
           </div>
-          <div className="min-w-0">
+          <div className="col-span-3 min-w-0">
             <p className={hCell}>Change Machine</p>
-            <p className={`text-[11px] font-medium truncate ${hasCM ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-slate-500'}`}>
+            <p className={`text-sm truncate ${hasCM ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-gray-400 dark:text-slate-500'}`}>
               {cmText}
             </p>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-100 dark:border-slate-700/40 my-2.5" />
-
-        {/* ── ROW 2: Name, Last Visit, Collection, User ── */}
-        <div className="grid grid-cols-[1fr_58px_52px_36px] gap-x-2 items-start">
-          <div className="min-w-0">
-            <p className={hCell}>Name</p>
-            <p className="text-[13px] font-bold text-gray-900 dark:text-slate-100 truncate leading-snug" style={{ fontFamily: "'Nunito', sans-serif" }}>
-              {loc?.name ?? '—'}
-            </p>
-          </div>
-          <div>
-            <p className={hCell}>Last Visit</p>
-            <p className="text-[11px] font-medium text-gray-700 dark:text-slate-200 tabular-nums">{formatDate(loc?.lastVisited)}</p>
-          </div>
-          <div>
-            <p className={hCell}>Collection</p>
-            <p className={`text-[12px] font-bold tabular-nums ${noMoney ? 'text-gray-400 dark:text-slate-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
-              {collection}
-            </p>
-          </div>
-          <div>
-            <p className={hCell}>User</p>
-            <p className="text-[11px] font-medium text-gray-700 dark:text-slate-200 truncate">{lastUser}</p>
-          </div>
-        </div>
-
         {/* Notes */}
         {notes && (
-          <div className="mt-2.5 rounded-lg p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30">
-            <LinkifyText text={notes} className="text-[11px] font-medium text-red-700 dark:text-red-400 leading-snug" />
+          <div className="mt-4 rounded-lg p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30">
+            <LinkifyText text={notes} className="text-sm font-medium text-red-700 dark:text-red-400 leading-snug" />
           </div>
         )}
       </div>
@@ -223,7 +227,7 @@ export default function SmartListDemoV1() {
       </header>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-[560px] mx-auto w-full px-3 py-3 space-y-2.5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-[560px] mx-auto w-full px-3 py-3 space-y-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {filtered.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-gray-400 dark:text-slate-500 text-sm font-medium">

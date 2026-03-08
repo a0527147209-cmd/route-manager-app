@@ -32,7 +32,7 @@ function localISO(d) {
 
 const USER_MAP = {
   eli: 'Eli', e: 'Eli', el: 'Eli',
-  mordi: 'Mordi', mardi: 'Mordi', mar: 'Mordi', mord: 'Mordi',
+  mardi: 'Mardi', mar: 'Mardi', mard: 'Mardi',
   hershi: 'Hershi', hersh: 'Hershi', her: 'Hershi',
   yuda: 'Yuda', yud: 'Yuda',
   oded: 'Oded', ode: 'Oded',

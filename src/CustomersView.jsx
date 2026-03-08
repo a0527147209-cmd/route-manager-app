@@ -259,7 +259,8 @@ export default function CustomersView() {
     }
   };
 
-  const inactiveCount = useMemo(() => validLocations.filter(loc => loc.inactive).length, [validLocations]);
+  const allInactiveRaw = useMemo(() => validLocations.filter(loc => !!loc.inactive), [validLocations]);
+  const totalInactiveCount = allInactiveRaw.length;
 
   const filteredLocations = useMemo(() => validLocations.filter(loc => {
     if (loc.inactive) return false;
@@ -280,8 +281,8 @@ export default function CustomersView() {
 
   const allInactiveLocations = useMemo(() => {
     if (!showInactive) return [];
-    return validLocations.filter(loc => loc.inactive && matchesSearch(loc));
-  }, [validLocations, showInactive, searchWords]);
+    return allInactiveRaw.filter(loc => matchesSearch(loc));
+  }, [allInactiveRaw, showInactive, searchWords]);
 
   function getGroupKey(loc) {
     if (sortBy === 'city') return zoneKey(loc?.city);
@@ -380,21 +381,30 @@ export default function CustomersView() {
     return optimizeRoute(areaLocationsRaw);
   }, [areaLocationsRaw, isInnerPage]);
 
+  const matchLocToAreaKey = (loc, aKey) => {
+    if (!aKey) return false;
+    const keyNorm = (k) => (k ?? '').trim().toLowerCase();
+    if (aKey.includes(COMPOSITE_SEP)) {
+      const [dim, key] = aKey.split(COMPOSITE_SEP);
+      const kn = keyNorm(key);
+      if (dim === 'city') return zoneKey(loc?.city) === kn;
+      if (dim === 'state') return zoneKey(loc?.state) === kn;
+      return zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn;
+    }
+    return zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === keyNorm(aKey);
+  };
+
   const inactiveAreaLocations = useMemo(() => {
     if (!showInactive || !isInnerPage || !areaKeyDecoded) return [];
-    const keyNorm = (k) => (k ?? '').trim().toLowerCase();
-    if (areaKeyDecoded.includes(COMPOSITE_SEP)) {
-      const [dim, key] = areaKeyDecoded.split(COMPOSITE_SEP);
-      const kn = keyNorm(key);
-      return allInactiveLocations.filter(loc => {
-        if (dim === 'city') return zoneKey(loc?.city) === kn;
-        if (dim === 'state') return zoneKey(loc?.state) === kn;
-        return zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn;
-      });
-    }
-    const kn = keyNorm(areaKeyDecoded);
-    return allInactiveLocations.filter(loc => zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn);
+    return allInactiveLocations.filter(loc => matchLocToAreaKey(loc, areaKeyDecoded));
   }, [allInactiveLocations, isInnerPage, areaKeyDecoded]);
+
+  const zoneInactiveCount = useMemo(() => {
+    if (!isInnerPage || !areaKeyDecoded) return 0;
+    return allInactiveRaw.filter(loc => matchLocToAreaKey(loc, areaKeyDecoded)).length;
+  }, [allInactiveRaw, isInnerPage, areaKeyDecoded]);
+
+  const badgeInactiveCount = isInnerPage ? zoneInactiveCount : totalInactiveCount;
   const areaDisplayLabel =
     areaLocations.length > 0
       ? norm(areaLocations[0]?.region ?? areaLocations[0]?.zone ?? areaLocations[0]?.city ?? areaLocations[0]?.state)
@@ -458,7 +468,7 @@ export default function CustomersView() {
                 </button>
               )}
             </div>
-            {inactiveCount > 0 && (
+            {badgeInactiveCount > 0 && (
               <button
                 onClick={() => setShowInactive(v => !v)}
                 className={`w-9 h-9 flex items-center justify-center rounded-xl border transition-all active:scale-95 shrink-0 relative ${
@@ -470,7 +480,7 @@ export default function CustomersView() {
               >
                 <EyeOff size={15} strokeWidth={1.8} />
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
-                  {inactiveCount}
+                  {badgeInactiveCount}
                 </span>
               </button>
             )}

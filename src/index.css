@@ -278,6 +278,38 @@ header {
   }
 }
 
+@keyframes flashHighlight {
+  0% {
+    background-color: rgba(203, 213, 225, 0.6);
+  }
+  40% {
+    background-color: rgba(203, 213, 225, 0.35);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes flashHighlightDark {
+  0% {
+    background-color: rgba(71, 85, 105, 0.5);
+  }
+  40% {
+    background-color: rgba(71, 85, 105, 0.25);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-flash-highlight {
+  animation: flashHighlight 2s ease-out forwards;
+}
+
+.dark .animate-flash-highlight {
+  animation: flashHighlightDark 2s ease-out forwards;
+}
+
 .animate-shimmer {
   background: linear-gradient(90deg, transparent 33%, rgba(255, 255, 255, 0.15) 50%, transparent 66%);
   background-size: 200% 100%;

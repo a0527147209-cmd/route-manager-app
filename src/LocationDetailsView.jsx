@@ -82,7 +82,7 @@ export default function LocationDetailsView() {
       bills,
     });
     setShowBackConfirm(false);
-    navigate(backPath);
+    navigate(backPath, { state: { focusCustomerId: id } });
   };
 
   const hasUnsavedChanges = location && (
@@ -93,12 +93,12 @@ export default function LocationDetailsView() {
 
   const handleBackClick = () => {
     if (hasUnsavedChanges) setShowBackConfirm(true);
-    else navigate(backPath);
+    else navigate(backPath, { state: { focusCustomerId: id } });
   };
 
   const handleDiscardAndBack = () => {
     setShowBackConfirm(false);
-    navigate(backPath);
+    navigate(backPath, { state: { focusCustomerId: id } });
   };
 
   const updateBillCount = (billValue, delta) => {

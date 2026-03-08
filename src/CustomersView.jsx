@@ -111,7 +111,7 @@ function CustomerRow({ loc, index, navigate, routeLocation, t, isRtl, getWazeUrl
   return (
     <div
       data-customer-id={loc?.id}
-      className={`w-full rounded-xl border border-slate-200/70 dark:border-slate-700/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border-l-4 ${stripe} bg-white dark:bg-slate-900 cursor-pointer transition-all active:scale-[0.99] ${isInactive ? 'opacity-50' : ''} ${isFocused ? 'ring-2 ring-indigo-400/60' : ''}`}
+      className={`w-full rounded-xl border border-slate-200/70 dark:border-slate-700/50 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] border-l-4 ${stripe} bg-white dark:bg-slate-900 cursor-pointer transition-all active:scale-[0.99] ${isInactive ? 'opacity-50' : ''} ${isFocused ? 'animate-flash-highlight' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
       {/* Row 1: Header */}

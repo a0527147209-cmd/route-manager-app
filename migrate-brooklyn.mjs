@@ -223,7 +223,6 @@ function isInactiveLocation(notes) {
     for (const n of notes) {
         const lower = n.toLowerCase();
         if (/machine\s*picked\s*up/i.test(lower)) return true;
-        if (/^picked up$/i.test(lower.trim())) return true;
     }
     return false;
 }

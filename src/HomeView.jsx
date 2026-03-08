@@ -122,12 +122,12 @@ export default function HomeView() {
       route: '/smart-list-demo',
     },
     {
-      label: 'Nav Mockup',
-      sub: 'Breadcrumbs & screens',
+      label: 'Smart List v1',
+      sub: 'Big cards · Pill badges',
       icon: Route,
       iconBg: 'bg-orange-50 dark:bg-orange-950/40',
       iconColor: 'text-orange-600 dark:text-orange-400',
-      route: '/nav-mockup',
+      route: '/smart-list-v1',
     },
   ];
 

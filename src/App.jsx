@@ -23,6 +23,7 @@ import NotificationsView from './NotificationsView';
 import AccountView from './AccountView';
 import NavigationMockup from './NavigationMockup';
 import SmartListDemo from './SmartListDemo';
+import SmartListDemoV1 from './SmartListDemoV1';
 import ImportHarlem from './ImportHarlem';
 import ImportLongIsland from './ImportLongIsland';
 import ImportConnecticut from './ImportConnecticut';
@@ -80,6 +81,7 @@ function AppContent() {
         <Route path="/account" element={<AccountView />} />
         <Route path="/nav-mockup" element={<NavigationMockup />} />
         <Route path="/smart-list-demo" element={<SmartListDemo />} />
+        <Route path="/smart-list-v1" element={<SmartListDemoV1 />} />
         <Route path="/import-harlem" element={<ImportHarlem />} />
         <Route path="/import-long-island" element={<ImportLongIsland />} />
         <Route path="/import-connecticut" element={<ImportConnecticut />} />

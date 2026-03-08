@@ -260,8 +260,9 @@ export default function CustomersView() {
   };
 
   const inactiveCount = useMemo(() => validLocations.filter(loc => loc.inactive).length, [validLocations]);
+
   const filteredLocations = useMemo(() => validLocations.filter(loc => {
-    if (!showInactive && loc.inactive) return false;
+    if (loc.inactive) return false;
     if (!matchesSearch(loc)) return false;
     if (statusFilter) {
       const vs = (() => {
@@ -275,7 +276,12 @@ export default function CustomersView() {
       if (vs !== statusFilter) return false;
     }
     return true;
-  }), [validLocations, searchWords, showInactive, statusFilter]);
+  }), [validLocations, searchWords, statusFilter]);
+
+  const allInactiveLocations = useMemo(() => {
+    if (!showInactive) return [];
+    return validLocations.filter(loc => loc.inactive && matchesSearch(loc));
+  }, [validLocations, showInactive, searchWords]);
 
   function getGroupKey(loc) {
     if (sortBy === 'city') return zoneKey(loc?.city);
@@ -373,6 +379,22 @@ export default function CustomersView() {
     if (!isInnerPage) return areaLocationsRaw;
     return optimizeRoute(areaLocationsRaw);
   }, [areaLocationsRaw, isInnerPage]);
+
+  const inactiveAreaLocations = useMemo(() => {
+    if (!showInactive || !isInnerPage || !areaKeyDecoded) return [];
+    const keyNorm = (k) => (k ?? '').trim().toLowerCase();
+    if (areaKeyDecoded.includes(COMPOSITE_SEP)) {
+      const [dim, key] = areaKeyDecoded.split(COMPOSITE_SEP);
+      const kn = keyNorm(key);
+      return allInactiveLocations.filter(loc => {
+        if (dim === 'city') return zoneKey(loc?.city) === kn;
+        if (dim === 'state') return zoneKey(loc?.state) === kn;
+        return zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn;
+      });
+    }
+    const kn = keyNorm(areaKeyDecoded);
+    return allInactiveLocations.filter(loc => zoneKey(loc?.region ?? loc?.zone ?? loc?.city) === kn);
+  }, [allInactiveLocations, isInnerPage, areaKeyDecoded]);
   const areaDisplayLabel =
     areaLocations.length > 0
       ? norm(areaLocations[0]?.region ?? areaLocations[0]?.zone ?? areaLocations[0]?.city ?? areaLocations[0]?.state)
@@ -520,17 +542,45 @@ export default function CustomersView() {
                     </DraggableCard>
                   ))}
                 </Reorder.Group>
+                {inactiveAreaLocations.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2.5 px-1 pt-4 pb-1">
+                      <EyeOff size={13} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                        Inactive ({inactiveAreaLocations.length})
+                      </span>
+                      <div className="flex-1 h-px bg-amber-300/50 dark:bg-amber-700/50" />
+                    </div>
+                    {inactiveAreaLocations.map((loc, index) => (
+                      <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus="normal" showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
+                    ))}
+                  </>
+                )}
               </div>
             ) : (
               <div className="px-2 py-2 space-y-1.5">
                 {areaLocations.map((loc, index) => (
                   <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}
+                {inactiveAreaLocations.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2.5 px-1 pt-4 pb-1">
+                      <EyeOff size={13} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                        Inactive ({inactiveAreaLocations.length})
+                      </span>
+                      <div className="flex-1 h-px bg-amber-300/50 dark:bg-amber-700/50" />
+                    </div>
+                    {inactiveAreaLocations.map((loc, index) => (
+                      <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus="normal" showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
+                    ))}
+                  </>
+                )}
               </div>
             )}
             </>
           ) : searchTerm && searchTerm.trim() ? (
-            filteredLocations.length === 0 ? (
+            filteredLocations.length === 0 && allInactiveLocations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center px-6">
                 <p className="text-slate-500 font-medium">{t('noResultsFor')} &quot;{searchTerm}&quot;</p>
                 <p className="text-slate-400 text-sm mt-1">{t('tryDifferentKeywords')}</p>
@@ -540,6 +590,20 @@ export default function CustomersView() {
                 {filteredLocations.map((loc, index) => (
                   <CustomerRow key={loc?.id ?? index} loc={loc} index={index} visitStatus={getVisitStatus(loc)} showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
                 ))}
+                {allInactiveLocations.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2.5 px-1 pt-4 pb-1">
+                      <EyeOff size={13} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                        Inactive ({allInactiveLocations.length})
+                      </span>
+                      <div className="flex-1 h-px bg-amber-300/50 dark:bg-amber-700/50" />
+                    </div>
+                    {allInactiveLocations.map((loc, index) => (
+                      <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus="normal" showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
+                    ))}
+                  </>
+                )}
               </div>
             )
           ) : displayGroups.length === 0 ? (
@@ -566,6 +630,20 @@ export default function CustomersView() {
                   </button>
                 );
               })}
+              {allInactiveLocations.length > 0 && (
+                <div className="pt-3 space-y-1.5">
+                  <div className="flex items-center gap-2.5 px-1 pb-1">
+                    <EyeOff size={13} className="text-amber-500 dark:text-amber-400 shrink-0" />
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                      Inactive ({allInactiveLocations.length})
+                    </span>
+                    <div className="flex-1 h-px bg-amber-300/50 dark:bg-amber-700/50" />
+                  </div>
+                  {allInactiveLocations.map((loc, index) => (
+                    <CustomerRow key={loc?.id} loc={loc} index={index} visitStatus="normal" showIndex={false} isFocused={focusedCustomerId === loc?.id} {...rowProps} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

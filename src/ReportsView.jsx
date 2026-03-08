@@ -30,13 +30,24 @@ function localISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+function normalizeUser(raw) {
+  if (!raw) return '';
+  let s = raw.trim()
+    .replace(/\s+\d+\s*$/, '')     // "eli 50" -> "eli"
+    .replace(/\d+\s*\$?\s*$/i, '') // "eli50$" -> "eli"
+    .replace(/[⌚️*]+/g, '')
+    .trim();
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
 function getAllLogs(locations) {
   const logs = [];
   for (const loc of locations) {
     for (const log of (loc.logs || [])) {
       if (!log.date) continue;
       const zone = loc.zone || loc.region || loc.city || loc.state || 'Other';
-      logs.push({ ...log, locationId: loc.id, locationName: loc.name, zone });
+      logs.push({ ...log, user: normalizeUser(log.user), locationId: loc.id, locationName: loc.name, zone });
     }
   }
   logs.sort((a, b) => (b.date || '').localeCompare(a.date || ''));

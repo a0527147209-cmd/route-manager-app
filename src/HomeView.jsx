@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Menu, Users, BarChart3, Plus,
-  Clock, Wallet, ListTodo, Map,
+  Clock, Wallet, ListTodo, Map, FlaskConical,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
@@ -112,6 +112,14 @@ export default function HomeView() {
       iconBg: 'bg-teal-50 dark:bg-teal-950/40',
       iconColor: 'text-teal-600 dark:text-teal-400',
       route: '/map-overview',
+    },
+    {
+      label: 'Smart List Demo',
+      sub: 'New card layout',
+      icon: FlaskConical,
+      iconBg: 'bg-fuchsia-50 dark:bg-fuchsia-950/40',
+      iconColor: 'text-fuchsia-600 dark:text-fuchsia-400',
+      route: '/smart-list-demo',
     },
   ];
 

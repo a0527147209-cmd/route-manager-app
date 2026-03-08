@@ -10,15 +10,21 @@ import AddressAutocomplete from './AddressAutocomplete';
 export default function AddLocationView() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addLocation } = useLocations();
+  const { addLocation, locations } = useLocations();
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const existingZones = [...new Set(
+    (Array.isArray(locations) ? locations : [])
+      .map(loc => (loc?.region || loc?.zone || '').trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
 
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     city: '',
-    zone: 'Brooklyn',
+    zone: '',
     state: 'NY',
     zipCode: '',
     type: 'Deli',
@@ -43,6 +49,7 @@ export default function AddLocationView() {
 
     const newLocation = {
       name: formData.name,
+      zone: formData.zone,
       region: formData.zone,
       commissionRate: parseFloat(formData.commissionRate) || 0.4,
       hasChangeMachine: formData.hasChangeMachine,
@@ -172,40 +179,31 @@ export default function AddLocationView() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={labelStyle}>{t('zone')}</label>
-                  <select
-                    name="zone"
-                    value={formData.zone}
-                    onChange={handleChange}
-                    className={inputStyle}
-                  >
-                    <option value="Brooklyn">Brooklyn</option>
-                    <option value="Bronx">Bronx</option>
-                    <option value="Queens">Queens</option>
-                    <option value="Manhattan">Manhattan</option>
-                    <option value="Staten Island">Staten Island</option>
-                    <option value="Harlem">Harlem</option>
-                    <option value="Long Island">Long Island</option>
-                    <option value="Connecticut">Connecticut</option>
-                    <option value="Poughkeepsie">Poughkeepsie</option>
-                    <option value="New Rochelle">New Rochelle</option>
-                    <option value="Maryland">Maryland</option>
-                    <option value="New Jersey">New Jersey</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelStyle}>{t('zipCode')}</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    name="zipCode"
-                    value={formData.zipCode}
-                    onChange={handleChange}
-                    className={inputStyle}
-                  />
-                </div>
+              <div>
+                <label className={labelStyle}>{t('zone')}</label>
+                <select
+                  name="zone"
+                  value={formData.zone}
+                  onChange={handleChange}
+                  className={inputStyle}
+                >
+                  <option value="">{t('selectZone') || '— Select Zone —'}</option>
+                  {existingZones.map(z => (
+                    <option key={z} value={z}>{z}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelStyle}>{t('zipCode')}</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  name="zipCode"
+                  value={formData.zipCode}
+                  onChange={handleChange}
+                  className={inputStyle}
+                />
               </div>
 
               <div>

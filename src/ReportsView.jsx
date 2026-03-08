@@ -30,15 +30,29 @@ function localISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+const USER_MAP = {
+  eli: 'Eli', e: 'Eli', el: 'Eli',
+  mardi: 'Mardi', mar: 'Mardi',
+  hershi: 'Hershi', hersh: 'Hershi', her: 'Hershi',
+  yuda: 'Yuda', yud: 'Yuda',
+  oded: 'Oded', ode: 'Oded',
+  payam: 'Payam', pj: 'Payam', pay: 'Payam',
+};
+
 function normalizeUser(raw) {
   if (!raw) return '';
   let s = raw.trim()
-    .replace(/\s+\d+\s*$/, '')     // "eli 50" -> "eli"
-    .replace(/\d+\s*\$?\s*$/i, '') // "eli50$" -> "eli"
     .replace(/[⌚️*]+/g, '')
-    .trim();
+    .replace(/\s+\d+\s*$/, '')
+    .replace(/\d+\s*\$?\s*$/i, '')
+    .trim()
+    .toLowerCase();
   if (!s) return '';
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  if (USER_MAP[s]) return USER_MAP[s];
+  for (const [key, name] of Object.entries(USER_MAP)) {
+    if (s.startsWith(key) || key.startsWith(s)) return name;
+  }
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function getAllLogs(locations) {

@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertTriangle, ArrowLeft, Clock, User, Percent, Cpu, MapPin } from 'lucide-react';
-import { WazeLogo, GoogleMapsLogo } from './BrandIcons';
 import { useLocations } from './LocationsContext';
 import { LinkifyText } from './utils/textUtils';
 
@@ -101,16 +100,13 @@ function SmartCard({ loc, index, navigate, routeLocation }) {
     : visitStatus === 'overdue' ? 'border-l-red-500'
     : 'border-l-slate-300 dark:border-l-slate-600';
 
-  const wazeUrl = `https://waze.com/ul?q=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}&navigate=yes`;
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc?.fullAddress || loc?.address || '')}`;
-
   return (
     <div
       data-customer-id={loc?.id}
       className={`w-full rounded-2xl border border-slate-200/70 dark:border-slate-700/50 border-l-4 ${stripe} bg-white dark:bg-slate-900 shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.02)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.3)] transition-all active:scale-[0.995] cursor-pointer ${isInactive ? 'opacity-50' : ''}`}
       onClick={() => loc?.id != null && navigate(`/customer/${loc.id}`, { state: { fromPath: routeLocation.pathname } })}
     >
-      <div className="px-3.5 pt-3 pb-1.5">
+      <div className="px-3.5 pt-3 pb-2.5">
         {/* Row 1: Index + Name + Money */}
         <div className="flex items-start gap-2.5">
           <span className="shrink-0 w-5 text-center text-[11px] font-bold text-slate-400 dark:text-slate-500 tabular-nums pt-0.5">
@@ -120,7 +116,6 @@ function SmartCard({ loc, index, navigate, routeLocation }) {
             <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100 leading-snug truncate" style={{ fontFamily: "'Nunito', sans-serif" }}>
               {loc?.name ?? '—'}
             </h3>
-            {/* Address line */}
             {(loc?.address || cityState) && (
               <div className="flex items-center gap-1 mt-0.5">
                 <MapPin size={10} className="text-slate-400 dark:text-slate-500 shrink-0" strokeWidth={2} />
@@ -130,7 +125,7 @@ function SmartCard({ loc, index, navigate, routeLocation }) {
               </div>
             )}
           </div>
-          <div className="shrink-0 flex flex-col items-end gap-1">
+          <div className="shrink-0 flex flex-col items-end gap-0.5">
             {isInactive ? (
               <span className="text-[13px] font-bold text-slate-400 dark:text-slate-600 uppercase">Closed</span>
             ) : noMoney ? (
@@ -142,6 +137,11 @@ function SmartCard({ loc, index, navigate, routeLocation }) {
                 {money}
               </span>
             )}
+            {lastUser && !isInactive && (
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                by <span className="font-semibold text-slate-500 dark:text-slate-400">{lastUser}</span>
+              </span>
+            )}
             <RelativeTimeBadge isoDate={loc?.lastVisited} />
           </div>
         </div>
@@ -149,7 +149,6 @@ function SmartCard({ loc, index, navigate, routeLocation }) {
         {/* Row 2: Pill badges */}
         <div className="flex flex-wrap items-center gap-1.5 mt-2 ml-7">
           <PillBadge icon={Percent} label={commPct} color="indigo" />
-          {lastUser && <PillBadge icon={User} label={lastUser} color="violet" />}
           {hasCM && <PillBadge icon={Cpu} label={`${cmCount}x Machine`} color="emerald" />}
           {isInactive && <PillBadge label="Inactive" color="slate" />}
           {lastVisitDate && (
@@ -157,28 +156,6 @@ function SmartCard({ loc, index, navigate, routeLocation }) {
               {lastVisitDate}
             </span>
           )}
-        </div>
-
-        {/* Row 3: Nav buttons */}
-        <div className="flex items-center justify-end gap-2 mt-2 pb-0.5" onClick={(e) => e.stopPropagation()}>
-          <a
-            href={wazeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-90"
-            title="Waze"
-          >
-            <WazeLogo size={16} />
-          </a>
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-center hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-200 dark:hover:border-green-800 transition-all active:scale-90"
-            title="Google Maps"
-          >
-            <GoogleMapsLogo size={16} />
-          </a>
         </div>
       </div>
 

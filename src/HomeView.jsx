@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Menu, Users, BarChart3, Plus,
-  Clock, Wallet, ListTodo, Map, FlaskConical,
+  Clock, Wallet, ListTodo, Map, FlaskConical, Route,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MenuDrawer from './MenuDrawer';
@@ -120,6 +120,14 @@ export default function HomeView() {
       iconBg: 'bg-fuchsia-50 dark:bg-fuchsia-950/40',
       iconColor: 'text-fuchsia-600 dark:text-fuchsia-400',
       route: '/smart-list-demo',
+    },
+    {
+      label: 'Nav Mockup',
+      sub: 'Breadcrumbs & screens',
+      icon: Route,
+      iconBg: 'bg-orange-50 dark:bg-orange-950/40',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      route: '/nav-mockup',
     },
   ];
 

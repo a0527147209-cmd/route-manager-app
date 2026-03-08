@@ -142,7 +142,7 @@ export default function CustomerDetailsView() {
         handleCancelEdit();
       }
     }
-    navigate(backPath);
+    navigate(backPath, { state: { focusCustomerId: id } });
   };
 
   const handleEditLog = async (log, index) => {

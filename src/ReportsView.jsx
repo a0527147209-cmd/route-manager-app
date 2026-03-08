@@ -32,22 +32,24 @@ function localISO(d) {
 
 const USER_MAP = {
   eli: 'Eli', e: 'Eli', el: 'Eli',
-  mardi: 'Mardi', mar: 'Mardi',
+  mordi: 'Mordi', mardi: 'Mordi', mar: 'Mordi', mord: 'Mordi',
   hershi: 'Hershi', hersh: 'Hershi', her: 'Hershi',
   yuda: 'Yuda', yud: 'Yuda',
   oded: 'Oded', ode: 'Oded',
-  payam: 'Payam', pj: 'Payam', pay: 'Payam',
+  payam: 'Payam', pj: 'Payam', pay: 'Payam', '0j': 'Payam',
 };
+
+const IGNORE_USERS = ['to collect', 'collect', 'tocollect', 'tocolect', 'no', 'none', 'n/a', '-', ''];
 
 function normalizeUser(raw) {
   if (!raw) return '';
   let s = raw.trim()
-    .replace(/[⌚️*]+/g, '')
+    .replace(/[⌚️*\\\/]+/g, '')
     .replace(/\s+\d+\s*$/, '')
     .replace(/\d+\s*\$?\s*$/i, '')
     .trim()
     .toLowerCase();
-  if (!s) return '';
+  if (!s || IGNORE_USERS.includes(s)) return '';
   if (USER_MAP[s]) return USER_MAP[s];
   for (const [key, name] of Object.entries(USER_MAP)) {
     if (s.startsWith(key) || key.startsWith(s)) return name;
